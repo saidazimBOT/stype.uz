@@ -1,0 +1,10 @@
+# STypeUz Robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Block AI crawlers
+User-agent: GPTBot
+Disallow: /
+
+Sitemap: https://stypeuz.com/sitemap.xml

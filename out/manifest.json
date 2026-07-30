@@ -1,0 +1,26 @@
+{
+  "name": "STypeUz - Typing Speed Test",
+  "short_name": "STypeUz",
+  "description": "Test your typing speed with 20+ languages, 25+ themes, and compete globally! Free online typing practice in Uzbek, Russian, English and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#a78bfa",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "utilities", "education"],
+  "lang": "en"
+}
