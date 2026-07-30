@@ -1,4 +1,4 @@
-const CACHE_NAME = "typeuz-v1";
+const CACHE_NAME = "typeuz-v2";
 const ASSETS = [
   "/",
   "/index.html",
