@@ -209,11 +209,10 @@ export default function RootLayout({
         {/* MS Tile */}
         <meta name="msapplication-TileColor" content="#a78bfa" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        {/**
-         * Uncomment and add your real verification codes:
-         * <meta name="yandex-verification" content="YOUR_YANDEX_CODE" />
-         * <meta name="google-site-verification" content="YOUR_GOOGLE_CODE" />
-         */}
+        {/* Google Search Console verification */}
+        <meta name="google-site-verification" content="Ry5FFibofm-2BLNxqvFV5Tq9THHJudeYjy9sqqRtJuM" />
+        {/* Yandex Webmaster verification */}
+        {/* <meta name="yandex-verification" content="YOUR_YANDEX_CODE" /> */}
       </head>
       <body className="antialiased">
         {children}
