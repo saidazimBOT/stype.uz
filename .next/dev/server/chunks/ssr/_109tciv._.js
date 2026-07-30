@@ -197,7 +197,7 @@ const viewport = {
     themeColor: [
         {
             media: "(prefers-color-scheme: dark)",
-            color: "#0f0f13"
+            color: "#090f15"
         },
         {
             media: "(prefers-color-scheme: light)",
@@ -356,6 +356,14 @@ function RootLayout({ children }) {
                         fileName: "[project]/app/layout.tsx",
                         lineNumber: 211,
                         columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("meta", {
+                        name: "google-site-verification",
+                        content: "Ry5FFibofm-2BLNxqvFV5Tq9THHJudeYjy9sqqRtJuM"
+                    }, void 0, false, {
+                        fileName: "[project]/app/layout.tsx",
+                        lineNumber: 213,
+                        columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
@@ -365,10 +373,13 @@ function RootLayout({ children }) {
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("body", {
                 className: "antialiased",
+                style: {
+                    backgroundColor: "#090f15"
+                },
                 children: children
             }, void 0, false, {
                 fileName: "[project]/app/layout.tsx",
-                lineNumber: 218,
+                lineNumber: 217,
                 columnNumber: 7
             }, this)
         ]

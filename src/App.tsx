@@ -32,10 +32,24 @@ import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 
+// ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
+// Bu React mount bo'lishidan OLDIN ishlaydi, shuning uchun useLocalStorage
+// hook'i "light" ni o'qib ololmaydi.
+try {
+  const stored = localStorage.getItem("typeuz_theme");
+  if (stored) {
+    const lightThemes = ["light", "warm", "sakura", "mint", "sky", "peachy", "vscode_light"];
+    if (lightThemes.includes(JSON.parse(stored))) {
+      // localStorage dan o'chirib tashlaymiz — useLocalStorage default ga tushadi
+      localStorage.setItem("typeuz_theme", JSON.stringify("blue"));
+    }
+  }
+} catch {}
+
 // ── APP ──────────────────────────────────────────────────────────────────
 export default function App() {
   // Core state
-  const [theme, setTheme] = useLocalStorage("typeuz_theme", "default");
+  const [theme, setTheme] = useLocalStorage("typeuz_theme", "blue");
   const [lang, setLang] = useLocalStorage("typeuz_lang", "en");
   const [duration, setDuration] = useLocalStorage<number | string>("typeuz_duration", 15);
   const [fontSize, setFontSize] = useLocalStorage("typeuz_fontsize", "md");
@@ -81,7 +95,7 @@ export default function App() {
   const t: ThemeColors = THEMES[theme] || THEMES.default;
 
   // Auto Dark/Light Mode
-  const [autoTheme, setAutoTheme] = useState(true);
+  const [autoTheme, setAutoTheme] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const lightThemes = ["light", "warm", "sakura", "mint", "sky", "peachy", "vscode_light"];
@@ -167,11 +181,28 @@ export default function App() {
     };
   }, [started, finished, duration, soundEnabled, playWin]);
 
-  // ── WPM UPDATE ──────────────────────────────────────────────────────
+  // ── WPM UPDATE (smooth, real typing feel) ───────────────────────────
   useEffect(() => {
     if (!started || !startTimeRef.current) return;
-    const e = (Date.now() - startTimeRef.current) / 60000;
-    if (e > 0) setWpm(Math.round((typed.length / 5) / e));
+    const elapsed = Date.now() - startTimeRef.current;
+
+    // Dastlabki 2 soniya WPM ko'rsatilmaydi (barqarorlashishi uchun)
+    if (elapsed < 2000) {
+      setWpm(0);
+      return;
+    }
+
+    const elapsedMin = elapsed / 60000;
+    if (elapsedMin > 0) {
+      const rawWpm = Math.round((typed.length / 5) / elapsedMin);
+      // Lerp smoothing: oldingi qiymatdan 40% ga yangilanadi
+      // Bu real tayping hissasini beradi (Monkeytype uslubi)
+      setWpm(prev => {
+        if (prev === 0) return rawWpm;
+        const diff = rawWpm - prev;
+        return Math.round(prev + diff * 0.4);
+      });
+    }
   }, [typed, started]);
 
   // ── KEYBOARD HANDLING ───────────────────────────────────────────────

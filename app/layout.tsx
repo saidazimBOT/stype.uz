@@ -130,7 +130,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0f0f13" },
+    { media: "(prefers-color-scheme: dark)", color: "#090f15" },
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
   colorScheme: "dark light",
@@ -214,7 +214,7 @@ export default function RootLayout({
         {/* Yandex Webmaster verification */}
         {/* <meta name="yandex-verification" content="YOUR_YANDEX_CODE" /> */}
       </head>
-      <body className="antialiased">
+      <body className="antialiased" style={{ backgroundColor: "#090f15" }}>
         {children}
       </body>
     </html>
