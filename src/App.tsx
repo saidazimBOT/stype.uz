@@ -560,17 +560,6 @@ export default function App() {
           ) : view === "type" ? (
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
-              {/* SEO content */}
-              <div className="text-center max-w-2xl">
-                <h1 className="text-2xl sm:text-3xl font-bold">
-                  STypeUz — Free Typing Speed Test
-                </h1>
-                <p className="mt-2 text-sm text-gray-400">
-                  Type faster with STypeUz. Practice typing, test your typing speed,
-                  and improve your WPM and accuracy.
-                </p>
-              </div>
-
               {/* Stats */}
               <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
                 <div className="text-center">
