@@ -322,7 +322,6 @@ export default function App() {
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── COMPUTED ────────────────────────────────────────────────────────
-  const prog = text.length ? (cursor / text.length) * 100 : 0;
   const rendered = text.split("").map((ch, i) => {
     let cls = "text-gray-600";
     if (i < cursor) cls = "text-white";
@@ -591,14 +590,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full max-w-2xl h-1 rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full transition-all duration-150"
-                  style={{ width: `${prog}%`, background: t.accent, boxShadow: `0 0 10px ${t.accent}44` }}
-                />
               </div>
 
               {/* Text display */}
