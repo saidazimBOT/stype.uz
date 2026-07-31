@@ -5,7 +5,7 @@ const ASSETS = [
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
-  "/favicon.svg",
+  "/favicon.png",
 ];
 
 // Install event - cache core assets
