@@ -1,11 +1,11 @@
-const CACHE_NAME = "typeuz-v1";
+const CACHE_NAME = "typeuz-v2";
 const ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
-  "/favicon.svg",
+  "/favicon.png",
 ];
 
 // Install event - cache core assets
