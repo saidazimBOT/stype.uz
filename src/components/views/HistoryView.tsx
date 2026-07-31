@@ -13,7 +13,7 @@ interface HistoryViewProps {
 
 export default function HistoryView({ t, onClose, history, favorites, onFavorite, showReplay }: HistoryViewProps) {
   return (
-    <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">📋 History</h2>
@@ -74,7 +74,7 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
           {history.map((h, i) => (
             <div
               key={i}
-              className="grid grid-cols-[1fr_70px_70px_60px_50px_40px] items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all"
+              className="grid grid-cols-[1fr_48px_48px_44px_40px_32px] sm:grid-cols-[1fr_70px_70px_60px_50px_40px] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl hover:bg-white/5 transition-all"
               style={{
                 background: t.surface,
                 border: `1px solid ${t.accent}11`,

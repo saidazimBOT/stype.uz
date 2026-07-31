@@ -23,7 +23,7 @@ export default function ProgressDashboard({ t, onClose, history }: ProgressDashb
   }, [history]);
 
   return (
-    <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">📈 Progress Dashboard</h2>
@@ -42,7 +42,7 @@ export default function ProgressDashboard({ t, onClose, history }: ProgressDashb
       ) : (
         <>
           {/* Quick stats */}
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
               { label: "Tests", value: stats.total, color: "#38bdf8" },
               { label: "Best WPM", value: stats.bestWpm, color: t.accent },

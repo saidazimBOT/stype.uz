@@ -71,7 +71,7 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
   };
 
   return (
-    <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">📚 Custom Text</h2>

@@ -27,7 +27,7 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
   const progress = Math.min((streak / 7) * 100, 100);
 
   return (
-    <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">🔥 Daily Login</h2>
@@ -77,7 +77,7 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
       </div>
 
       {/* Rewards grid */}
-      <div className="grid grid-cols-7 gap-2 mb-6">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-6">
         {REWARDS.map((reward) => {
           const isUnlocked = streak >= reward.day;
           const isCurrent = streak === reward.day;
@@ -86,7 +86,7 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
           return (
             <div
               key={reward.day}
-              className={`p-2 rounded-xl text-center transition-all ${
+              className={`p-1.5 sm:p-2 rounded-xl text-center transition-all ${
                 isCurrent ? "scale-110" : ""
               }`}
               style={{
@@ -103,7 +103,7 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
                 opacity: isUnlocked ? 1 : 0.4,
               }}
             >
-              <div className="text-xl mb-0.5">{reward.icon}</div>
+              <div className="text-base sm:text-xl mb-0.5">{reward.icon}</div>
               <div className="text-[10px] font-bold" style={{ color: t.accent }}>
                 +{reward.xp}
               </div>

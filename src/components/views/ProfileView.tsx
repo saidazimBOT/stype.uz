@@ -47,7 +47,7 @@ export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
   }, [history]);
 
   return (
-    <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-bold text-white">👤 Profile</h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">

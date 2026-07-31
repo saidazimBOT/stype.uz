@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ThemeColors } from "../../types";
 
 const KEY_ROWS: string[][] = [
@@ -39,6 +39,23 @@ export default function KeyboardVisualizer({
 }: KeyboardVisualizerProps) {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [heatmap, setHeatmap] = useState<Record<string, number>>({});
+
+  // Auto-scale keyboard to fit any screen width (100% responsive)
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [kbdScale, setKbdScale] = useState(1);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const compute = () => {
+      // Natural keyboard width ≈ 690px
+      setKbdScale(Math.min(1, el.clientWidth / 690));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -101,8 +118,12 @@ export default function KeyboardVisualizer({
   };
 
   return (
-    <div className="w-full max-w-[800px] mx-auto">
-      <div className="flex flex-col gap-1.5 items-center">
+    <div ref={wrapRef} className="w-full">
+      <div className="mx-auto overflow-hidden" style={{ width: 690 * kbdScale, height: 224 * kbdScale }}>
+        <div
+          className="flex flex-col gap-1.5 items-center origin-top"
+          style={{ transform: `scale(${kbdScale})` }}
+        >
         {KEY_ROWS.map((row, rowIdx) => (
           <div key={rowIdx} className="flex gap-1.5 justify-center">
             {row.map((key) => {
@@ -127,6 +148,7 @@ export default function KeyboardVisualizer({
             })}
           </div>
         ))}
+        </div>
       </div>
     </div>
   );

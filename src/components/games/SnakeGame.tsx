@@ -155,7 +155,7 @@ export default function SnakeGame({ t }: SnakeGameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-full" style={{ width: SC * SZ }}>
+      <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: SC * SZ }}>
         <span className="text-gray-400 text-sm">🐍 Snake</span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
@@ -163,7 +163,7 @@ export default function SnakeGame({ t }: SnakeGameProps) {
         ref={cvs}
         width={SC * SZ}
         height={SR * SZ}
-        className="rounded-xl cursor-pointer"
+        className="rounded-xl cursor-pointer max-w-full h-auto"
         style={{ border: `1px solid ${t.accent}33` }}
         onClick={start}
       />

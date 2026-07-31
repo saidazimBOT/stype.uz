@@ -197,7 +197,7 @@ export default function TetrisGame({ t }: TetrisGameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-full" style={{ width: TW * TC }}>
+      <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: TW * TC }}>
         <span className="text-gray-400 text-sm">🧩 Tetris</span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
@@ -205,7 +205,7 @@ export default function TetrisGame({ t }: TetrisGameProps) {
         ref={cvs}
         width={TW * TC}
         height={TH * TC}
-        className="rounded-xl cursor-pointer"
+        className="rounded-xl cursor-pointer max-w-full h-auto"
         style={{ border: `1px solid ${t.accent}33` }}
         onClick={handleClick}
       />

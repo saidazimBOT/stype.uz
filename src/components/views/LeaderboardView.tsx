@@ -17,7 +17,7 @@ export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
   const langFilters = ["all", ...new Set(LEADERBOARD.map((p) => p.lang))];
 
   return (
-    <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-y-auto">
+    <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-white">🏆 Global Leaderboard</h2>
@@ -45,7 +45,7 @@ export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-[36px_1fr_70px_70px_60px] gap-2 px-3 pb-2 text-xs text-gray-600 uppercase tracking-widest">
+      <div className="grid grid-cols-[28px_1fr_48px_48px_40px] sm:grid-cols-[36px_1fr_70px_70px_60px] gap-1.5 sm:gap-2 px-3 pb-2 text-[10px] sm:text-xs text-gray-600 uppercase tracking-widest">
         <span />
         <span />
         <span className="text-right">WPM</span>
@@ -57,7 +57,7 @@ export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
         {filtered.map((p, i) => (
           <div
             key={p.rank}
-            className="grid grid-cols-[36px_1fr_70px_70px_60px] gap-2 items-center px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all"
+            className="grid grid-cols-[28px_1fr_48px_48px_40px] sm:grid-cols-[36px_1fr_70px_70px_60px] gap-1.5 sm:gap-2 items-center px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all"
             style={{
               background: i < 3 ? t.surface : "transparent",
               border: i < 3 ? `1px solid ${t.accent}22` : "1px solid transparent",

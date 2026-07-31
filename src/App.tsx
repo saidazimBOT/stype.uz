@@ -151,6 +151,15 @@ export default function App() {
     if (text === "") newText();
   }, [lang, duration, text === "", newText]);
 
+  // Til o'zgarganda matnni ham yangilaymiz (faqat haqiqiy o'zgarishda)
+  const prevLangRef = useRef(lang);
+  useEffect(() => {
+    if (prevLangRef.current !== lang) {
+      prevLangRef.current = lang;
+      newText();
+    }
+  }, [lang, newText]);
+
   useEffect(() => {
     if (inputRef.current && view === "type" && !finished) inputRef.current.focus();
   }, [text, finished, view]);
@@ -326,10 +335,6 @@ export default function App() {
           i === cursor
             ? {
                 color: t.accent,
-                textDecoration: "underline",
-                textUnderlineOffset: "4px",
-                textDecorationColor: t.accent,
-                textDecorationThickness: "2px",
               }
             : {}
         }
@@ -395,10 +400,10 @@ export default function App() {
 
       {/* Navbar */}
       <nav className="flex items-center justify-between px-4 md:px-8 py-3 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button
             onClick={() => setView("type")}
-            className="text-xl md:text-2xl font-bold tracking-tight transition-all hover:scale-105"
+            className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight transition-all hover:scale-105 whitespace-nowrap"
             style={{ color: t.accent }}
           >
             ⌨ STypeUz
@@ -421,12 +426,12 @@ export default function App() {
             </div>
           )}
           {/* Language quick switch */}
-          <div className="flex gap-1">
+          <div className="flex gap-0.5 sm:gap-1">
             {["en", "ru", "uz"].map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className="px-2 py-0.5 rounded text-[10px] font-medium transition-all"
+                className="px-1.5 sm:px-2 py-0.5 rounded text-[10px] font-medium transition-all"
                 style={{
                   background: lang === l ? t.accent + "33" : "transparent",
                   color: lang === l ? t.accent : "#6b7280",
@@ -556,22 +561,22 @@ export default function App() {
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
               {/* Stats */}
-              <div className="flex items-center gap-6 md:gap-16">
+              <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
                 <div className="text-center">
                   <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">WPM</div>
-                  <div className="text-3xl md:text-5xl font-bold" style={{ color: t.accent }}>
+                  <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: t.accent }}>
                     {wpm}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">Accuracy</div>
-                  <div className="text-3xl md:text-5xl font-bold text-white">{accuracy}%</div>
+                  <div className="text-2xl sm:text-3xl md:text-5xl font-bold text-white">{accuracy}%</div>
                 </div>
                 {duration !== "∞" && (
                   <div className="text-center">
                     <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">Time</div>
                     <div
-                      className="text-3xl md:text-5xl font-bold"
+                      className="text-2xl sm:text-3xl md:text-5xl font-bold"
                       style={{ color: timeLeft !== null && timeLeft <= 5 ? "#ef4444" : "#e5e7eb" }}
                     >
                       {timeLeft ?? duration}
@@ -581,7 +586,7 @@ export default function App() {
                 {combo >= 5 && (
                   <div className="text-center">
                     <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">Combo</div>
-                    <div className="text-3xl md:text-5xl font-bold" style={{ color: "#f59e0b" }}>
+                    <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: "#f59e0b" }}>
                       ×{combo}
                     </div>
                   </div>
