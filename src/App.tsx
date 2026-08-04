@@ -32,6 +32,7 @@ import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import TelegramPromo from "./components/features/TelegramPromo";
+import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
@@ -72,6 +73,7 @@ export default function App() {
   const [showHeatmap, setShowHeatmap] = useLocalStorage("typeuz_heatmap", false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
+  const [showOwner, setShowOwner] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
 
   // Typing state
@@ -268,6 +270,7 @@ export default function App() {
       if (view !== "type" || finished) {
         if (e.key === "Escape") {
           setView("type");
+          setShowOwner(false);
           e.preventDefault();
         }
         return;
@@ -536,6 +539,7 @@ export default function App() {
             onClick={() => {
               setShowPromo((s) => !s);
               setShowSettings(false);
+              setShowOwner(false);
             }}
             className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
             title="50 WPM → 1 oylik Telegram Premium!"
@@ -543,10 +547,29 @@ export default function App() {
             🏆 <span className="hidden sm:inline">50 WPM</span>
             <span className="hidden lg:inline">→ Premium</span>
           </button>
+          {/* Sayt egasi */}
+          <button
+            onClick={() => {
+              setShowOwner((s) => !s);
+              setShowPromo(false);
+              setShowSettings(false);
+            }}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title="Sayt egasi haqida"
+            style={{
+              background: showOwner ? t.accent + "33" : "#ffffff0d",
+              color: showOwner ? t.accent : "#9ca3af",
+              border: `1px solid ${showOwner ? t.accent + "55" : "#ffffff14"}`,
+            }}
+          >
+            <FiUser size={13} />
+            <span className="hidden sm:inline">Egasi</span>
+          </button>
           <button
             onClick={() => {
               setShowSettings((s) => !s);
               setShowPromo(false);
+              setShowOwner(false);
             }}
             className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
           >
@@ -565,7 +588,11 @@ export default function App() {
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setView(view === item.id ? "type" : item.id)}
+              onClick={() => {
+                setShowOwner(false);
+                setShowPromo(false);
+                setView(view === item.id ? "type" : item.id);
+              }}
               className="flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg text-left transition-all hover:bg-white/5"
               style={{
                 color: view === item.id ? t.accent : "#6b7280",
@@ -584,6 +611,9 @@ export default function App() {
           {/* Telegram Premium promo */}
           {showPromo ? (
             <TelegramPromo t={t} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
+          ) : /* Sayt egasi */
+          showOwner ? (
+            <OwnerView t={t} onClose={() => setShowOwner(false)} />
           ) : /* Settings Modal */
           showSettings ? (
             <SettingsModal
