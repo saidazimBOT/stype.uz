@@ -31,6 +31,7 @@ import AIExercises from "./components/features/AIExercises";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
+import AppLogo from "./components/AppLogo";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
 // Bu React mount bo'lishidan OLDIN ishlaydi, shuning uchun useLocalStorage
@@ -402,10 +403,11 @@ export default function App() {
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button
             onClick={() => setView("type")}
-            className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight transition-all hover:scale-105 whitespace-nowrap"
+            className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-xl md:text-2xl font-bold tracking-tight transition-all hover:scale-105 whitespace-nowrap"
             style={{ color: t.accent }}
           >
-            ⌨ STypeUz
+            <AppLogo size={32} animate="glow" glowColor={t.accent} className="w-7 h-7 md:w-8 md:h-8" />
+            <span>STypeUz</span>
           </button>
           {view === "type" && (
             <div className="hidden sm:flex gap-1 text-sm">
@@ -676,12 +678,7 @@ export default function App() {
         className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md"
         style={{ background: t.surface + "cc", border: `1px solid ${t.accent}33` }}
       >
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-          style={{ background: t.accent + "33", color: t.accent }}
-        >
-          T
-        </div>
+        <AppLogo size={26} animate="glow" glowColor={t.accent} />
         <div className="hidden sm:block">
           <div className="font-semibold" style={{ color: t.accent }}>
             25+ Themes

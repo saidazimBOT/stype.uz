@@ -4,8 +4,8 @@
   "description": "Test your typing speed with 20+ languages, 25+ themes, and compete globally! Free online typing practice in Uzbek, Russian, English and more.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f13",
-  "theme_color": "#a78bfa",
+  "background_color": "#090f15",
+  "theme_color": "#090f15",
   "orientation": "any",
   "icons": [
     {

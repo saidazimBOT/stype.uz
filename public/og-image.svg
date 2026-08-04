@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1520"/>
+      <stop offset="50%" stop-color="#090f15"/>
+      <stop offset="100%" stop-color="#05070b"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.10"/>
+    </linearGradient>
+    <radialGradient id="btn" cx="32%" cy="26%" r="90%">
+      <stop offset="0%" stop-color="#41414b"/>
+      <stop offset="40%" stop-color="#17171d"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5c5c66"/>
+      <stop offset="40%" stop-color="#2a2a31"/>
+      <stop offset="100%" stop-color="#08080a"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0%" y1="0%" x2="60%" y2="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="chrome" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f2f4f7"/>
+      <stop offset="38%" stop-color="#c6cbd4"/>
+      <stop offset="65%" stop-color="#7d8491"/>
+      <stop offset="100%" stop-color="#4c525c"/>
+    </linearGradient>
+    <linearGradient id="key" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9aa1ac"/>
+      <stop offset="55%" stop-color="#565d68"/>
+      <stop offset="100%" stop-color="#2e333b"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#f0f2f5"/>
+      <stop offset="50%" stop-color="#8f96a1"/>
+      <stop offset="62%" stop-color="#dde1e7"/>
+      <stop offset="100%" stop-color="#565d69"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#a5b4c6"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="bigblur" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="80"/>
+    </filter>
+    <clipPath id="circle">
+      <circle cx="360" cy="300" r="210"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Ambient glow -->
+  <circle cx="360" cy="300" r="340" fill="url(#glowGrad)" filter="url(#bigblur)"/>
+  <circle cx="1000" cy="120" r="260" fill="#a78bfa" fill-opacity="0.08" filter="url(#bigblur)"/>
+
+  <!-- Logo -->
+  <g transform="translate(110,60)">
+    <circle cx="250" cy="240" r="212" fill="url(#btn)"/>
+    <circle cx="250" cy="240" r="210" fill="none" stroke="url(#rim)" stroke-width="4"/>
+    <circle cx="250" cy="240" r="205" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="2"/>
+    <g clip-path="url(#circle)">
+      <ellipse cx="172" cy="138" rx="160" ry="110" fill="url(#gloss)" filter="url(#soft)" transform="rotate(-22 172 138)"/>
+      <ellipse cx="162" cy="96" rx="88" ry="48" fill="#ffffff" fill-opacity="0.22" filter="url(#soft)" transform="rotate(-18 162 96)"/>
+    </g>
+    <path d="M148 76 C151 88 162 99 174 102 C162 105 151 116 148 128 C145 116 134 105 122 102 C134 99 145 88 148 76 Z" fill="#ffffff" opacity="0.95"/>
+    <g transform="rotate(-5 250 158)">
+      <rect x="176" y="106" width="148" height="100" rx="14" fill="#15171c" stroke="url(#chrome)" stroke-width="3.5"/>
+      <rect x="180" y="110" width="140" height="4" rx="2" fill="#ffffff" fill-opacity="0.35"/>
+      <g>
+        <rect x="194" y="122" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="217" y="122" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="240" y="122" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="263" y="122" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="286" y="122" width="18" height="11" rx="2.5" fill="url(#key)"/>
+      </g>
+      <g>
+        <rect x="194" y="138" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="217" y="138" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="240" y="138" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="263" y="138" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="286" y="138" width="18" height="11" rx="2.5" fill="url(#key)"/>
+      </g>
+      <g>
+        <rect x="194" y="154" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="217" y="154" width="58" height="11" rx="3" fill="url(#key)"/>
+        <rect x="280" y="154" width="18" height="11" rx="2.5" fill="url(#key)"/>
+        <rect x="303" y="154" width="14" height="11" rx="2.5" fill="url(#key)"/>
+      </g>
+      <rect x="180" y="200" width="140" height="2" rx="1" fill="#000000" fill-opacity="0.5"/>
+    </g>
+    <text x="250" y="392" font-family="'Arial Black','Arial','Helvetica',sans-serif" font-size="118" font-style="italic" font-weight="900" fill="url(#metal)" text-anchor="middle" letter-spacing="2">STuZ</text>
+  </g>
+
+  <!-- Right side text -->
+  <text x="640" y="260" font-family="Arial, 'Segoe UI', 'Helvetica Neue', sans-serif" font-size="76" font-weight="800" fill="url(#title)" letter-spacing="-1">STypeUz</text>
+  <text x="640" y="320" font-family="Arial, 'Segoe UI', 'Helvetica Neue', sans-serif" font-size="30" font-weight="500" fill="#94a3b8">Typing Speed Test in 20+ Languages</text>
+  <g>
+    <rect x="640" y="352" width="240" height="3" rx="1.5" fill="#38bdf8" fill-opacity="0.7"/>
+  </g>
+  <text x="640" y="400" font-family="Arial, 'Segoe UI', 'Helvetica Neue', sans-serif" font-size="24" font-weight="500" fill="#64748b">25+ themes · Mini-games · Leaderboards · Free</text>
+</svg>

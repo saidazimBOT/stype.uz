@@ -1,6 +1,7 @@
 "use client";
 
 import type { ThemeColors } from "../../types";
+import AppLogo from "../AppLogo";
 
 interface AboutViewProps {
   t: ThemeColors;
@@ -47,12 +48,7 @@ export default function AboutView({ t, onClose }: AboutViewProps) {
           border: `1px solid ${t.accent}33`,
         }}
       >
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black"
-          style={{ background: t.accent + "22", color: t.accent }}
-        >
-          S
-        </div>
+        <AppLogo size={56} animate="spin" />
         <div>
           <div className="text-xl font-bold text-white">STypeUz</div>
           <div className="text-sm text-gray-400">
