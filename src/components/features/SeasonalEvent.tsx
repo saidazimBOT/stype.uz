@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { FiCheckCircle } from "react-icons/fi";
+import { FaCalendar, FaMedal } from "react-icons/fa6";
 import { SEASONS } from "../../data/missions";
 import type { ThemeColors, ActiveMission } from "../../types";
 
@@ -40,14 +42,17 @@ export default function SeasonalEvent({ t, onClose, missions, updateProgress }: 
     return (
       <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">🎖️ Seasonal Events</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FaMedal />
+            Seasonal Events
+          </h2>
           <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
             ← Back
           </button>
         </div>
 
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">📅</div>
+          <FaCalendar size={52} className="mx-auto mb-4 text-gray-500" />
           <div className="text-lg text-gray-400 mb-2">No active events right now</div>
           <div className="text-sm text-gray-600">Check back soon for new events!</div>
         </div>
@@ -64,7 +69,7 @@ export default function SeasonalEvent({ t, onClose, missions, updateProgress }: 
                   className="p-4 rounded-xl flex items-center gap-4"
                   style={{ background: t.surface, border: `1px solid ${t.accent}22` }}
                 >
-                  <div className="text-3xl">📅</div>
+                  <FaCalendar size={26} className="flex-shrink-0 text-gray-400" />
                   <div>
                     <div className="text-sm font-medium text-white">{s.name}</div>
                     <div className="text-xs text-gray-500">
@@ -89,7 +94,10 @@ export default function SeasonalEvent({ t, onClose, missions, updateProgress }: 
   return (
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">🎖️ Seasonal Events</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <FaMedal />
+          Seasonal Events
+        </h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
         </button>
@@ -143,7 +151,9 @@ export default function SeasonalEvent({ t, onClose, missions, updateProgress }: 
                 border: `1px solid ${isCompleted ? t.accent + "44" : "#ffffff0a"}`,
               }}
             >
-              <div className="text-2xl w-10 text-center">{m.icon}</div>
+              <div className="w-10 text-center flex justify-center flex-shrink-0">
+                <m.icon size={22} />
+              </div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-white">{m.title}</div>
                 <div className="text-xs text-gray-500 mt-0.5">{m.desc}</div>
@@ -161,9 +171,7 @@ export default function SeasonalEvent({ t, onClose, missions, updateProgress }: 
                 </div>
               </div>
               {isCompleted && (
-                <div className="text-xl" style={{ color: t.accent }}>
-                  ✅
-                </div>
+                <FiCheckCircle size={22} style={{ color: t.accent }} className="flex-shrink-0" />
               )}
             </div>
           );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { FaDove } from "react-icons/fa6";
 import type { ThemeColors } from "../../types";
 
 interface FlappyBirdProps {
@@ -105,7 +106,7 @@ export default function FlappyBird({ t }: FlappyBirdProps) {
       ctx.fillStyle = "#fff";
       ctx.font = "bold 19px Inter";
       ctx.textAlign = "center";
-      ctx.fillText("Tap or SPACE to fly! 🐦", FW / 2, FH / 2);
+      ctx.fillText("Tap or SPACE to fly!", FW / 2, FH / 2);
     }
     if (g.started && !g.alive) {
       ctx.fillStyle = "rgba(0,0,0,0.72)";
@@ -165,7 +166,7 @@ export default function FlappyBird({ t }: FlappyBirdProps) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: FW }}>
-        <span className="text-gray-400 text-sm">🐦 Flappy Bird</span>
+        <span className="text-gray-400 text-sm flex items-center gap-1.5"><FaDove size={14} /> Flappy Bird</span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
       <canvas

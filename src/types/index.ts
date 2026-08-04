@@ -1,3 +1,5 @@
+import type { IconType } from "react-icons";
+
 // ── Theme Types ──────────────────────────────────────────────────────────
 export interface ThemeColors {
   name: string;
@@ -64,13 +66,13 @@ export interface TestResult {
 // ── Mission Types ────────────────────────────────────────────────────────
 export interface Reward {
   xp: number;
-  badge?: string;
+  badge?: IconType;
   coins?: number;
 }
 
 export interface Mission {
   id: string;
-  icon: string;
+  icon: IconType;
   title: string;
   desc: string;
   goal: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { FiMessageCircle, FiSend } from "react-icons/fi";
 import type { ThemeColors, ChatUser, ChatMessage } from "../../types";
 
 const CHAT_USERS: ChatUser[] = [
@@ -10,10 +11,10 @@ const CHAT_USERS: ChatUser[] = [
 ];
 
 const GREETINGS = [
-  "Hey everyone! 👋",
+  "Hey everyone!",
   "gg!",
   "nice typing!",
-  "let's race! 🏎️",
+  "let's race!",
   "anyone up for a challenge?",
 ];
 
@@ -27,7 +28,7 @@ export default function Chat({ t, onClose }: ChatProps) {
     {
       id: 1,
       user: CHAT_USERS[0],
-      text: "Welcome to the chat! 🎉",
+      text: "Welcome to the chat!",
       time: new Date().toLocaleTimeString(),
     },
     {
@@ -100,7 +101,10 @@ export default function Chat({ t, onClose }: ChatProps) {
     <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full overflow-hidden flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">💬 Chat</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiMessageCircle />
+            Chat
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">{CHAT_USERS.length + 1} online</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
@@ -114,7 +118,7 @@ export default function Chat({ t, onClose }: ChatProps) {
         style={{ background: t.surface, border: `1px solid ${t.accent}11` }}
       >
         {messages.map((msg) => (
-          <div key={msg.id} className="flex items-start gap-2.5 mb-3">
+          <div key={msg.id} className="flex items-start gap-2.5 mb-3 animate-pop-in">
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
               style={{ background: msg.user.color + "33", color: msg.user.color }}
@@ -159,9 +163,10 @@ export default function Chat({ t, onClose }: ChatProps) {
         <button
           onClick={sendMessage}
           disabled={!input.trim()}
-          className="px-4 py-2.5 rounded-xl text-sm transition-all disabled:opacity-30"
+          className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-30 flex items-center gap-1.5"
           style={{ background: t.accent, color: "#000" }}
         >
+          <FiSend size={14} />
           Send
         </button>
       </div>

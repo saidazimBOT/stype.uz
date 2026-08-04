@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { FiPlay, FiVideo } from "react-icons/fi";
 import type { ReplayRecording, ReplayEvent, ThemeColors } from "../../types";
 
 interface ReplayReturn {
@@ -134,7 +135,10 @@ export default function TypingReplayView({ recordings, t, onClose }: TypingRepla
     return (
       <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">▶️ Replay</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiVideo />
+            Replay
+          </h2>
           <button onClick={stopReplay} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
             ← Stop
           </button>
@@ -187,7 +191,10 @@ export default function TypingReplayView({ recordings, t, onClose }: TypingRepla
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">📹 Typing Replay</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiVideo />
+            Typing Replay
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">{recordings.length} recordings saved</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
@@ -197,7 +204,7 @@ export default function TypingReplayView({ recordings, t, onClose }: TypingRepla
 
       {recordings.length === 0 ? (
         <div className="text-center text-gray-600 py-16">
-          <div className="text-5xl mb-3">📹</div>
+          <FiVideo size={48} className="mx-auto mb-3" />
           <div>No recordings yet. Complete a test to save a replay!</div>
         </div>
       ) : (
@@ -223,10 +230,11 @@ export default function TypingReplayView({ recordings, t, onClose }: TypingRepla
               </div>
               <button
                 onClick={() => playReplay(r)}
-                className="px-4 py-2 rounded-lg text-sm transition-all hover:scale-105"
+                className="px-4 py-2 rounded-lg text-sm transition-all hover:scale-105 flex items-center gap-1.5"
                 style={{ background: t.accent + "22", color: t.accent }}
               >
-                ▶ Play
+                <FiPlay size={14} />
+                Play
               </button>
             </div>
           ))}

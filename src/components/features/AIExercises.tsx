@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { FiCode, FiCpu, FiEdit3, FiHash, FiRefreshCw, FiZap } from "react-icons/fi";
+import type { IconType } from "react-icons";
 import type { ThemeColors } from "../../types";
+
+const CATEGORIES: { id: string; icon: IconType; label: string; desc: string }[] = [
+  { id: "punctuation", icon: FiEdit3, label: "Punctuation", desc: "Practice commas, quotes, and more" },
+  { id: "numbers", icon: FiHash, label: "Numbers", desc: "Type numbers and symbols" },
+  { id: "code", icon: FiCode, label: "Code", desc: "Practice coding syntax" },
+  { id: "hard", icon: FiZap, label: "Hard Words", desc: "Long and complex words" },
+  { id: "reverse", icon: FiRefreshCw, label: "Reverse Text", desc: "Type text backwards" },
+];
 
 const EXERCISE_TEMPLATES: Record<string, string[]> = {
   punctuation: [
@@ -67,7 +77,10 @@ export default function AIExercises({ t, onClose, onSelectText }: AIExercisesPro
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">🤖 AI Exercises</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiCpu />
+            AI Exercises
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">Practice specific skills</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
@@ -100,13 +113,7 @@ export default function AIExercises({ t, onClose, onSelectText }: AIExercisesPro
       <div className="mb-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">Focus Area</div>
         <div className="grid grid-cols-2 gap-2">
-          {[
-            { id: "punctuation", icon: "📝", label: "Punctuation", desc: "Practice commas, quotes, and more" },
-            { id: "numbers", icon: "🔢", label: "Numbers", desc: "Type numbers and symbols" },
-            { id: "code", icon: "💻", label: "Code", desc: "Practice coding syntax" },
-            { id: "hard", icon: "🔥", label: "Hard Words", desc: "Long and complex words" },
-            { id: "reverse", icon: "🔄", label: "Reverse Text", desc: "Type text backwards" },
-          ].map((c) => (
+          {CATEGORIES.map((c) => (
             <button
               key={c.id}
               onClick={() => setCategory(c.id)}
@@ -117,7 +124,7 @@ export default function AIExercises({ t, onClose, onSelectText }: AIExercisesPro
               }}
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">{c.icon}</span>
+                <c.icon size={18} style={{ color: t.accent }} />
                 <span className="text-sm font-medium text-white">{c.label}</span>
               </div>
               <div className="text-xs text-gray-500">{c.desc}</div>
@@ -129,10 +136,11 @@ export default function AIExercises({ t, onClose, onSelectText }: AIExercisesPro
       {/* Generate */}
       <button
         onClick={generateExercise}
-        className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02]"
+        className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
         style={{ background: t.accent, color: "#000" }}
       >
-        🤖 Generate Exercise
+        <FiCpu size={16} />
+        Generate Exercise
       </button>
 
       <p className="text-xs text-gray-600 text-center mt-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { GiSnake } from "react-icons/gi";
 import type { ThemeColors } from "../../types";
 
 interface SnakeGameProps {
@@ -156,7 +157,7 @@ export default function SnakeGame({ t }: SnakeGameProps) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: SC * SZ }}>
-        <span className="text-gray-400 text-sm">🐍 Snake</span>
+        <span className="text-gray-400 text-sm flex items-center gap-1.5"><GiSnake size={14} /> Snake</span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
       <canvas

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { FaPuzzlePiece } from "react-icons/fa6";
 import type { ThemeColors } from "../../types";
 
 interface TetrisGameProps {
@@ -198,7 +199,7 @@ export default function TetrisGame({ t }: TetrisGameProps) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: TW * TC }}>
-        <span className="text-gray-400 text-sm">🧩 Tetris</span>
+        <span className="text-gray-400 text-sm flex items-center gap-1.5"><FaPuzzlePiece size={14} /> Tetris</span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
       <canvas

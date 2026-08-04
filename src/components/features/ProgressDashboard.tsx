@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { FiTrendingUp } from "react-icons/fi";
 import type { ThemeColors, TestResult } from "../../types";
 
 interface ProgressDashboardProps {
@@ -26,7 +27,10 @@ export default function ProgressDashboard({ t, onClose, history }: ProgressDashb
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">📈 Progress Dashboard</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiTrendingUp />
+            Progress Dashboard
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">Track your typing improvement over time</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
@@ -36,7 +40,7 @@ export default function ProgressDashboard({ t, onClose, history }: ProgressDashb
 
       {!stats ? (
         <div className="text-center text-gray-600 py-16">
-          <div className="text-5xl mb-3">📈</div>
+          <FiTrendingUp size={48} className="mx-auto mb-3" />
           <div>No data yet. Complete some tests to see your progress!</div>
         </div>
       ) : (

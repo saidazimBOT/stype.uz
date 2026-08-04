@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { FiBookOpen, FiEdit3, FiSave, FiUpload, FiX } from "react-icons/fi";
 import type { ThemeColors } from "../../types";
 
 interface SavedText {
@@ -74,7 +75,10 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">📚 Custom Text</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiBookOpen />
+            Custom Text
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {savedTexts.length} saved texts
           </p>
@@ -87,8 +91,8 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
       {/* Import method tabs */}
       <div className="flex gap-2 mb-4">
         {[
-          { id: "type" as const, label: "✏️ Type" },
-          { id: "file" as const, label: "📁 File" },
+          { id: "type" as const, label: (<><FiEdit3 className="inline-block mr-1" /> Type</>) },
+          { id: "file" as const, label: (<><FiUpload className="inline-block mr-1" /> File</>) },
         ].map((m) => (
           <button
             key={m.id}
@@ -138,10 +142,11 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
             <button
               onClick={saveText}
               disabled={!text.trim()}
-              className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-30"
+              className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-30 flex items-center gap-1.5"
               style={{ background: t.accent, color: "#000" }}
             >
-              💾 Save Text
+              <FiSave size={14} />
+              Save Text
             </button>
           </div>
         </div>
@@ -162,7 +167,7 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
               border: `2px dashed ${t.accent}44`,
             }}
           >
-            <div className="text-4xl mb-2">📁</div>
+            <FiUpload size={38} className="mx-auto mb-2" />
             <div className="text-sm text-gray-400">Click to upload a text file</div>
             <div className="text-xs text-gray-600 mt-1">Supports .txt, .md, .csv</div>
           </button>
@@ -178,10 +183,11 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
               </div>
               <button
                 onClick={saveText}
-                className="mt-2 px-4 py-2 rounded-xl text-sm"
+                className="mt-2 px-4 py-2 rounded-xl text-sm flex items-center gap-1.5"
                 style={{ background: t.accent, color: "#000" }}
               >
-                💾 Save
+                <FiSave size={14} />
+                Save
               </button>
             </div>
           )}
@@ -216,9 +222,9 @@ export default function CustomTextImport({ t, onClose, onImportText }: CustomTex
                   </button>
                   <button
                     onClick={() => deleteText(st.id)}
-                    className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-gray-500"
+                    className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-gray-500 flex items-center"
                   >
-                    ✕
+                    <FiX size={12} />
                   </button>
                 </div>
               </div>

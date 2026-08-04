@@ -1,5 +1,6 @@
 "use client";
 
+import { FiHeart, FiList, FiPlay, FiX } from "react-icons/fi";
 import type { ThemeColors, TestResult } from "../../types";
 
 interface HistoryViewProps {
@@ -16,7 +17,10 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">📋 History</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiList />
+            History
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {history.length} test{history.length !== 1 ? "s" : ""} completed
           </p>
@@ -28,8 +32,8 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
 
       {favorites.length > 0 && (
         <div className="mb-6">
-          <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">
-            Saved Texts ❤️
+          <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            Saved Texts <FiHeart size={11} className="text-red-400" />
           </div>
           <div className="flex flex-col gap-2">
             {favorites.map((txt, i) => (
@@ -54,9 +58,9 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
                 </span>
                 <button
                   onClick={() => onFavorite(txt)}
-                  className="text-red-400 hover:text-red-300 text-lg flex-shrink-0"
+                  className="text-red-400 hover:text-red-300 flex-shrink-0"
                 >
-                  ✕
+                  <FiX size={16} />
                 </button>
               </div>
             ))}
@@ -66,7 +70,7 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
 
       {history.length === 0 ? (
         <div className="text-center text-gray-600 py-16">
-          <div className="text-5xl mb-3">📋</div>
+          <FiList size={48} className="mx-auto mb-3" />
           <div>No tests yet. Start typing!</div>
         </div>
       ) : (
@@ -108,10 +112,10 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
               {showReplay && h.recordingId != null && (
                 <button
                   onClick={() => showReplay(h.recordingId!)}
-                  className="text-xs px-2 py-1 rounded hover:bg-white/5"
+                  className="text-xs px-2 py-1 rounded hover:bg-white/5 flex items-center justify-center"
                   style={{ color: t.accent }}
                 >
-                  ▶
+                  <FiPlay size={12} />
                 </button>
               )}
             </div>

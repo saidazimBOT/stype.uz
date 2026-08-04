@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { FiAward } from "react-icons/fi";
+import { FaMedal } from "react-icons/fa6";
 import { LEADERBOARD } from "../../data/leaderboard";
 import type { ThemeColors, CountryStats } from "../../types";
 
@@ -46,7 +48,10 @@ export default function CountryRanking({ t, onClose }: CountryRankingProps) {
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">🏅 Country Rankings</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiAward />
+            Country Rankings
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {countryStats.length} countries represented
           </p>
@@ -80,7 +85,7 @@ export default function CountryRanking({ t, onClose }: CountryRankingProps) {
       {/* Country list */}
       <div className="flex flex-col gap-2">
         {countryStats.map((country, i) => {
-          const medals = ["🥇", "🥈", "🥉"];
+          const medalColors = ["#fbbf24", "#cbd5e1", "#d97706"];
           return (
             <div
               key={country.name}
@@ -92,7 +97,11 @@ export default function CountryRanking({ t, onClose }: CountryRankingProps) {
             >
               <div className="flex items-center gap-4">
                 <div className="text-center w-8">
-                  <div className="text-lg">{i < 3 ? medals[i] : `${i + 1}`}</div>
+                  {i < 3 ? (
+                    <FaMedal size={20} style={{ color: medalColors[i] }} className="mx-auto" />
+                  ) : (
+                    <div className="text-lg">{i + 1}</div>
+                  )}
                 </div>
                 <div className="text-3xl">{country.flag}</div>
                 <div className="flex-1">

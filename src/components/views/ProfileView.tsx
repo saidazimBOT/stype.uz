@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import { FiAward, FiGlobe, FiMoon, FiSmile, FiStar, FiSun, FiTarget, FiUser, FiZap } from "react-icons/fi";
+import { FaFire, FaGem, FaTrophy } from "react-icons/fa6";
+import type { IconType } from "react-icons";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import type { ThemeColors, TestResult } from "../../types";
 
@@ -10,22 +13,22 @@ interface ProfileViewProps {
   history: TestResult[];
 }
 
-const BADGES_DB = [
-  { icon: "⚡", name: "Speed Demon", desc: "100+ WPM", check: (h: TestResult[]) => Math.max(...h.map((t) => t.wpm), 0) >= 100 },
-  { icon: "🎯", name: "Sharpshooter", desc: "98%+ accuracy", check: (h: TestResult[]) => h.length > 0 && Math.round(h.reduce((a, t) => a + t.accuracy, 0) / h.length) >= 98 },
-  { icon: "🔥", name: "On Fire", desc: "5 tests done", check: (h: TestResult[]) => h.length >= 5 },
-  { icon: "🏆", name: "Champion", desc: "150+ WPM", check: (h: TestResult[]) => Math.max(...h.map((t) => t.wpm), 0) >= 150 },
-  { icon: "💎", name: "Diamond", desc: "200+ WPM", check: (h: TestResult[]) => Math.max(...h.map((t) => t.wpm), 0) >= 200 },
-  { icon: "🌙", name: "Night Owl", desc: "10 tests done", check: (h: TestResult[]) => h.length >= 10 },
-  { icon: "☀️", name: "Daily Player", desc: "3 day streak", check: () => {
+const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestResult[]) => boolean }[] = [
+  { icon: FiZap, name: "Speed Demon", desc: "100+ WPM", check: (h: TestResult[]) => Math.max(...h.map((t) => t.wpm), 0) >= 100 },
+  { icon: FiTarget, name: "Sharpshooter", desc: "98%+ accuracy", check: (h: TestResult[]) => h.length > 0 && Math.round(h.reduce((a, t) => a + t.accuracy, 0) / h.length) >= 98 },
+  { icon: FaFire, name: "On Fire", desc: "5 tests done", check: (h: TestResult[]) => h.length >= 5 },
+  { icon: FaTrophy, name: "Champion", desc: "150+ WPM", check: (h: TestResult[]) => Math.max(...h.map((t) => t.wpm), 0) >= 150 },
+  { icon: FaGem, name: "Diamond", desc: "200+ WPM", check: (h: TestResult[]) => Math.max(...h.map((t) => t.wpm), 0) >= 200 },
+  { icon: FiMoon, name: "Night Owl", desc: "10 tests done", check: (h: TestResult[]) => h.length >= 10 },
+  { icon: FiSun, name: "Daily Player", desc: "3 day streak", check: () => {
     try { const d = JSON.parse(localStorage.getItem("typeuz_daily") || "{}"); return (d.streak || 0) >= 3; }
     catch { return false; }
   }},
-  { icon: "⭐", name: "Week Warrior", desc: "7 day streak", check: () => {
+  { icon: FiStar, name: "Week Warrior", desc: "7 day streak", check: () => {
     try { const d = JSON.parse(localStorage.getItem("typeuz_daily") || "{}"); return (d.streak || 0) >= 7; }
     catch { return false; }
   }},
-  { icon: "🌐", name: "Polyglot", desc: "3 languages", check: (h: TestResult[]) => new Set(h.map((t) => t.lang)).size >= 3 },
+  { icon: FiGlobe, name: "Polyglot", desc: "3 languages", check: (h: TestResult[]) => new Set(h.map((t) => t.lang)).size >= 3 },
 ];
 
 export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
@@ -49,7 +52,10 @@ export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
   return (
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-white">👤 Profile</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <FiUser />
+          Profile
+        </h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
         </button>
@@ -69,9 +75,7 @@ export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
               boxShadow: `0 0 20px ${t.accent}33`,
             }}
           >
-            <div className="flex flex-col items-center">
-              <span className="text-lg">😊</span>
-            </div>
+            <FiSmile size={30} className="mx-auto" />
           </div>
           <div
             className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs animate-bounce"
@@ -82,8 +86,9 @@ export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
         </div>
         <div className="flex-1">
           <div className="text-xl font-bold text-white">Typist #888</div>
-          <div className="text-sm mb-2" style={{ color: t.accent }}>
-            🏅 Precision Pro · {xp.toLocaleString()} XP
+          <div className="text-sm mb-2 flex items-center gap-1.5" style={{ color: t.accent }}>
+            <FiAward size={14} />
+            Precision Pro · {xp.toLocaleString()} XP
           </div>
           <div className="flex gap-2 flex-wrap">
             <span
@@ -142,7 +147,7 @@ export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
               opacity: b.earned ? 1 : 0.4,
             }}
           >
-            <span className="text-2xl">{b.icon}</span>
+            <b.icon size={24} className="flex-shrink-0" />
             <div>
               <div className="text-xs font-medium text-white">{b.name}</div>
               <div className="text-xs text-gray-500">{b.desc}</div>

@@ -1,5 +1,9 @@
 "use client";
 
+import { FiCheckCircle, FiMoon, FiStar, FiSun, FiZap } from "react-icons/fi";
+import { FaCrown } from "react-icons/fa6";
+import { GiSparkles } from "react-icons/gi";
+import type { IconType } from "react-icons";
 import type { ThemeColors, DailyState } from "../../types";
 
 interface DailyLoginViewProps {
@@ -12,14 +16,14 @@ interface DailyLoginViewProps {
 }
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
-const REWARDS = [
-  { day: 1, xp: 50, coins: 10, icon: "☀️" },
-  { day: 2, xp: 75, coins: 15, icon: "🌟" },
-  { day: 3, xp: 100, coins: 25, icon: "🔥", bonus: "☀️" },
-  { day: 4, xp: 125, coins: 30, icon: "💫" },
-  { day: 5, xp: 150, coins: 40, icon: "⚡", bonus: "⚡" },
-  { day: 6, xp: 175, coins: 45, icon: "🌙" },
-  { day: 7, xp: 500, coins: 100, icon: "👑", bonus: "⭐" },
+const REWARDS: { day: number; xp: number; coins: number; icon: IconType; bonus?: IconType }[] = [
+  { day: 1, xp: 50, coins: 10, icon: FiSun },
+  { day: 2, xp: 75, coins: 15, icon: FiStar },
+  { day: 3, xp: 100, coins: 25, icon: FiZap, bonus: FiSun },
+  { day: 4, xp: 125, coins: 30, icon: GiSparkles },
+  { day: 5, xp: 150, coins: 40, icon: FiZap, bonus: FiZap },
+  { day: 6, xp: 175, coins: 45, icon: FiMoon },
+  { day: 7, xp: 500, coins: 100, icon: FaCrown, bonus: FiStar },
 ];
 
 export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProps) {
@@ -30,7 +34,10 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">🔥 Daily Login</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiZap />
+            Daily Login
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {totalLogins} total logins · {streak} day streak
           </p>
@@ -54,7 +61,7 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
           <div className="absolute bottom-0 right-1/4 w-24 h-24 rounded-full bg-white blur-2xl animate-pulse" />
         </div>
         <div className="relative">
-          <div className="text-5xl mb-2">🔥</div>
+          <FiZap size={44} className="mx-auto mb-2" style={{ color: t.accent }} />
           <div className="text-3xl font-bold text-white mb-1">{streak}-Day Streak!</div>
           <p className="text-sm text-gray-300">
             {claimedToday ? "Come back tomorrow for more rewards!" : "Login today to claim your reward!"}
@@ -103,13 +110,17 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
                 opacity: isUnlocked ? 1 : 0.4,
               }}
             >
-              <div className="text-base sm:text-xl mb-0.5">{reward.icon}</div>
+              <div className="flex justify-center mb-0.5">
+                <reward.icon size={18} />
+              </div>
               <div className="text-[10px] font-bold" style={{ color: t.accent }}>
                 +{reward.xp}
               </div>
               <div className="text-[8px] text-gray-500">XP</div>
               {reward.bonus && (
-                <div className="text-xs mt-0.5">{reward.bonus}</div>
+                <div className="flex justify-center mt-0.5">
+                  <reward.bonus size={12} />
+                </div>
               )}
               <div className="text-[8px] text-gray-600 mt-0.5">Day {reward.day}</div>
             </div>
@@ -121,10 +132,14 @@ export default function DailyLoginView({ t, onClose, daily }: DailyLoginViewProp
       <button
         onClick={claimReward}
         disabled={claimedToday}
-        className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ background: t.accent, color: "#000" }}
       >
-        {claimedToday ? "✅ Claimed Today" : `🔥 Claim Day ${streak} Reward`}
+        {claimedToday ? (
+          <><FiCheckCircle size={16} /> Claimed Today</>
+        ) : (
+          <><FiZap size={16} /> Claim Day {streak} Reward</>
+        )}
       </button>
 
       {/* Info */}

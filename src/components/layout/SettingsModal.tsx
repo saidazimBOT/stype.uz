@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
+import { FiGlobe, FiMonitor, FiSettings, FiVolume2, FiZap } from "react-icons/fi";
+import { FaKeyboard, FaPalette } from "react-icons/fa6";
 import { THEME_LIST, THEME_GROUPS } from "../../data/themes";
 import { LANG_LABELS, LANG_GROUPS } from "../../data/texts";
 import type { ThemeColors } from "../../types";
@@ -40,16 +43,19 @@ export default function SettingsModal({
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState("themes");
 
-  const tabs = [
-    { id: "themes", label: "🎨 Themes" },
-    { id: "language", label: "🌐 Language" },
-    { id: "display", label: "🖥️ Display" },
+  const tabs: { id: string; label: ReactNode }[] = [
+    { id: "themes", label: (<><FaPalette className="inline-block mr-1" /> Themes</>) },
+    { id: "language", label: (<><FiGlobe className="inline-block mr-1" /> Language</>) },
+    { id: "display", label: (<><FiMonitor className="inline-block mr-1" /> Display</>) },
   ];
 
   return (
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">⚙️ Settings</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <FiSettings />
+          Settings
+        </h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
         </button>
@@ -205,7 +211,10 @@ export default function SettingsModal({
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: t.surface }}>
               <div>
-                <div className="text-sm text-white">🔊 Keyboard Sounds</div>
+                <div className="text-sm text-white flex items-center gap-1.5">
+                  <FiVolume2 size={14} className="text-gray-400" />
+                  Keyboard Sounds
+                </div>
                 <div className="text-xs text-gray-500">Play click sounds when typing</div>
               </div>
               <button
@@ -223,7 +232,10 @@ export default function SettingsModal({
 
             <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: t.surface }}>
               <div>
-                <div className="text-sm text-white">⌨️ Keyboard Visualizer</div>
+                <div className="text-sm text-white flex items-center gap-1.5">
+                  <FaKeyboard size={14} className="text-gray-400" />
+                  Keyboard Visualizer
+                </div>
                 <div className="text-xs text-gray-500">Show virtual keyboard</div>
               </div>
               <button
@@ -241,7 +253,10 @@ export default function SettingsModal({
 
             <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: t.surface }}>
               <div>
-                <div className="text-sm text-white">🔥 Key Heatmap</div>
+                <div className="text-sm text-white flex items-center gap-1.5">
+                  <FiZap size={14} className="text-gray-400" />
+                  Key Heatmap
+                </div>
                 <div className="text-xs text-gray-500">Show most used keys in color</div>
               </div>
               <button

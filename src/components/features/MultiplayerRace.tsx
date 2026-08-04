@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { FiActivity, FiFlag, FiRefreshCw, FiSend } from "react-icons/fi";
+import { FaMedal, FaTrophy } from "react-icons/fa6";
 import type { ThemeColors, BotRacer, RaceState } from "../../types";
 
 const BOT_NAMES = [
@@ -163,7 +165,10 @@ export default function MultiplayerRace({ t, onClose, currentWpm, isPlaying }: M
   return (
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">🚀 Multiplayer Race</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <FiSend />
+          Multiplayer Race
+        </h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
         </button>
@@ -171,16 +176,17 @@ export default function MultiplayerRace({ t, onClose, currentWpm, isPlaying }: M
 
       {raceState === "idle" && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-6">🏁</div>
+          <FiFlag size={52} className="mx-auto mb-6" style={{ color: t.accent }} />
           <p className="text-gray-400 mb-6">
             Race against AI opponents! Type faster than them to win!
           </p>
           <button
             onClick={startRace}
-            className="px-8 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
+            className="px-8 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 flex items-center gap-2 mx-auto"
             style={{ background: t.accent, color: "#000" }}
           >
-            🏎️ Start Race!
+            <FiSend size={16} />
+            Start Race!
           </button>
         </div>
       )}
@@ -245,7 +251,9 @@ export default function MultiplayerRace({ t, onClose, currentWpm, isPlaying }: M
                     }}
                   />
                   {position === 1 && playerProgress > 0 && (
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs">🏆</div>
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 text-xs">
+                      <FaTrophy size={12} className="text-yellow-400" />
+                    </div>
                   )}
                 </div>
               </div>
@@ -269,7 +277,15 @@ export default function MultiplayerRace({ t, onClose, currentWpm, isPlaying }: M
               className="p-5 rounded-xl text-center"
               style={{ background: t.surface, border: `2px solid ${t.accent}` }}
             >
-              <div className="text-4xl mb-2">{position === 1 ? "🏆" : position <= 3 ? "🥉" : "💪"}</div>
+              <div className="flex justify-center mb-2" style={{ color: t.accent }}>
+                {position === 1 ? (
+                  <FaTrophy size={36} className="text-yellow-400" />
+                ) : position <= 3 ? (
+                  <FaMedal size={36} />
+                ) : (
+                  <FiActivity size={36} />
+                )}
+              </div>
               <div className="text-xl font-bold text-white mb-1">
                 {position === 1 ? "You Win!" : position <= 3 ? "Top 3!" : "Good Effort!"}
               </div>
@@ -278,10 +294,11 @@ export default function MultiplayerRace({ t, onClose, currentWpm, isPlaying }: M
               </div>
               <button
                 onClick={startRace}
-                className="mt-4 px-6 py-2 rounded-xl text-sm transition-all hover:scale-105"
+                className="mt-4 px-6 py-2 rounded-xl text-sm transition-all hover:scale-105 flex items-center gap-2 mx-auto"
                 style={{ background: t.accent, color: "#000" }}
               >
-                🔄 Race Again
+                <FiRefreshCw size={14} />
+                Race Again
               </button>
             </div>
           )}

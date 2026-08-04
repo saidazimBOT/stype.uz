@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { FiCheckCircle, FiTarget } from "react-icons/fi";
 import { MISSIONS } from "../../data/missions";
 import type { ActiveMission, ThemeColors } from "../../types";
 
@@ -81,7 +82,10 @@ export default function WeeklyMissionsView({ missions, xp, t, onClose }: WeeklyM
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">🎯 Missions</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiTarget />
+            Missions
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             Complete challenges to earn badges and XP
           </p>
@@ -152,13 +156,16 @@ export default function WeeklyMissionsView({ missions, xp, t, onClose }: WeeklyM
               opacity: m.completed ? 1 : 0.9,
             }}
           >
-            <div className="text-2xl w-10 text-center">{m.icon}</div>
+            <div className="w-10 text-center flex justify-center flex-shrink-0">
+              <m.icon size={22} />
+            </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-white">{m.title}</span>
                 {m.completed && (
-                  <span className="text-xs" style={{ color: t.accent }}>
-                    ✅ Done
+                  <span className="text-xs flex items-center gap-1" style={{ color: t.accent }}>
+                    <FiCheckCircle size={12} />
+                    Done
                   </span>
                 )}
               </div>
@@ -177,7 +184,7 @@ export default function WeeklyMissionsView({ missions, xp, t, onClose }: WeeklyM
               </div>
             </div>
             {m.reward.badge && (
-              <div className="text-xl opacity-60">{m.reward.badge}</div>
+              <m.reward.badge size={20} className="opacity-60 flex-shrink-0" />
             )}
           </div>
         ))}

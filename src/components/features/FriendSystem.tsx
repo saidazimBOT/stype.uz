@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FiUsers, FiX } from "react-icons/fi";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import type { ThemeColors, FriendUser, FriendRequest } from "../../types";
 
@@ -56,7 +57,10 @@ export default function FriendSystem({ t, onClose }: FriendSystemProps) {
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">👥 Friends</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FiUsers />
+            Friends
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">{friends.length} friends</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
@@ -120,9 +124,9 @@ export default function FriendSystem({ t, onClose }: FriendSystemProps) {
                   </div>
                   <button
                     onClick={() => removeFriend(f.name)}
-                    className="text-xs px-3 py-1 rounded-lg hover:bg-white/5 text-gray-500"
+                    className="text-xs px-3 py-1 rounded-lg hover:bg-white/5 text-gray-500 flex items-center"
                   >
-                    ✕
+                    <FiX size={13} />
                   </button>
                 </div>
               ))}
@@ -170,9 +174,9 @@ export default function FriendSystem({ t, onClose }: FriendSystemProps) {
                   </div>
                   <button
                     onClick={() => removeFriend(f.name)}
-                    className="text-xs px-3 py-1 rounded-lg hover:bg-white/5 text-gray-500"
+                    className="text-xs px-3 py-1 rounded-lg hover:bg-white/5 text-gray-500 flex items-center"
                   >
-                    ✕
+                    <FiX size={13} />
                   </button>
                 </div>
               ))}

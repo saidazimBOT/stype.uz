@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FaMedal, FaTrophy } from "react-icons/fa6";
 import { LEADERBOARD } from "../../data/leaderboard";
 import type { ThemeColors } from "../../types";
 
@@ -11,7 +12,7 @@ interface LeaderboardViewProps {
 
 export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
   const [filter, setFilter] = useState("all");
-  const medals = ["🥇", "🥈", "🥉"];
+  const medalColors = ["#fbbf24", "#cbd5e1", "#d97706"];
   const filtered = filter === "all" ? LEADERBOARD : LEADERBOARD.filter((p) => p.lang === filter);
 
   const langFilters = ["all", ...new Set(LEADERBOARD.map((p) => p.lang))];
@@ -20,7 +21,10 @@ export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">🏆 Global Leaderboard</h2>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <FaTrophy />
+            Global Leaderboard
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">Top typists worldwide</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
@@ -63,8 +67,12 @@ export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
               border: i < 3 ? `1px solid ${t.accent}22` : "1px solid transparent",
             }}
           >
-            <div className="text-center text-lg">
-              {i < 3 ? medals[i] : <span className="text-gray-600 text-sm">{p.rank}</span>}
+            <div className="text-center">
+              {i < 3 ? (
+                <FaMedal size={20} style={{ color: medalColors[i] }} className="mx-auto" />
+              ) : (
+                <span className="text-gray-600 text-sm">{p.rank}</span>
+              )}
             </div>
             <div className="flex items-center gap-2.5">
               <div

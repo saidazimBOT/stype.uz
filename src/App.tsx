@@ -33,6 +33,15 @@ import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import AppLogo from "./components/AppLogo";
 
+// SVG icons (stiker/emoji o'rniga)
+import {
+  FiActivity, FiAward, FiBookOpen, FiCpu, FiGrid, FiHeart, FiInfo, FiList,
+  FiMap, FiMessageCircle, FiSend, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
+  FiType, FiUser, FiUsers, FiVideo, FiZap,
+} from "react-icons/fi";
+import { FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
+import type { IconType } from "react-icons";
+
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
 // Bu React mount bo'lishidan OLDIN ishlaydi, shuning uchun useLocalStorage
 // hook'i "light" ni o'qib ololmaydi.
@@ -125,12 +134,10 @@ export default function App() {
   // ── TEXT MANAGEMENT ──────────────────────────────────────────────────
   const newText = useCallback(
     (customText?: string) => {
-      if (customText) {
-        setText(customText);
-      } else {
-        const pool = TEXTS[lang] || TEXTS.en;
-        setText(pool[Math.floor(Math.random() * pool.length)]);
-      }
+      // Barcha matnlar KICHIK harflarda bo'lsin — boshida/o'rtasida katta harf yo'q
+      const pool = TEXTS[lang] || TEXTS.en;
+      const raw = customText ?? pool[Math.floor(Math.random() * pool.length)];
+      setText(raw.toLowerCase());
       setTyped("");
       setCursor(0);
       setStarted(false);
@@ -226,13 +233,14 @@ export default function App() {
         return;
       }
 
-      const k = e.key;
-      if (k === "Tab") {
+      // Kiritilgan tugmani ham kichik harfga aylantiramiz — matn bilan mos tushishi uchun
+      const k = e.key.toLowerCase();
+      if (k === "tab") {
         e.preventDefault();
         newText();
         return;
       }
-      if (k === "Escape") {
+      if (k === "escape") {
         setShowSettings(false);
         return;
       }
@@ -323,59 +331,71 @@ export default function App() {
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── COMPUTED ────────────────────────────────────────────────────────
+  // Joriy so'zda xato bo'lsa — so'zning yozilmagan harflari ham qizil ko'rinadi (Monkeytype uslubi)
+  const curStart = text.lastIndexOf(" ", cursor) + 1;
+  const nextSpace = text.indexOf(" ", cursor);
+  const curEnd = nextSpace === -1 ? text.length : nextSpace;
+  let wordHasError = false;
+  for (let w = curStart; w < Math.min(curEnd, typed.length); w++) {
+    if (typed[w] !== text[w]) {
+      wordHasError = true;
+      break;
+    }
+  }
+
   const rendered = text.split("").map((ch, i) => {
-    let cls = "text-gray-600";
-    if (i < cursor) cls = "text-white";
-    if (i < typed.length && typed[i] !== text[i]) cls = "text-red-400 bg-red-900/30 rounded";
+    let cls = "relative text-gray-600";
+    if (i < cursor) cls = "relative text-white";
+    if (i < typed.length && typed[i] !== text[i]) {
+      cls = "relative text-red-400 bg-red-900/30 rounded err-char";
+    } else if (wordHasError && i >= cursor && i < curEnd) {
+      cls = "relative text-red-400/70";
+    }
     return (
-      <span
-        key={i}
-        className={cls}
-        style={
-          i === cursor
-            ? {
-                color: t.accent,
-              }
-            : {}
-        }
-      >
+      <span key={i} className={cls}>
+        {i === cursor && <span className="caret-bar" style={{ background: t.accent }} />}
         {ch}
       </span>
     );
   });
 
   // ── NAVIGATION ──────────────────────────────────────────────────────
-  const navItems = [
-    { id: "type", icon: "⌨️", label: "Type" },
-    { id: "leaderboard", icon: "🏆", label: "Leaderboard" },
-    { id: "countryrank", icon: "🏅", label: "Countries" },
-    { id: "profile", icon: "👤", label: "Profile" },
-    { id: "history", icon: "📋", label: "History" },
-    { id: "dashboard", icon: "📈", label: "Progress" },
-    { id: "missions", icon: "🎯", label: "Missions" },
-    { id: "daily", icon: "🔥", label: "Daily" },
-    { id: "seasonal", icon: "🎖️", label: "Events" },
-    { id: "multiplyer", icon: "🚀", label: "Race" },
-    { id: "friends", icon: "👥", label: "Friends" },
-    { id: "chat", icon: "💬", label: "Chat" },
-    { id: "ai", icon: "🤖", label: "AI" },
-    { id: "custom", icon: "📚", label: "Texts" },
-    { id: "replay", icon: "📹", label: "Replay" },
-    { id: "games", icon: "🎮", label: "Games" },
-    { id: "about", icon: "ℹ️", label: "About" },
+  const navItems: { id: string; icon: IconType; label: string }[] = [
+    { id: "type", icon: FiType, label: "Type" },
+    { id: "leaderboard", icon: FaTrophy, label: "Leaderboard" },
+    { id: "countryrank", icon: FiMap, label: "Countries" },
+    { id: "profile", icon: FiUser, label: "Profile" },
+    { id: "history", icon: FiList, label: "History" },
+    { id: "dashboard", icon: FiTrendingUp, label: "Progress" },
+    { id: "missions", icon: FiTarget, label: "Missions" },
+    { id: "daily", icon: FiZap, label: "Daily" },
+    { id: "seasonal", icon: FaMedal, label: "Events" },
+    { id: "multiplyer", icon: FiSend, label: "Race" },
+    { id: "friends", icon: FiUsers, label: "Friends" },
+    { id: "chat", icon: FiMessageCircle, label: "Chat" },
+    { id: "ai", icon: FiCpu, label: "AI" },
+    { id: "custom", icon: FiBookOpen, label: "Texts" },
+    { id: "replay", icon: FiVideo, label: "Replay" },
+    { id: "games", icon: FiGrid, label: "Games" },
+    { id: "about", icon: FiInfo, label: "About" },
   ];
 
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
     <div
       suppressHydrationWarning
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col isolate"
       style={{
         background: t.bg,
         color: t.color || "#e5e7eb",
         fontFamily: "'Inter', sans-serif",
       }}
     >
+      {/* Ambient animated background */}
+      <div className="aurora-layer" aria-hidden>
+        <div className="aurora" />
+      </div>
+
       {/* Particles */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
         {particles.map((p) => (
@@ -452,7 +472,7 @@ export default function App() {
                 className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all hidden sm:block"
                 title="Keyboard Visualizer"
               >
-                ⌨
+                <FaKeyboard size={16} />
               </button>
               <button
                 onClick={() => newText()}
@@ -492,7 +512,7 @@ export default function App() {
               }}
               title={item.label}
             >
-              <span className="text-base md:text-base">{item.icon}</span>
+              <item.icon size={16} className="flex-shrink-0" />
               <span className="hidden md:block">{item.label}</span>
             </button>
           ))}
@@ -549,9 +569,9 @@ export default function App() {
           ) : view === "chat" ? (
             <Chat t={t} onClose={() => setView("type")} />
           ) : view === "ai" ? (
-            <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt); setView("type"); }} />
+            <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "custom" ? (
-            <CustomTextImport t={t} onClose={() => setView("type")} onImportText={(txt) => { setText(txt); setView("type"); }} />
+            <CustomTextImport t={t} onClose={() => setView("type")} onImportText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "replay" ? (
             <TypingReplayView t={t} onClose={() => setView("type")} recordings={recordings} />
           ) : view === "games" ? (
@@ -619,7 +639,7 @@ export default function App() {
                   className="absolute -right-8 md:-right-10 top-0 p-2 rounded-lg transition-all hover:scale-110"
                   style={{ color: favorites.includes(text) ? t.accent : "#4b5563" }}
                 >
-                  {favorites.includes(text) ? "❤️" : "🤍"}
+                  {favorites.includes(text) ? <FiHeart size={18} fill="currentColor" /> : <FiHeart size={18} />}
                 </button>
               </div>
 
@@ -633,12 +653,15 @@ export default function App() {
               {/* Finished state */}
               {finished && (
                 <div className="flex flex-col items-center gap-4 animate-fade-in">
-                  <div className="text-2xl font-bold" style={{ color: t.accent }}>
-                    {accuracy >= 95
-                      ? "🎉 Excellent!"
-                      : accuracy >= 80
-                      ? "👍 Good job!"
-                      : "💪 Keep practicing!"}
+                  <div className="flex items-center gap-2 text-2xl font-bold" style={{ color: t.accent }}>
+                    {accuracy >= 95 ? (
+                      <FiStar size={26} fill="currentColor" />
+                    ) : accuracy >= 80 ? (
+                      <FiThumbsUp size={26} />
+                    ) : (
+                      <FiActivity size={26} />
+                    )}
+                    {accuracy >= 95 ? "Excellent!" : accuracy >= 80 ? "Good job!" : "Keep practicing!"}
                   </div>
                   <div className="flex gap-6 text-sm text-gray-400">
                     <span>
@@ -713,10 +736,10 @@ export default function App() {
           </div>
         )}
         <button
-          className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
+          className="w-8 h-8 rounded-full flex items-center justify-center"
           style={{ background: t.accent + "33", color: t.accent }}
         >
-          🎨
+          <FaPalette size={15} />
         </button>
       </div>
     </div>
