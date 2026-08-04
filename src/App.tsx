@@ -31,6 +31,7 @@ import AIExercises from "./components/features/AIExercises";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
+import TelegramPromo from "./components/features/TelegramPromo";
 import AppLogo from "./components/AppLogo";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
@@ -70,6 +71,7 @@ export default function App() {
   const [showKeyboard, setShowKeyboard] = useLocalStorage("typeuz_showkb", false);
   const [showHeatmap, setShowHeatmap] = useLocalStorage("typeuz_heatmap", false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPromo, setShowPromo] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
 
   // Typing state
@@ -107,6 +109,9 @@ export default function App() {
 
   // Theme
   const t: ThemeColors = THEMES[theme] || THEMES.default;
+
+  // Telegram Premium aksiyasi uchun eng yaxshi WPM
+  const bestWpm = history.length ? Math.max(...history.map((h) => h.wpm)) : 0;
 
   // Admin: saytga tashrifni kuzatish
   useVisitTracker(lang, theme);
@@ -526,8 +531,23 @@ export default function App() {
               </button>
             </>
           )}
+          {/* 50 WPM → Telegram Premium aksiyasi */}
           <button
-            onClick={() => setShowSettings((s) => !s)}
+            onClick={() => {
+              setShowPromo((s) => !s);
+              setShowSettings(false);
+            }}
+            className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title="50 WPM → 1 oylik Telegram Premium!"
+          >
+            🏆 <span className="hidden sm:inline">50 WPM</span>
+            <span className="hidden lg:inline">→ Premium</span>
+          </button>
+          <button
+            onClick={() => {
+              setShowSettings((s) => !s);
+              setShowPromo(false);
+            }}
             className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -561,8 +581,11 @@ export default function App() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Settings Modal */}
-          {showSettings ? (
+          {/* Telegram Premium promo */}
+          {showPromo ? (
+            <TelegramPromo t={t} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
+          ) : /* Settings Modal */
+          showSettings ? (
             <SettingsModal
               t={t}
               theme={theme}
