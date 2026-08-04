@@ -641,7 +641,7 @@ export default function App() {
           ) : view === "games" ? (
             <GamesView t={t} onClose={() => setView("type")} />
           ) : view === "about" ? (
-            <AboutView t={t} onClose={() => setView("type")} history={history} />
+            <AboutView t={t} onClose={() => setView("type")} />
           ) : view === "admin" ? (
             <AdminPanel t={t} onClose={() => setView("type")} history={history} xp={xp} />
           ) : view === "type" ? (
@@ -802,24 +802,6 @@ export default function App() {
           <div className="text-gray-500">{LANG_LABELS[lang]} · {xp.toLocaleString()} XP</div>
         </div>
       </div>
-
-      {/* Sayt egasi haqida — quick access to the creator profile */}
-      <button
-        onClick={() => setView("about")}
-        className="fixed bottom-3 left-1/2 -translate-x-1/2 z-30 hidden sm:flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
-        style={{ background: t.surface + "cc", border: `1px solid ${t.accent}33` }}
-        title="Sayt egasi haqida"
-      >
-        <img
-          src="/creator.png"
-          alt="Creator"
-          className="w-6 h-6 rounded-full object-cover border border-white/20"
-          draggable={false}
-        />
-        <span className="text-[11px] font-semibold" style={{ color: t.accent }}>
-          Sayt egasi haqida
-        </span>
-      </button>
 
       {/* Quick theme picker */}
       <div

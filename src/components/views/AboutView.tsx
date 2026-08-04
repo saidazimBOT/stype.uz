@@ -6,17 +6,15 @@ import {
 } from "react-icons/fi";
 import { FaGamepad, FaKeyboard, FaPalette, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
-import type { ThemeColors, TestResult } from "../../types";
+import type { ThemeColors } from "../../types";
 import AppLogo from "../AppLogo";
-import CreatorProfile from "../features/CreatorProfile";
 
 interface AboutViewProps {
   t: ThemeColors;
   onClose: () => void;
-  history?: TestResult[];
 }
 
-export default function AboutView({ t, onClose, history }: AboutViewProps) {
+export default function AboutView({ t, onClose }: AboutViewProps) {
   const features: [IconType, string][] = [
     [FiZap, "Real-time WPM & accuracy"],
     [FiGlobe, "20+ languages: UZ / RU / EN / DE / FR..."],
@@ -49,11 +47,6 @@ export default function AboutView({ t, onClose, history }: AboutViewProps) {
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
         </button>
-      </div>
-
-      {/* Creator studio scene */}
-      <div className="mb-6">
-        <CreatorProfile t={t} history={history} />
       </div>
 
       {/* Brand card */}
