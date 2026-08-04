@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiActivity, FiBarChart2, FiClock, FiEdit3, FiEye, FiLock, FiLogOut,
   FiMonitor, FiSend, FiShield, FiSmartphone, FiTrash2, FiUser, FiUsers,
@@ -40,6 +40,25 @@ interface VisitLogRow {
   lang: string;
   theme: string;
   screen: string;
+  referrer: string;
+  country: string;
+  city: string;
+  flag: string;
+  duration: number;
+}
+
+interface CountryBreakdown {
+  flag: string;
+  name: string;
+  count: number;
+}
+
+interface LiveRow {
+  id: string;
+  flag: string;
+  place: string;
+  device: string;
+  minutesAgo: number;
 }
 
 const DEVICE_ICONS: Record<string, typeof FiMonitor> = {
@@ -47,6 +66,21 @@ const DEVICE_ICONS: Record<string, typeof FiMonitor> = {
   Tablet: FiSmartphone,
   Desktop: FiMonitor,
 };
+
+function referrerHost(url: string): string {
+  if (!url) return "—";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "—";
+  }
+}
+
+function formatDuration(sec: number): string {
+  if (!sec || sec < 0) return "—";
+  if (sec < 60) return `${sec} sek`;
+  return `${Math.floor(sec / 60)} daq`;
+}
 
 export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
   const [loggedIn, setLoggedIn] = useLocalStorage(SESSION_KEY, false);
@@ -92,6 +126,11 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
       lang: v.lang.toUpperCase(),
       theme: v.theme,
       screen: v.screen,
+      referrer: v.referrer ?? "",
+      country: v.country ?? "",
+      city: v.city ?? "",
+      flag: v.flag ?? "🌍",
+      duration: v.duration ?? 0,
     }));
     const typingRaw = readTypingLog();
     const typingRows = typingRaw.map((ty) => ({
@@ -112,6 +151,34 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
     }));
     const todayKey = new Date().toDateString();
     const typingToday = typingRaw.filter((ty) => new Date(ty.time).toDateString() === todayKey).length;
+
+    // Hozir onlayn: so'nggi 5 daqiqada faol bo'lganlar
+    const online = raw.filter((v) => Date.now() - (v.lastSeen ?? v.time) < 5 * 60 * 1000).length;
+
+    // Jonli faollik: so'nggi 30 daqiqa
+    const live: LiveRow[] = raw
+      .filter((v) => Date.now() - (v.lastSeen ?? v.time) < 30 * 60 * 1000)
+      .slice(0, 8)
+      .map((v) => ({
+        id: v.id,
+        flag: v.flag ?? "🌍",
+        place: [v.city, v.country].filter(Boolean).join(", ") || "Noma'lum",
+        device: v.device,
+        minutesAgo: Math.max(0, Math.round((Date.now() - (v.lastSeen ?? v.time)) / 60000)),
+      }));
+
+    // Mamlakatlar bo'yicha taqsimot
+    const countryMap = new Map<string, CountryBreakdown>();
+    for (const v of raw) {
+      const key = (v.countryCode || v.country || "Noma'lum").toLowerCase();
+      const cur = countryMap.get(key);
+      if (cur) cur.count++;
+      else countryMap.set(key, { flag: v.flag ?? "🌍", name: v.country || "Noma'lum", count: 1 });
+    }
+    const countries: CountryBreakdown[] = [...countryMap.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+
     return {
       rows,
       total: rows.length,
@@ -119,6 +186,9 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
       week: countThisWeek(raw),
       unique: uniqueVisitors(raw),
       chart: visitsPerDay(raw, 14),
+      online,
+      live,
+      countries,
       typingRows,
       typingToday,
       typingAvgWpm: typingRaw.length
@@ -135,6 +205,21 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
   }, [loggedIn, refreshKey, history, xp]);
 
   const refresh = () => setRefreshKey((k) => k + 1);
+
+  // ── AVTOMATIK YANGILANISH: har 30 soniyada ────────────────────────────
+  useEffect(() => {
+    if (!loggedIn) return;
+    const iv = window.setInterval(() => setRefreshKey((k) => k + 1), 30_000);
+    // Oyna yana faol bo'lganda ham darhol yangilaymiz
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setRefreshKey((k) => k + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(iv);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [loggedIn]);
 
   // ── LOGIN SCREEN ─────────────────────────────────────────────────────
   if (!loggedIn) {
@@ -258,6 +343,17 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <span
+            className="text-[10px] px-2 py-1 rounded-full flex items-center gap-1.5"
+            style={{ background: "#22c55e14", color: "#22c55e", border: "1px solid #22c55e33" }}
+            title="Har 30 soniyada avtomatik yangilanadi"
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="live-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-400"></span>
+            </span>
+            Live 30s
+          </span>
           <button
             onClick={refresh}
             className="px-3 py-1.5 rounded-lg text-xs hover:bg-white/5 text-gray-400 transition-all"
@@ -294,8 +390,90 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-6">
-        {/* Chart */}
-        <div className="p-5 rounded-2xl" style={{ background: t.surface, border: `1px solid ${t.accent}1a` }}>
+      {/* Live activity + Countries */}
+      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+        {/* Live activity */}
+        <div className="p-5 rounded-2xl animate-fade-in" style={{ background: t.surface, border: `1px solid ${t.accent}1a` }}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="live-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
+              </span>
+              Jonli faollik
+              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "#22c55e22", color: "#22c55e" }}>
+                {data!.online} onlayn
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-500 mb-3">
+            Eslatma: statik sayt — faollik faqat shu brauzerda kuzatiladi.
+          </p>
+          {data!.live.length === 0 ? (
+            <div className="text-center py-6 text-sm text-gray-600">
+              So'nggi 30 daqiqada faol tashrif yo'q.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {data!.live.map((l, i) => (
+                <div
+                  key={l.id}
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 row-in"
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  <span className="text-lg leading-none">{l.flag}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs text-white truncate">{l.place}</div>
+                    <div className="text-[10px] text-gray-500">{l.device}</div>
+                  </div>
+                  <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                    {l.minutesAgo === 0 ? "hozir" : `${l.minutesAgo} daq. oldin`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Countries */}
+        <div className="p-5 rounded-2xl animate-fade-in" style={{ background: t.surface, border: `1px solid ${t.accent}1a` }}>
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-4">
+            <FiUsers style={{ color: t.accent }} />
+            Mamlakatlar bo'yicha
+          </div>
+          {data!.countries.length === 0 ? (
+            <div className="text-center py-6 text-sm text-gray-600">
+              Hozircha mamlakat ma'lumotlari yo'q.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {data!.countries.map((c, i) => (
+                <div key={c.name} className="row-in" style={{ animationDelay: `${i * 60}ms` }}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-gray-300 flex items-center gap-1.5">
+                      <span className="text-base leading-none">{c.flag}</span>
+                      {c.name}
+                    </span>
+                    <span className="font-bold" style={{ color: t.accent }}>{c.count}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bar-fill"
+                      style={{
+                        width: `${Math.max((c.count / data!.countries[0].count) * 100, 8)}%`,
+                        background: `linear-gradient(90deg, ${t.accent}66, ${t.accent})`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="p-5 rounded-2xl" style={{ background: t.surface, border: `1px solid ${t.accent}1a` }}>
           <div className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-4">
             <FiBarChart2 style={{ color: t.accent }} />
             So'nggi 14 kun — tashriflar
@@ -376,16 +554,23 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
                   <th className="py-2 pr-3">Vaqt</th>
                   <th className="py-2 pr-3">Qurilma</th>
                   <th className="py-2 pr-3">Brauzer</th>
+                  <th className="py-2 pr-3">Manzil</th>
                   <th className="py-2 pr-3">Til</th>
                   <th className="py-2 pr-3">Tema</th>
-                  <th className="py-2">Ekran</th>
+                  <th className="py-2 pr-3">Ekran</th>
+                  <th className="py-2 pr-3">Qayerdan</th>
+                  <th className="py-2">Saytda</th>
                 </tr>
               </thead>
               <tbody>
-                {data!.rows.slice(0, 40).map((v) => {
+                {data!.rows.slice(0, 40).map((v, i) => {
                   const Icon = DEVICE_ICONS[v.deviceType] || FiMonitor;
                   return (
-                    <tr key={v.id} className="border-t border-white/5 hover:bg-white/[0.03] transition-colors">
+                    <tr
+                      key={v.id}
+                      className="border-t border-white/5 hover:bg-white/[0.03] transition-colors row-in"
+                      style={{ animationDelay: `${Math.min(i, 20) * 35}ms` }}
+                    >
                       <td className="py-2 pr-3 text-gray-400 whitespace-nowrap">{v.time}</td>
                       <td className="py-2 pr-3 whitespace-nowrap">
                         <span className="flex items-center gap-1.5">
@@ -394,13 +579,23 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
                         </span>
                       </td>
                       <td className="py-2 pr-3 text-gray-300">{v.browser}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-sm leading-none">{v.flag}</span>
+                          <span className="text-gray-300">{v.city ? `${v.city}, ` : ""}{v.country || "Noma'lum"}</span>
+                        </span>
+                      </td>
                       <td className="py-2 pr-3">
                         <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ background: "#ffffff0d", color: "#9ca3af" }}>
                           {v.lang}
                         </span>
                       </td>
                       <td className="py-2 pr-3 text-gray-400">{v.theme}</td>
-                      <td className="py-2 text-gray-600 whitespace-nowrap">{v.screen}</td>
+                      <td className="py-2 pr-3 text-gray-600 whitespace-nowrap">{v.screen}</td>
+                      <td className="py-2 pr-3 text-gray-500 whitespace-nowrap" title={v.referrer || undefined}>
+                        {referrerHost(v.referrer)}
+                      </td>
+                      <td className="py-2 text-gray-500 whitespace-nowrap">{formatDuration(v.duration)}</td>
                     </tr>
                   );
                 })}

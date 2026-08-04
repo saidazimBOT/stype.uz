@@ -15,10 +15,21 @@ export interface VisitRecord {
   lang: string;
   theme: string;
   screen: string;
+  referrer?: string; // qaysi saytdan kelgani
+  country?: string; // mamlakat nomi (IP orqali)
+  countryCode?: string;
+  city?: string;
+  flag?: string; // 🇺🇿 kabi emoji
+  pageViews?: number; // bu brauzer necha marta ochgan
+  duration?: number; // tashrif davomiyligi (soniyalarda)
+  lastSeen?: number; // oxirgi faollik vaqti (onlayn status uchun)
 }
 
 const KEY = "typeuz_visits";
 const MAX = 500;
+const VIEWS_KEY = "typeuz_pageviews";
+const GEO_KEY = "typeuz_geo";
+const GEO_TTL = 24 * 60 * 60 * 1000; // geo cache — kuniga 1 marta so'raymiz
 
 function makeId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -30,6 +41,14 @@ export function readVisits(): VisitRecord[] {
     return raw ? (JSON.parse(raw) as VisitRecord[]) : [];
   } catch {
     return [];
+  }
+}
+
+function saveVisits(visits: VisitRecord[]): void {
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(visits.slice(0, MAX)));
+  } catch {
+    // ignore
   }
 }
 
@@ -63,33 +82,168 @@ function getDevice(): { device: string; deviceType: "Mobile" | "Tablet" | "Deskt
   return { device: "Other", deviceType: "Desktop" };
 }
 
+// ── IP orqali mamlakat/shahar (bepul, kalitsiz API) ───────────────────────
+interface GeoInfo {
+  country: string;
+  countryCode: string;
+  city: string;
+  flag: string;
+}
+
+function readCachedGeo(): GeoInfo | null {
+  try {
+    const raw = window.localStorage.getItem(GEO_KEY);
+    if (!raw) return null;
+    const { data, at } = JSON.parse(raw) as { data: GeoInfo; at: number };
+    if (Date.now() - at > GEO_TTL) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function cacheGeo(geo: GeoInfo): void {
+  try {
+    window.localStorage.setItem(GEO_KEY, JSON.stringify({ data: geo, at: Date.now() }));
+  } catch {
+    // ignore
+  }
+}
+
+async function fetchGeo(): Promise<GeoInfo | null> {
+  const cached = readCachedGeo();
+  if (cached) return cached;
+
+  const providers: (() => Promise<GeoInfo | null>)[] = [
+    async () => {
+      // ipwho.is — bepul, HTTPS, kalitsiz
+      const r = await fetch("https://ipwho.is/");
+      const j = await r.json();
+      if (j?.success && j.country) {
+        return {
+          country: String(j.country),
+          countryCode: String(j.country_code ?? "").toLowerCase(),
+          city: String(j.city ?? ""),
+          flag: String(j.flag?.emoji ?? "🌍"),
+        };
+      }
+      return null;
+    },
+    async () => {
+      // zaxira: ipapi.co — bepul HTTPS (kuniga ~1000 so'rov)
+      const r = await fetch("https://ipapi.co/json/");
+      const j = await r.json();
+      if (j?.country_name) {
+        return {
+          country: String(j.country_name),
+          countryCode: String(j.country_code ?? "").toLowerCase(),
+          city: String(j.city ?? ""),
+          flag: String(j.country_flag_emoji ?? "🌍"),
+        };
+      }
+      return null;
+    },
+  ];
+
+  for (const provider of providers) {
+    try {
+      const geo = await provider();
+      if (geo) {
+        cacheGeo(geo);
+        return geo;
+      }
+    } catch {
+      // keyingisiga o'tamiz
+    }
+  }
+  return null;
+}
+
+/** Har bir brauzer necha marta ochilganini sanaydi. */
+function nextPageViews(): number {
+  try {
+    const cur = parseInt(window.localStorage.getItem(VIEWS_KEY) || "0", 10) || 0;
+    const next = cur + 1;
+    window.localStorage.setItem(VIEWS_KEY, String(next));
+    return next;
+  } catch {
+    return 1;
+  }
+}
+
 export function recordVisit(lang: string, theme: string): void {
   try {
     if (typeof window === "undefined") return;
     const { device, deviceType } = getDevice();
+    const referrer = document.referrer || "";
+    const now = Date.now();
     const record: VisitRecord = {
       id: makeId(),
-      time: Date.now(),
+      time: now,
       browser: getBrowser(),
       device,
       deviceType,
       lang,
       theme,
       screen: `${window.screen?.width ?? 0}x${window.screen?.height ?? 0}`,
+      referrer,
+      pageViews: nextPageViews(),
+      lastSeen: now,
     };
+
     const visits = readVisits();
     visits.unshift(record);
-    window.localStorage.setItem(KEY, JSON.stringify(visits.slice(0, MAX)));
+    saveVisits(visits);
+
+    // IP orqali mamlakat/shahar — asinxron, xato bo'lsa jim o'tkazamiz
+    void fetchGeo().then((geo) => {
+      if (!geo) return;
+      try {
+        const list = readVisits();
+        const idx = list.findIndex((v) => v.id === record.id);
+        if (idx === -1) return;
+        list[idx] = { ...list[idx], ...geo };
+        saveVisits(list);
+      } catch {
+        // ignore
+      }
+    });
   } catch {
     // ignore
   }
 }
 
-/** Sayt ochilganda bir marta tashrifni qayd qiladi. */
+/** Sayt ochilganda bir marta tashrifni qayd qiladi va onlayn statusni yangilab turadi. */
 export function useVisitTracker(lang: string, theme: string): void {
   useEffect(() => {
     recordVisit(lang, theme);
-    // Faqat mount da bir marta yozamiz (lang/theme o'zgarishi qayta yozmaydi)
+
+    // Onlayn status / tashrif davomiyligi — har 20 soniyada yangilanadi
+    const touch = () => {
+      try {
+        const list = readVisits();
+        if (!list.length) return;
+        const now = Date.now();
+        const top = list[0];
+        list[0] = {
+          ...top,
+          lastSeen: now,
+          duration: Math.max(0, Math.round((now - top.time) / 1000)),
+        };
+        saveVisits(list);
+      } catch {
+        // ignore
+      }
+    };
+    const iv = window.setInterval(touch, 20_000);
+    document.addEventListener("visibilitychange", touch);
+    window.addEventListener("beforeunload", touch);
+    return () => {
+      window.clearInterval(iv);
+      document.removeEventListener("visibilitychange", touch);
+      window.removeEventListener("beforeunload", touch);
+    };
+    // Faqat mount da bir marta ishga tushiramiz
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

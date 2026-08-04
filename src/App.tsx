@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TEXTS, LANG_LABELS } from "./data/texts";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
 import { createAudioController } from "./utils/audio";
@@ -78,6 +78,7 @@ export default function App() {
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(15);
+  const [restartKey, setRestartKey] = useState(0);
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [errors, setErrors] = useState(0);
@@ -102,6 +103,7 @@ export default function App() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const clickBufRef = useRef<AudioBuffer | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const replayStartedRef = useRef(false);
 
   // Theme
   const t: ThemeColors = THEMES[theme] || THEMES.default;
@@ -133,8 +135,11 @@ export default function App() {
     return () => mq.removeEventListener("change", handler);
   }, [autoTheme, theme, setTheme]);
 
-  // Audio
-  const { playClick, playError, playWin } = createAudioController(audioCtxRef, clickBufRef);
+  // Audio (bir marta yaratiladi — timer har renderda qayta ishga tushmasligi uchun)
+  const { playClick, playError, playWin } = useMemo(
+    () => createAudioController(audioCtxRef, clickBufRef),
+    []
+  );
 
   // ── TEXT MANAGEMENT ──────────────────────────────────────────────────
   const newText = useCallback(
@@ -155,6 +160,7 @@ export default function App() {
       setCombo(0);
       setMaxCombo(0);
       setParticles([]);
+      replayStartedRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
     },
     [lang, duration]
@@ -201,7 +207,31 @@ export default function App() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [started, finished, duration, soundEnabled, playWin]);
+  }, [started, finished, duration, soundEnabled, playWin, restartKey]);
+
+  // ── DURATION TANLASH (15/30/60/Free) ────────────────────────────────
+  // Tugma bosilganda taymer darhol yangi qiymatga tushadi va sanay boshlaydi
+  // (shu jumladan faol tugma qayta bosilganda ham test qaytadan boshlanadi)
+  const selectDuration = (d: number | string) => {
+    setRestartKey((k) => k + 1);
+    if (timerRef.current) clearInterval(timerRef.current);
+    replayStartedRef.current = false;
+    setDuration(d);
+    setTimeLeft(d === "∞" ? null : (d as number));
+    setStarted(d !== "∞");
+    setFinished(false);
+    setTyped("");
+    setCursor(0);
+    cursorRef.current = 0;
+    setCombo(0);
+    setMaxCombo(0);
+    setErrors(0);
+    setTotalKs(0);
+    setWpm(0);
+    setAccuracy(100);
+    setParticles([]);
+    startTimeRef.current = d === "∞" ? null : Date.now();
+  };
 
   // ── WPM UPDATE (smooth, real typing feel) ───────────────────────────
   useEffect(() => {
@@ -254,6 +284,9 @@ export default function App() {
       if (!started) {
         setStarted(true);
         startTimeRef.current = Date.now();
+      }
+      if (!replayStartedRef.current) {
+        replayStartedRef.current = true;
         startRecording(text);
       }
 
@@ -303,7 +336,7 @@ export default function App() {
 
   // ── TEST COMPLETION ─────────────────────────────────────────────────
   useEffect(() => {
-    if (finished && started) {
+    if (finished && started && typed.length > 0) {
       const e = (Date.now() - startTimeRef.current!) / 60000;
       const fw = Math.round((typed.length / 5) / e);
       const result: TestResult = {
@@ -442,7 +475,7 @@ export default function App() {
               {DURATIONS.map((d) => (
                 <button
                   key={String(d)}
-                  onClick={() => setDuration(d)}
+                  onClick={() => selectDuration(d)}
                   className="px-3 py-1 rounded-md transition-all"
                   style={{
                     background: duration === d ? t.accent + "22" : "transparent",
@@ -664,14 +697,23 @@ export default function App() {
               {finished && (
                 <div className="flex flex-col items-center gap-4 animate-fade-in">
                   <div className="flex items-center gap-2 text-2xl font-bold" style={{ color: t.accent }}>
-                    {accuracy >= 95 ? (
-                      <FiStar size={26} fill="currentColor" />
-                    ) : accuracy >= 80 ? (
-                      <FiThumbsUp size={26} />
+                    {typed.length === 0 ? (
+                      <>
+                        <FiActivity size={26} />
+                        Vaqt tugadi!
+                      </>
                     ) : (
-                      <FiActivity size={26} />
+                      <>
+                        {accuracy >= 95 ? (
+                          <FiStar size={26} fill="currentColor" />
+                        ) : accuracy >= 80 ? (
+                          <FiThumbsUp size={26} />
+                        ) : (
+                          <FiActivity size={26} />
+                        )}
+                        {accuracy >= 95 ? "Excellent!" : accuracy >= 80 ? "Good job!" : "Keep practicing!"}
+                      </>
                     )}
-                    {accuracy >= 95 ? "Excellent!" : accuracy >= 80 ? "Good job!" : "Keep practicing!"}
                   </div>
                   <div className="flex gap-6 text-sm text-gray-400">
                     <span>
@@ -681,9 +723,11 @@ export default function App() {
                     <span>
                       Errors: <strong className="text-red-400">{errors}</strong>
                     </span>
-                    <span>
-                      XP: <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
-                    </span>
+                    {typed.length > 0 && (
+                      <span>
+                        XP: <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={() => newText()}
