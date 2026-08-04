@@ -32,6 +32,8 @@ import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import AppLogo from "./components/AppLogo";
+import AdminPanel from "./components/admin/AdminPanel";
+import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
@@ -103,6 +105,9 @@ export default function App() {
 
   // Theme
   const t: ThemeColors = THEMES[theme] || THEMES.default;
+
+  // Admin: saytga tashrifni kuzatish
+  useVisitTracker(lang, theme);
 
   // Auto Dark/Light Mode
   const [autoTheme, setAutoTheme] = useState(false);
@@ -311,6 +316,9 @@ export default function App() {
         recordingId: Date.now(),
       };
       setHistory((h) => [result, ...h.slice(0, 49)]);
+
+      // Admin panel uchun: kim type qilganini qayd qilamiz
+      recordTyping({ wpm: fw, accuracy, errors, lang });
 
       updateProgress("wpm", fw);
       updateProgress("accuracy", accuracy);
@@ -578,6 +586,8 @@ export default function App() {
             <GamesView t={t} onClose={() => setView("type")} />
           ) : view === "about" ? (
             <AboutView t={t} onClose={() => setView("type")} />
+          ) : view === "admin" ? (
+            <AdminPanel t={t} onClose={() => setView("type")} history={history} xp={xp} />
           ) : view === "type" ? (
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
@@ -701,6 +711,22 @@ export default function App() {
         className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md"
         style={{ background: t.surface + "cc", border: `1px solid ${t.accent}33` }}
       >
+        {/* Admin button (footer) */}
+        <button
+          onClick={() => setView(view === "admin" ? "type" : "admin")}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 mr-1"
+          style={{
+            background: view === "admin" ? t.accent + "33" : "#ffffff0d",
+            color: view === "admin" ? t.accent : "#9ca3af",
+            border: `1px solid ${view === "admin" ? t.accent + "55" : "#ffffff14"}`,
+          }}
+          title="Admin Panel"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span className="hidden sm:block">Admin</span>
+        </button>
         <AppLogo size={26} animate="glow" glowColor={t.accent} />
         <div className="hidden sm:block">
           <div className="font-semibold" style={{ color: t.accent }}>
