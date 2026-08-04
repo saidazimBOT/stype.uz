@@ -9,7 +9,7 @@ const LANGUAGES = [
 ];
 
 // ── SEO METADATA ───────────────────────────────────────────────────────────
-const siteUrl = "https://stypeuz.com";
+const siteUrl = "https://styping.uz";
 const siteName = "STypeUz";
 const title = "STypeUz - Typing Speed Test in 20+ Languages | Improve Your Typing";
 const description =
@@ -100,6 +100,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.svg", sizes: "any", type: "image/svg+xml" },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
       { url: "/favicon.png", sizes: "512x512", type: "image/png" },
       { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
       { url: "/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },

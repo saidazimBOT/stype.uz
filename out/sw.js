@@ -1,10 +1,14 @@
-const CACHE_NAME = "typeuz-v2";
+const CACHE_NAME = "typeuz-v3";
 const ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
+  "/icon-192.svg",
+  "/icon-512.svg",
+  "/favicon.svg",
+  "/favicon-16.png",
+  "/favicon-32.png",
+  "/favicon-48.png",
   "/favicon.png",
 ];
 
