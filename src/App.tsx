@@ -39,6 +39,7 @@ import TelegramPromo from "./components/features/TelegramPromo";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
+import CoinIcon from "./components/CoinIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
@@ -861,7 +862,7 @@ export default function App() {
                           XP: <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
                         </span>
                         <span>
-                          🪙 +{Math.round(wpm * 1) + (accuracy >= 95 ? 5 : 0)}
+                          <CoinIcon size={14} /> +{Math.round(wpm * 1) + (accuracy >= 95 ? 5 : 0)}
                         </span>
                       </>
                     )}
@@ -912,7 +913,7 @@ export default function App() {
             >
               <AvIcon size={12} />
             </div>
-            <span>🪙 {coinsStore.coins.toLocaleString()}</span>
+            <span className="flex items-center gap-1.5"><CoinIcon size={18} /> {coinsStore.coins.toLocaleString()}</span>
           </div>
         );
       })()}
@@ -952,7 +953,7 @@ export default function App() {
               </div>
               <div className="hidden sm:block">
                 <div className="font-semibold" style={{ color: t.accent }}>
-                  {coinsStore.coins.toLocaleString()} 🪙 · {xp.toLocaleString()} XP
+                  {coinsStore.coins.toLocaleString()} <CoinIcon size={13} /> · {xp.toLocaleString()} XP
                 </div>
                 <div className="text-gray-500">{LANG_LABELS[lang]}</div>
               </div>

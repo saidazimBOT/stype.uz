@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import CoinIcon from "../CoinIcon";
 
 export interface CoinNotif {
   id: number;
@@ -67,7 +68,7 @@ function CoinBubble({ notif, onDismiss }: { notif: CoinNotif; onDismiss: (id: nu
         className={`coin-badge ${phase === "exit" ? "coin-badge-exit" : ""}`}
       >
         <div className="coin-icon-wrap">
-          <span className="coin-emoji">🪙</span>
+          <span className="coin-emoji"><CoinIcon size={30} /></span>
           <div className="coin-ring" />
         </div>
         <div className="coin-text">
@@ -84,7 +85,7 @@ function CoinBubble({ notif, onDismiss }: { notif: CoinNotif; onDismiss: (id: nu
             className="trail-coin"
             style={{ animationDelay: `${i * 120}ms` }}
           >
-            🪙
+            <CoinIcon size={14} />
           </span>
         ))}
       </div>

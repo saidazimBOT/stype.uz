@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { FiShoppingBag, FiCheck, FiLock, FiZap, FiStar, FiHeart } from "react-icons/fi";
 import { FaCrown, FaGem, FaFire, FaBolt, FaRocket } from "react-icons/fa6";
 import { GiSparkles, GiCrystalBall } from "react-icons/gi";
+import CoinIcon from "../CoinIcon";
 import type { ThemeColors } from "../../types";
 import type { ShopItem, EffectItem, ShopCategory } from "../../data/shop";
 import {
@@ -129,7 +130,7 @@ export default function ShopView({
             </span>
           ) : (
             <span className="text-[11px] font-bold flex items-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
-              {item.price === 0 ? "Free" : <><span>🪙</span> {item.price}</>}
+              {item.price === 0 ? "Free" : <><CoinIcon size={13} /> {item.price}</>}
             </span>
           )}
         </div>
@@ -198,7 +199,7 @@ export default function ShopView({
             </span>
           ) : (
             <span className="text-[11px] font-bold flex items-center justify-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
-              {item.price === 0 ? "Free" : <><span>🪙</span> {item.price}</>}
+              {item.price === 0 ? "Free" : <><CoinIcon size={13} /> {item.price}</>}
             </span>
           )}
         </div>
@@ -265,7 +266,7 @@ export default function ShopView({
               </div>
             ) : (
               <span className="text-xs font-bold flex items-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
-                🪙 {item.price}
+                <CoinIcon size={13} /> {item.price}
               </span>
             )}
           </div>
@@ -306,7 +307,7 @@ export default function ShopView({
           <div className="absolute bottom-0 right-1/4 w-24 h-24 rounded-full bg-yellow-300 blur-2xl animate-pulse" />
         </div>
         <div className="relative">
-          <div className="text-4xl mb-1">🪙</div>
+          <div className="mb-1 flex justify-center"><CoinIcon size={56} /></div>
           <div className="text-3xl font-bold text-white mb-1">{coins.toLocaleString()}</div>
           <div className="text-sm text-yellow-300/80">Coins</div>
           <div className="mt-2 text-[11px] text-yellow-200/50">
@@ -359,7 +360,7 @@ export default function ShopView({
 
       {/* Footer tip */}
       <div className="mt-6 text-xs text-gray-600 text-center">
-        🪙 Earn coins by completing typing tests and playing mini-games
+        <CoinIcon size={12} /> Earn coins by completing typing tests and playing mini-games
       </div>
     </div>
   );
