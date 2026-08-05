@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  FiCalendar, FiCode, FiHeart, FiMail, FiStar, FiUser, FiZap,
+  FiBookOpen, FiCalendar, FiCode, FiHeart, FiMail, FiStar, FiUser, FiZap,
 } from "react-icons/fi";
 import {
   FaCss3Alt, FaHtml5, FaJs, FaKeyboard, FaPython, FaReact, FaTelegram, FaTrophy,
@@ -18,6 +18,7 @@ interface OwnerViewProps {
 const ME = {
   name: "Saidazim",
   role: "Dasturchi",
+  mentor: "Sunnatbek Yusupov",
   photo: "/creator.png",
   born: "2011-yil",
   birthday: "27-may",
@@ -114,6 +115,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
                 { icon: FiCalendar, label: "27-may 2011" },
                 { icon: FiStar, label: "15 yosh" },
                 { icon: FiCode, label: "Dasturchi" },
+                { icon: FiBookOpen, label: `Ustoz: ${ME.mentor}` },
               ].map((c) => (
                 <span
                   key={c.label}
@@ -132,6 +134,42 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               platformasini yaratdim. Kelajakda yana ko'plab foydali loyihalar yaratishni
               rejalashtiryapman.
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── USTOZIM ── */}
+      <div className="mt-6">
+        <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <FiBookOpen style={{ color: t.accent }} />
+          Ustozim
+        </div>
+        <div
+          className="flex items-center gap-4 p-4 rounded-2xl border border-white/10 animate-row"
+          style={{ background: "#ffffff06" }}
+        >
+          <div
+            className="relative w-28 h-32 rounded-xl overflow-hidden flex-shrink-0 animate-bounce-in"
+            style={{ border: `2px solid ${t.accent}55`, boxShadow: `0 0 24px ${t.accent}30` }}
+          >
+            <img
+              src="/mentor.webp"
+              alt={`Ustozim — ${ME.mentor}`}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 pointer-events-none" />
+          </div>
+          <div className="min-w-0">
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold mb-1.5"
+              style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}55` }}
+            >
+              <FiBookOpen size={11} />
+              Ustozim 👨‍🏫
+            </div>
+            <div className="text-lg font-bold text-white truncate">{ME.mentor}</div>
+            <div className="text-xs text-gray-400 mt-0.5">Mening ustozim</div>
           </div>
         </div>
       </div>
