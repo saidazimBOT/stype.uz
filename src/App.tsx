@@ -27,7 +27,8 @@ import WeeklyMissionsView from "./components/features/WeeklyMissions";
 import ProgressDashboard from "./components/features/ProgressDashboard";
 import CountryRanking from "./components/features/CountryRanking";
 import KeyboardVisualizer from "./components/features/KeyboardVisualizer";
-import MultiplayerRace from "./components/features/MultiplayerRace";
+import BattleHub from "./components/features/Battle/BattleHub";
+import { ConvexClientProvider } from "./lib/battle";
 import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
@@ -475,7 +476,7 @@ export default function App() {
     { id: "daily", icon: FiZap, label: "Daily" },
     { id: "seasonal", icon: FaMedal, label: "Events" },
     { id: "dna", icon: FaDna, label: "DNA" },
-    { id: "multiplyer", icon: FiSend, label: "Race" },
+    { id: "multiplyer", icon: FiSend, label: "Battle" },
     { id: "friends", icon: FiUsers, label: "Friends" },
     { id: "chat", icon: FiMessageCircle, label: "Chat" },
     { id: "ai", icon: FiCpu, label: "AI" },
@@ -488,6 +489,7 @@ export default function App() {
 
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
+    <ConvexClientProvider>
     <div
       suppressHydrationWarning
       className="min-h-screen flex flex-col isolate"
@@ -714,7 +716,7 @@ export default function App() {
           ) : view === "seasonal" ? (
             <SeasonalEvent t={t} onClose={() => setView("type")} missions={missions} updateProgress={updateProgress} />
           ) : view === "multiplyer" ? (
-            <MultiplayerRace t={t} onClose={() => setView("type")} currentWpm={wpm} isPlaying={started && !finished} />
+            <BattleHub t={t} onClose={() => setView("type")} coinsStore={coinsStore} addXp={addXp} />
           ) : view === "friends" ? (
             <FriendSystem t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
           ) : view === "chat" ? (
@@ -995,5 +997,6 @@ export default function App() {
         </button>
       </div>
     </div>
+    </ConvexClientProvider>
   );
 }
