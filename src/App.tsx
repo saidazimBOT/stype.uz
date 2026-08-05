@@ -890,13 +890,13 @@ export default function App() {
       {/* Coin earning notifications */}
       <CoinNotification notifications={coinNotifs} onDismiss={dismissCoinNotif} />
 
-      {/* Avatar + Coin balance badge (top-right) */}
+      {/* Avatar + Coin balance badge (bottom-right — yuqorida Egasi tugmasini berkitib qo'ymasligi uchun) */}
       {(() => {
         const av = getAvatarInfo(coinsStore.activeAvatar);
         const AvIcon = av.icon;
         return (
           <div
-            className="fixed top-3 right-20 sm:right-24 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md cursor-pointer hover:scale-105 transition-all"
+            className="fixed bottom-16 right-3 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md cursor-pointer hover:scale-105 transition-all"
             style={{ background: av.color + "18", border: `1px solid ${av.color}44`, color: av.color }}
             onClick={() => {
               setView("shop");
