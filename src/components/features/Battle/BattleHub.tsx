@@ -1094,6 +1094,7 @@ function ResultsView({
   onRematch: () => void;
   onLeave: () => void;
 }) {
+  const [reportTarget, setReportTarget] = useState<RoomPlayer | null>(null);
   const myPlayer = room.players.find((p) => p.tokenIdentifier === myToken);
   const myTeam = myPlayer?.team;
   let outcome: BattleOutcome = "draw";
@@ -1217,6 +1218,14 @@ function ResultsView({
               <span className="text-xs text-gray-500 w-14 text-right">
                 {progressPct(p.correct, room.text.length)}%
               </span>
+              <button
+                onClick={() => setReportTarget(p)}
+                className="text-gray-600 hover:text-red-400 transition-colors"
+                title={`${p.username} haqida hisobot yuborish`}
+                aria-label={`${p.username} haqida hisobot`}
+              >
+                <FiFlag size={12} />
+              </button>
             </div>
           ))}
         </div>
@@ -1238,6 +1247,140 @@ function ResultsView({
         >
           <FiLogOut size={14} /> Xonani tark etish
         </button>
+      </div>
+
+      {reportTarget && (
+        <ReportPlayerModal
+          t={t}
+          target={reportTarget}
+          onClose={() => setReportTarget(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// O'yinchi haqida hisobot (report)
+// ══════════════════════════════════════════════════════════════════════
+const REPORT_REASONS = [
+  { value: "cheating", label: "Aldash (cheat / autotyper)" },
+  { value: "abuse", label: "Haqorat yoki yomon so'z" },
+  { value: "spam", label: "Spam" },
+  { value: "impersonation", label: "Boshqa odam nomidan yurish" },
+  { value: "other", label: "Boshqa" },
+];
+
+function ReportPlayerModal({
+  t,
+  target,
+  onClose,
+}: {
+  t: ThemeColors;
+  target: RoomPlayer;
+  onClose: () => void;
+}) {
+  const fileReport = useMutation(api.admin.fileReport);
+  const [reason, setReason] = useState("cheating");
+  const [details, setDetails] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState(false);
+
+  const submit = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await fileReport({
+        targetToken: target.tokenIdentifier,
+        targetName: target.username,
+        reason,
+        details: details.trim() || undefined,
+      });
+      setOk(true);
+      window.setTimeout(onClose, 1200);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Hisobot yuborilmadi");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      onClick={busy ? undefined : onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-5 animate-pop-in"
+        style={{ background: t.surface, border: `1px solid ${t.accent}44` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <FiFlag size={16} style={{ color: t.accent }} />
+          <h3 className="text-sm font-bold text-white">Hisobot yuborish</h3>
+        </div>
+        <p className="text-xs text-gray-500 mb-4">
+          <span className="font-bold text-white">{target.username}</span> haqida shikoyat — admin tekshiradi.
+        </p>
+
+        {ok ? (
+          <div className="text-center py-6 text-sm text-green-400 animate-pop-in">
+            ✓ Hisobot yuborildi. Rahmat!
+          </div>
+        ) : (
+          <>
+            <label className="block text-[11px] text-gray-500 uppercase tracking-widest mb-1.5">Sabab</label>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none mb-3"
+              style={{ background: "#ffffff08", border: "1px solid #ffffff14", color: "#fff" }}
+            >
+              {REPORT_REASONS.map((r) => (
+                <option key={r.value} value={r.value} className="bg-[#0b1626] text-white">
+                  {r.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="block text-[11px] text-gray-500 uppercase tracking-widest mb-1.5">Tafsilot (ixtiyoriy)</label>
+            <textarea
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              rows={3}
+              placeholder="Nima bo'ldi?"
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none resize-y mb-3"
+              style={{ background: "#ffffff08", border: "1px solid #ffffff14", color: "#fff" }}
+            />
+
+            {error && (
+              <div className="mb-3 px-3 py-2 rounded-xl text-xs text-red-400 bg-red-500/10 border border-red-500/30 animate-pop-in">
+                {error}
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={onClose}
+                disabled={busy}
+                className="px-4 py-2 rounded-xl text-xs text-gray-400 hover:bg-white/5 transition-all disabled:opacity-40"
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={submit}
+                disabled={busy}
+                className="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105 disabled:opacity-50"
+                style={{ background: t.accent, color: "#000" }}
+              >
+                {busy ? "Yuborilmoqda..." : "Yuborish"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

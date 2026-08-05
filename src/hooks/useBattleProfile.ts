@@ -9,7 +9,7 @@ import { api } from "../../convex/_generated/api";
  * Battle uchun profil: avtomatik anonim kirish + Convex'dagi user profili.
  */
 export function useBattleProfile() {
-  const { isLoading, isAuthenticated, error } = useConvexAuth();
+  const { isLoading, isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
   const me = useQuery(api.users.me);
   const setUsername = useMutation(api.users.setUsername);
@@ -26,7 +26,6 @@ export function useBattleProfile() {
   return {
     authLoading: isLoading,
     isAuthenticated,
-    authError: error,
     me,
     setUsername,
   };

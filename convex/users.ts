@@ -24,6 +24,20 @@ export const me = query({
   },
 });
 
+// Onlayn status uchun yurak urishi (har 60 soniyada chaqiriladi)
+export const heartbeat = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .first();
+    if (user) await ctx.db.patch(user._id, { lastSeen: Date.now() });
+  },
+});
+
 // Username o'rnatish / profil yaratish.
 // Birinchi marta kirganda localStorage dagi coins/xp/avatar import qilinadi.
 export const setUsername = mutation({

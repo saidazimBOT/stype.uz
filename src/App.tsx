@@ -28,7 +28,9 @@ import ProgressDashboard from "./components/features/ProgressDashboard";
 import CountryRanking from "./components/features/CountryRanking";
 import KeyboardVisualizer from "./components/features/KeyboardVisualizer";
 import BattleHub from "./components/features/Battle/BattleHub";
-import { ConvexClientProvider } from "./lib/battle";
+import { ConvexClientProvider, getConvexClient, getStoredUsername } from "./lib/battle";
+import { getTypingRecorder } from "./lib/convexBridge";
+import SiteOverlays from "./components/features/SiteOverlays";
 import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
@@ -412,6 +414,23 @@ export default function App() {
       // Admin panel uchun: kim type qilganini qayd qilamiz
       recordTyping({ wpm: fw, accuracy, errors, lang });
 
+      // Convex'ga real statistika yozish (backend ulangan bo'lsa)
+      try {
+        const recorder = getTypingRecorder();
+        if (recorder) {
+          void recorder({
+            wpm: fw,
+            accuracy,
+            errors,
+            lang,
+            duration: duration === "∞" ? 0 : (duration as number),
+            username: getStoredUsername(),
+          }).catch(() => {});
+        }
+      } catch {
+        // Convex yo'q — jim o'tkazamiz
+      }
+
       updateProgress("wpm", fw);
       updateProgress("accuracy", accuracy);
       updateProgress("tests", 1);
@@ -490,6 +509,7 @@ export default function App() {
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
     <ConvexClientProvider>
+      {getConvexClient() ? <SiteOverlays t={t} /> : null}
     <div
       suppressHydrationWarning
       className="min-h-screen flex flex-col isolate"
