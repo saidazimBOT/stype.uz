@@ -6,6 +6,7 @@ import {
   FiMonitor, FiSend, FiShield, FiSmartphone, FiTrash2, FiUser, FiUsers,
 } from "react-icons/fi";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import GscDashboard from "./GscDashboard";
 import {
   readVisits, clearVisits, visitsPerDay, countToday, countThisWeek, uniqueVisitors,
   readTypingLog, clearTypingLog,
@@ -387,6 +388,11 @@ export default function AdminPanel({ t, onClose, history, xp }: AdminPanelProps)
             <div className="text-xs text-gray-500">{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Google Search Console (REAL Google ma'lumotlari) */}
+      <div className="mb-6">
+        <GscDashboard t={t} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mb-6">

@@ -36,6 +36,7 @@ import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
+import { setSid as setGscSid } from "./lib/gscApi";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
@@ -117,6 +118,17 @@ export default function App() {
 
   // Admin: saytga tashrifni kuzatish
   useVisitTracker(lang, theme);
+
+  // Google Search Console OAuth qaytishi: ?gsc_connected=1&gsc_sid=...
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("gsc_connected") === "1" && p.get("gsc_sid")) {
+      setGscSid(p.get("gsc_sid") || "");
+    }
+    if (p.has("gsc_connected") || p.has("gsc_sid") || p.has("error")) {
+      window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+    }
+  }, []);
 
   // Auto Dark/Light Mode
   const [autoTheme, setAutoTheme] = useState(false);
