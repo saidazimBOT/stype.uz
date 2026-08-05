@@ -473,6 +473,7 @@ export default function App() {
     { id: "missions", icon: FiTarget, label: "Missions" },
     { id: "daily", icon: FiZap, label: "Daily" },
     { id: "seasonal", icon: FaMedal, label: "Events" },
+    { id: "dna", icon: FaDna, label: "DNA" },
     { id: "multiplyer", icon: FiSend, label: "Race" },
     { id: "friends", icon: FiUsers, label: "Friends" },
     { id: "chat", icon: FiMessageCircle, label: "Chat" },
@@ -482,7 +483,6 @@ export default function App() {
     { id: "games", icon: FiGrid, label: "Games" },
     { id: "shop", icon: FiShoppingBag, label: "Shop" },
     { id: "about", icon: FiInfo, label: "About" },
-    { id: "dna", icon: FaDna, label: "DNA" },
   ];
 
   // ── RENDER ──────────────────────────────────────────────────────────
