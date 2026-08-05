@@ -32,6 +32,7 @@ import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import TelegramPromo from "./components/features/TelegramPromo";
+import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
 import AdminPanel from "./components/admin/AdminPanel";
@@ -44,7 +45,7 @@ import {
   FiMap, FiMessageCircle, FiSend, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
+import { FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
@@ -439,6 +440,7 @@ export default function App() {
     { id: "replay", icon: FiVideo, label: "Replay" },
     { id: "games", icon: FiGrid, label: "Games" },
     { id: "about", icon: FiInfo, label: "About" },
+    { id: "dna", icon: FaDna, label: "DNA" },
   ];
 
   // ── RENDER ──────────────────────────────────────────────────────────
@@ -684,6 +686,15 @@ export default function App() {
             <GamesView t={t} onClose={() => setView("type")} />
           ) : view === "about" ? (
             <AboutView t={t} onClose={() => setView("type")} />
+          ) : view === "dna" ? (
+            <TypingDNA
+              t={t}
+              onClose={() => setView("type")}
+              history={history}
+              recordings={recordings}
+              daily={daily}
+              usedLangs={usedLangs}
+            />
           ) : view === "admin" ? (
             <AdminPanel t={t} onClose={() => setView("type")} history={history} xp={xp} />
           ) : view === "type" ? (
