@@ -6,6 +6,7 @@ import type { ThemeColors } from "../../types";
 
 interface SnakeGameProps {
   t: ThemeColors;
+  onCoinEarned?: (amount: number) => void;
 }
 
 const SZ = 20, SC = 20, SR = 18;
@@ -25,7 +26,7 @@ interface GameState {
   started: boolean;
 }
 
-export default function SnakeGame({ t }: SnakeGameProps) {
+export default function SnakeGame({ t, onCoinEarned }: SnakeGameProps) {
   const cvs = useRef<HTMLCanvasElement>(null);
   const G = useRef<GameState>({ snake: [{ x: 10, y: 9 }], dir: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, food: { x: 5, y: 5 }, score: 0, alive: true, started: false });
   const [score, setScore] = useState(0);
@@ -102,11 +103,14 @@ export default function SnakeGame({ t }: SnakeGameProps) {
       last.current = ts;
       g.dir = g.nd;
       const h: Point = { x: g.snake[0].x + g.dir.x, y: g.snake[0].y + g.dir.y };
-      if (h.x < 0 || h.x >= SC || h.y < 0 || h.y >= SR || g.snake.some((s) => s.x === h.x && s.y === h.y)) {
-        g.alive = false;
-        draw();
-        return;
+    if (h.x < 0 || h.x >= SC || h.y < 0 || h.y >= SR || g.snake.some((s) => s.x === h.x && s.y === h.y)) {
+      g.alive = false;
+      if (g.score > 0 && onCoinEarned) {
+        onCoinEarned(g.score);
       }
+      draw();
+      return;
+    }
       g.snake.unshift(h);
       if (h.x === g.food.x && h.y === g.food.y) {
         g.score++;

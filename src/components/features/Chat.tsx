@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { FiMessageCircle, FiSend } from "react-icons/fi";
+import { getAvatarInfo } from "../../data/shop";
 import type { ThemeColors, ChatUser, ChatMessage } from "../../types";
 
 const CHAT_USERS: ChatUser[] = [
@@ -21,9 +22,10 @@ const GREETINGS = [
 interface ChatProps {
   t: ThemeColors;
   onClose: () => void;
+  activeAvatar?: string;
 }
 
-export default function Chat({ t, onClose }: ChatProps) {
+export default function Chat({ t, onClose, activeAvatar = "avatar_default" }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -78,11 +80,12 @@ export default function Chat({ t, onClose }: ChatProps) {
 
   const sendMessage = () => {
     if (!input.trim()) return;
+    const av = getAvatarInfo(activeAvatar);
     setMessages((prev) => [
       ...prev,
       {
         id: Date.now(),
-        user: { name: "You", color: t.accent, avatar: "YO" },
+        user: { name: "You", color: av.color, avatar: "YO" },
         text: input.trim(),
         time: new Date().toLocaleTimeString(),
       },
@@ -117,13 +120,17 @@ export default function Chat({ t, onClose }: ChatProps) {
         className="flex-1 overflow-y-auto rounded-xl p-4 mb-4"
         style={{ background: t.surface, border: `1px solid ${t.accent}11` }}
       >
-        {messages.map((msg) => (
+        {messages.map((msg) => {
+          const isMe = msg.user.name === "You";
+          const av = isMe ? getAvatarInfo(activeAvatar) : null;
+          const AvIcon = av?.icon;
+          return (
           <div key={msg.id} className="flex items-start gap-2.5 mb-3 animate-pop-in">
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
               style={{ background: msg.user.color + "33", color: msg.user.color }}
             >
-              {msg.user.avatar}
+              {isMe && AvIcon ? <AvIcon size={13} /> : msg.user.avatar}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
@@ -135,7 +142,8 @@ export default function Chat({ t, onClose }: ChatProps) {
               <div className="text-sm text-gray-300 break-words">{msg.text}</div>
             </div>
           </div>
-        ))}
+          );
+        })}
         {typing && (
           <div className="text-xs text-gray-500 italic animate-pulse">
             {typing.name} is typing...

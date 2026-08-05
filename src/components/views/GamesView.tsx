@@ -13,6 +13,7 @@ import type { ThemeColors } from "../../types";
 interface GamesViewProps {
   t: ThemeColors;
   onClose: () => void;
+  onCoinEarned?: (amount: number) => void;
 }
 
 const GAMES: { id: string; icon: IconType; name: string; desc: string }[] = [
@@ -21,7 +22,7 @@ const GAMES: { id: string; icon: IconType; name: string; desc: string }[] = [
   { id: "flappy", icon: FaDove, name: "Flappy Bird", desc: "Tap to fly through the pipes!" },
 ];
 
-export default function GamesView({ t, onClose }: GamesViewProps) {
+export default function GamesView({ t, onClose, onCoinEarned }: GamesViewProps) {
   const [game, setGame] = useState<string | null>(null);
 
   return (
@@ -59,9 +60,9 @@ export default function GamesView({ t, onClose }: GamesViewProps) {
         </div>
       ) : (
         <div className="flex justify-center pt-2">
-          {game === "snake" && <SnakeGame t={t} />}
-          {game === "tetris" && <TetrisGame t={t} />}
-          {game === "flappy" && <FlappyBird t={t} />}
+          {game === "snake" && <SnakeGame t={t} onCoinEarned={onCoinEarned} />}
+          {game === "tetris" && <TetrisGame t={t} onCoinEarned={onCoinEarned} />}
+          {game === "flappy" && <FlappyBird t={t} onCoinEarned={onCoinEarned} />}
         </div>
       )}
     </div>

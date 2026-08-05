@@ -6,6 +6,7 @@ import type { ThemeColors } from "../../types";
 
 interface FlappyBirdProps {
   t: ThemeColors;
+  onCoinEarned?: (amount: number) => void;
 }
 
 const FW = 320, FH = 420, PGAP = 130, PW = 46;
@@ -26,7 +27,7 @@ interface GameState {
   frame: number;
 }
 
-export default function FlappyBird({ t }: FlappyBirdProps) {
+export default function FlappyBird({ t, onCoinEarned }: FlappyBirdProps) {
   const cvs = useRef<HTMLCanvasElement>(null);
   const G = useRef<GameState>({ y: FH / 2, vy: 0, pipes: [], score: 0, alive: false, started: false, frame: 0 });
   const [score, setScore] = useState(0);
@@ -137,12 +138,17 @@ export default function FlappyBird({ t }: FlappyBirdProps) {
     const bx = 70, by = g.y;
     if (by < 0 || by > FH - 40 || g.pipes.some((p) => bx + 13 > p.x && bx - 13 < p.x + PW && (by - 9 < p.top || by + 9 > p.top + PGAP))) {
       g.alive = false;
+      // Award coins based on score
+      if (g.score > 0 && onCoinEarned) {
+        const coinReward = Math.max(1, Math.round(g.score * 1));
+        onCoinEarned(coinReward);
+      }
       draw();
       return;
     }
     draw();
     raf.current = requestAnimationFrame(loopRef.current);
-  }, [draw]);
+  }, [draw, onCoinEarned]);
 
   // Keep loopRef in sync
   useEffect(() => {

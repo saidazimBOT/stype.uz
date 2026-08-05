@@ -6,6 +6,7 @@ import type { ThemeColors } from "../../types";
 
 interface TetrisGameProps {
   t: ThemeColors;
+  onCoinEarned?: (amount: number) => void;
 }
 
 const TC = 26, TW = 10, TH = 18;
@@ -36,7 +37,7 @@ interface GameState {
   started: boolean;
 }
 
-export default function TetrisGame({ t }: TetrisGameProps) {
+export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
   const cvs = useRef<HTMLCanvasElement>(null);
   const G = useRef<GameState | null>(null);
   const [score, setScore] = useState(0);
@@ -150,7 +151,14 @@ export default function TetrisGame({ t }: TetrisGameProps) {
           setScore(g.score);
           g.piece = g.next;
           g.next = mkPiece();
-          if (!fits(g.board, g.piece)) { g.alive = false; draw(); return; }
+          if (!fits(g.board, g.piece)) {
+            g.alive = false;
+            if (g.score > 0 && onCoinEarned) {
+              onCoinEarned(Math.round(g.score / 10));
+            }
+            draw();
+            return;
+          }
         }
       }
       draw();

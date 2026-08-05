@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FiUsers, FiX } from "react-icons/fi";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { getAvatarInfo } from "../../data/shop";
 import type { ThemeColors, FriendUser, FriendRequest } from "../../types";
 
 const MOCK_USERS: FriendUser[] = [
@@ -17,9 +18,10 @@ const MOCK_USERS: FriendUser[] = [
 interface FriendSystemProps {
   t: ThemeColors;
   onClose: () => void;
+  activeAvatar?: string;
 }
 
-export default function FriendSystem({ t, onClose }: FriendSystemProps) {
+export default function FriendSystem({ t, onClose, activeAvatar = "avatar_default" }: FriendSystemProps) {
   const [friends, setFriends] = useLocalStorage<FriendUser[]>("typeuz_friends", []);
   const [search, setSearch] = useState("");
   const [requests, setRequests] = useLocalStorage<FriendRequest[]>("typeuz_requests", []);
@@ -67,6 +69,33 @@ export default function FriendSystem({ t, onClose }: FriendSystemProps) {
           ← Back
         </button>
       </div>
+
+      {/* Your Avatar Card */}
+      {(() => {
+        const av = getAvatarInfo(activeAvatar);
+        const AvIcon = av.icon;
+        return (
+          <div
+            className="flex items-center gap-4 p-4 rounded-xl mb-6"
+            style={{ background: t.surface, border: `1px solid ${av.color}33` }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{
+                background: `linear-gradient(135deg, ${av.color}44, ${av.color}88)`,
+                boxShadow: `0 0 16px ${av.color}44`,
+              }}
+            >
+              <AvIcon size={22} style={{ color: av.color }} />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold text-white">You</div>
+              <div className="text-xs" style={{ color: av.color }}>{av.name}</div>
+            </div>
+            <div className="w-3 h-3 rounded-full" style={{ background: "#22c55e" }} />
+          </div>
+        );
+      })()}
 
       {/* Search */}
       <div className="relative mb-6">

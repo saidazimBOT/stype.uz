@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { FaMedal, FaTrophy } from "react-icons/fa6";
 import { LEADERBOARD } from "../../data/leaderboard";
+import { getAvatarInfo } from "../../data/shop";
 import type { ThemeColors } from "../../types";
 
 interface LeaderboardViewProps {
   t: ThemeColors;
   onClose: () => void;
+  activeAvatar?: string;
 }
 
-export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
+export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_default" }: LeaderboardViewProps) {
   const [filter, setFilter] = useState("all");
   const medalColors = ["#fbbf24", "#cbd5e1", "#d97706"];
   const filtered = filter === "all" ? LEADERBOARD : LEADERBOARD.filter((p) => p.lang === filter);
@@ -75,12 +77,28 @@ export default function LeaderboardView({ t, onClose }: LeaderboardViewProps) {
               )}
             </div>
             <div className="flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                style={{ background: p.color + "22", color: p.color }}
-              >
-                {p.avatar}
-              </div>
+              {p.isMe ? (() => {
+                const av = getAvatarInfo(activeAvatar);
+                const AvIcon = av.icon;
+                return (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${av.color}44, ${av.color}88)`,
+                      boxShadow: `0 0 12px ${av.color}44`,
+                    }}
+                  >
+                    <AvIcon size={16} style={{ color: av.color }} />
+                  </div>
+                );
+              })() : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: p.color + "22", color: p.color }}
+                >
+                  {p.avatar}
+                </div>
+              )}
               <div>
                 <div className="text-sm font-medium text-white flex items-center gap-1.5">
                   {p.name}

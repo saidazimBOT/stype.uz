@@ -8,6 +8,9 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useDailyReward } from "./components/features/DailyLogin";
 import { useMissions } from "./components/features/WeeklyMissions";
 import { useReplay } from "./components/features/TypingReplay";
+import { useCoins } from "./hooks/useCoins";
+import CoinNotification, { type CoinNotif } from "./components/features/CoinNotification";
+import { getAvatarInfo } from "./data/shop";
 import type { ThemeColors, TestResult, Particle } from "./types";
 
 // Views
@@ -16,6 +19,7 @@ import ProfileView from "./components/views/ProfileView";
 import HistoryView from "./components/views/HistoryView";
 import AboutView from "./components/views/AboutView";
 import GamesView from "./components/views/GamesView";
+import ShopView from "./components/views/ShopView";
 
 // Features
 import DailyLoginView from "./components/features/DailyLoginView";
@@ -42,7 +46,7 @@ import { setSid as setGscSid } from "./lib/gscApi";
 // SVG icons (stiker/emoji o'rniga)
 import {
   FiActivity, FiAward, FiBookOpen, FiCpu, FiGrid, FiHeart, FiInfo, FiList,
-  FiMap, FiMessageCircle, FiSend, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
+  FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
 import { FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
@@ -77,6 +81,18 @@ export default function App() {
   const [showPromo, setShowPromo] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
+  const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
+
+  // Coin notification helper
+  const showCoinNotif = useCallback((amount: number, source: CoinNotif["source"]) => {
+    const id = Date.now() + Math.random();
+    const x = 30 + Math.random() * 40;
+    setCoinNotifs((prev) => [...prev.slice(-4), { id, amount, x, y: 50, source }]);
+  }, []);
+
+  const dismissCoinNotif = useCallback((id: number) => {
+    setCoinNotifs((prev) => prev.filter((n) => n.id !== id));
+  }, []);
 
   // Typing state
   const [text, setText] = useState("");
@@ -102,6 +118,26 @@ export default function App() {
   const daily = useDailyReward();
   const { missions, xp, updateProgress, addXp } = useMissions();
   const { recordings, startRecording, recordEvent, stopRecording } = useReplay();
+  const coinsStore = useCoins();
+
+  // Show coin notification for daily login reward on mount
+  useEffect(() => {
+    if (daily.claimedToday && daily.streak > 0) {
+      // Already claimed today — show how much they got
+      const dayKey = `day${Math.min(daily.streak, 7)}`;
+      const rewards: Record<string, number> = {
+        day1: 10, day2: 15, day3: 25, day4: 30, day5: 40, day6: 45, day7: 100,
+      };
+      const coins = rewards[dayKey] || 10;
+      // Only show if they just logged in (within last 5 min)
+      const lastLogin = localStorage.getItem("typeuz_daily_notif_shown");
+      const now = new Date().toDateString();
+      if (lastLogin !== now) {
+        setTimeout(() => showCoinNotif(coins, "daily"), 1500);
+        localStorage.setItem("typeuz_daily_notif_shown", now);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Refs
   const inputRef = useRef<HTMLInputElement>(null);
@@ -379,6 +415,11 @@ export default function App() {
       updateProgress("tests", 1);
       addXp(fw + accuracy);
 
+      // Award coins for typing tests
+      const coinReward = Math.round(fw * 1) + (accuracy >= 95 ? 5 : 0);
+      coinsStore.addCoins(coinReward);
+      if (coinReward > 0) showCoinNotif(coinReward, "typing");
+
       const lastStreakReported = parseInt(localStorage.getItem("typeuz_laststreak") || "0");
       if (daily.streak >= 7 && lastStreakReported < 7) {
         updateProgress("streak", 7);
@@ -439,6 +480,7 @@ export default function App() {
     { id: "custom", icon: FiBookOpen, label: "Texts" },
     { id: "replay", icon: FiVideo, label: "Replay" },
     { id: "games", icon: FiGrid, label: "Games" },
+    { id: "shop", icon: FiShoppingBag, label: "Shop" },
     { id: "about", icon: FiInfo, label: "About" },
     { id: "dna", icon: FaDna, label: "DNA" },
   ];
@@ -647,11 +689,11 @@ export default function App() {
               onClose={() => setShowSettings(false)}
             />
           ) : view === "leaderboard" ? (
-            <LeaderboardView t={t} onClose={() => setView("type")} />
+            <LeaderboardView t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
           ) : view === "countryrank" ? (
             <CountryRanking t={t} onClose={() => setView("type")} />
           ) : view === "profile" ? (
-            <ProfileView t={t} onClose={() => setView("type")} history={history} />
+            <ProfileView t={t} onClose={() => setView("type")} history={history} activeAvatar={coinsStore.activeAvatar} />
           ) : view === "history" ? (
             <HistoryView
               t={t}
@@ -673,9 +715,9 @@ export default function App() {
           ) : view === "multiplyer" ? (
             <MultiplayerRace t={t} onClose={() => setView("type")} currentWpm={wpm} isPlaying={started && !finished} />
           ) : view === "friends" ? (
-            <FriendSystem t={t} onClose={() => setView("type")} />
+            <FriendSystem t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
           ) : view === "chat" ? (
-            <Chat t={t} onClose={() => setView("type")} />
+            <Chat t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
           ) : view === "ai" ? (
             <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "custom" ? (
@@ -683,7 +725,21 @@ export default function App() {
           ) : view === "replay" ? (
             <TypingReplayView t={t} onClose={() => setView("type")} recordings={recordings} />
           ) : view === "games" ? (
-            <GamesView t={t} onClose={() => setView("type")} />
+            <GamesView t={t} onClose={() => setView("type")} onCoinEarned={(amt) => { coinsStore.addCoins(amt); showCoinNotif(amt, "game"); }} />
+          ) : view === "shop" ? (
+            <ShopView
+              t={t}
+              coins={coinsStore.coins}
+              purchased={coinsStore.purchased}
+              activeEffects={coinsStore.activeEffects}
+              activeAvatar={coinsStore.activeAvatar}
+              onClose={() => setView("type")}
+              onPurchase={coinsStore.purchase}
+              onSetTheme={setTheme}
+              onEquipAvatar={coinsStore.equipAvatar}
+              onToggleEffect={coinsStore.toggleEffect}
+              currentTheme={theme}
+            />
           ) : view === "about" ? (
             <AboutView t={t} onClose={() => setView("type")} />
           ) : view === "dna" ? (
@@ -791,7 +847,7 @@ export default function App() {
                       </>
                     )}
                   </div>
-                  <div className="flex gap-6 text-sm text-gray-400">
+                  <div className="flex gap-4 sm:gap-6 text-sm text-gray-400 flex-wrap justify-center">
                     <span>
                       Combo:{" "}
                       <strong style={{ color: t.accent }}>×{maxCombo}</strong>
@@ -800,9 +856,14 @@ export default function App() {
                       Errors: <strong className="text-red-400">{errors}</strong>
                     </span>
                     {typed.length > 0 && (
-                      <span>
-                        XP: <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
-                      </span>
+                      <>
+                        <span>
+                          XP: <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
+                        </span>
+                        <span>
+                          🪙 +{Math.round(wpm * 1) + (accuracy >= 95 ? 5 : 0)}
+                        </span>
+                      </>
                     )}
                   </div>
                   <button
@@ -826,6 +887,36 @@ export default function App() {
         </div>
       </div>
 
+      {/* Coin earning notifications */}
+      <CoinNotification notifications={coinNotifs} onDismiss={dismissCoinNotif} />
+
+      {/* Avatar + Coin balance badge (top-right) */}
+      {(() => {
+        const av = getAvatarInfo(coinsStore.activeAvatar);
+        const AvIcon = av.icon;
+        return (
+          <div
+            className="fixed top-3 right-20 sm:right-24 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md cursor-pointer hover:scale-105 transition-all"
+            style={{ background: av.color + "18", border: `1px solid ${av.color}44`, color: av.color }}
+            onClick={() => {
+              setView("shop");
+              setShowSettings(false);
+              setShowPromo(false);
+              setShowOwner(false);
+            }}
+            title={`${av.name} · Open Coin Shop`}
+          >
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: av.color + "33" }}
+            >
+              <AvIcon size={12} />
+            </div>
+            <span>🪙 {coinsStore.coins.toLocaleString()}</span>
+          </div>
+        );
+      })()}
+
       {/* Bottom user badge */}
       <div
         className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md"
@@ -847,13 +938,27 @@ export default function App() {
           </svg>
           <span className="hidden sm:block">Admin</span>
         </button>
-        <AppLogo size={26} animate="glow" glowColor={t.accent} />
-        <div className="hidden sm:block">
-          <div className="font-semibold" style={{ color: t.accent }}>
-            25+ Themes
-          </div>
-          <div className="text-gray-500">{LANG_LABELS[lang]} · {xp.toLocaleString()} XP</div>
-        </div>
+        {(() => {
+          const av = getAvatarInfo(coinsStore.activeAvatar);
+          const AvIcon = av.icon;
+          return (
+            <>
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                style={{ background: `linear-gradient(135deg, ${av.color}, ${av.color}88)`, boxShadow: `0 0 10px ${av.color}44` }}
+                title={av.name}
+              >
+                <AvIcon size={14} className="text-white" />
+              </div>
+              <div className="hidden sm:block">
+                <div className="font-semibold" style={{ color: t.accent }}>
+                  {coinsStore.coins.toLocaleString()} 🪙 · {xp.toLocaleString()} XP
+                </div>
+                <div className="text-gray-500">{LANG_LABELS[lang]}</div>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Quick theme picker */}

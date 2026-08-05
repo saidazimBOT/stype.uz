@@ -5,12 +5,14 @@ import { FiAward, FiGlobe, FiMoon, FiSmile, FiStar, FiSun, FiTarget, FiUser, FiZ
 import { FaFire, FaGem, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { getAvatarInfo } from "../../data/shop";
 import type { ThemeColors, TestResult } from "../../types";
 
 interface ProfileViewProps {
   t: ThemeColors;
   onClose: () => void;
   history: TestResult[];
+  activeAvatar?: string;
 }
 
 const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestResult[]) => boolean }[] = [
@@ -31,7 +33,7 @@ const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestRe
   { icon: FiGlobe, name: "Polyglot", desc: "3 languages", check: (h: TestResult[]) => new Set(h.map((t) => t.lang)).size >= 3 },
 ];
 
-export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
+export default function ProfileView({ t, onClose, history, activeAvatar = "avatar_default" }: ProfileViewProps) {
   const [xp] = useLocalStorage("typeuz_xp", 0);
 
   const stats = useMemo(() => {
@@ -66,24 +68,35 @@ export default function ProfileView({ t, onClose, history }: ProfileViewProps) {
         className="flex items-center gap-6 p-6 rounded-2xl mb-6"
         style={{ background: t.surface, border: `1px solid ${t.accent}22` }}
       >
-        <div className="relative group">
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold transition-all duration-300 group-hover:scale-110"
-            style={{
-              background: `linear-gradient(135deg,${t.accent}44,${t.accent}88)`,
-              border: `2px solid ${t.accent}`,
-              boxShadow: `0 0 20px ${t.accent}33`,
-            }}
-          >
-            <FiSmile size={30} className="mx-auto" />
-          </div>
-          <div
-            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs animate-bounce"
-            style={{ background: t.accent }}
-          >
-            🇺🇿
-          </div>
-        </div>
+        {(() => {
+          const av = getAvatarInfo(activeAvatar);
+          const AvIcon = av.icon;
+          return (
+            <div className="relative group">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold transition-all duration-300 group-hover:scale-110"
+                style={{
+                  background: `linear-gradient(135deg, ${av.color}44, ${av.color}88)`,
+                  border: `2px solid ${av.color}`,
+                  boxShadow: `0 0 24px ${av.color}44`,
+                }}
+              >
+                <AvIcon size={32} style={{ color: av.color }} />
+              </div>
+              {/* Rarity indicator ring */}
+              <div
+                className="absolute inset-0 rounded-full animate-ping opacity-20"
+                style={{ border: `2px solid ${av.color}` }}
+              />
+              <div
+                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs animate-bounce"
+                style={{ background: av.color }}
+              >
+                🇺🇿
+              </div>
+            </div>
+          );
+        })()}
         <div className="flex-1">
           <div className="text-xl font-bold text-white">Typist #888</div>
           <div className="text-sm mb-2 flex items-center gap-1.5" style={{ color: t.accent }}>
