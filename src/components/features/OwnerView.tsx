@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  FiCode, FiCpu, FiHeart, FiMail, FiStar, FiUser, FiZap,
+  FiCalendar, FiCode, FiHeart, FiMail, FiStar, FiUser, FiZap,
 } from "react-icons/fi";
 import {
-  FaCss3Alt, FaJs, FaKeyboard, FaPython, FaReact, FaTelegram, FaTrophy,
+  FaCss3Alt, FaHtml5, FaJs, FaKeyboard, FaPython, FaReact, FaTelegram, FaTrophy,
 } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import type { ThemeColors } from "../../types";
@@ -16,30 +16,31 @@ interface OwnerViewProps {
 
 // ── Portfolio ma'lumotlari ─────────────────────────────────────────────
 const ME = {
-  name: "Sunnatbek Yusupov",
-  role: "Aidevix asoschisi va CEO'si",
-  title: "Frontend muhandis va AI integratsiya mutaxassisi",
-  badge: "Aidevix · Asoschi va CEO",
+  name: "Saidazim",
+  role: "Dasturchi",
   photo: "/creator.png",
+  born: "2011-yil",
+  birthday: "27-may",
+  age: "15 yosh",
   tg: "@said_khujayev",
   tgUrl: "https://t.me/said_khujayev",
-  tagline: "AI texnologiyalarini real loyihalarga integratsiya qilib, zamonaviy frontend interfeyslar yarataman.",
+  tagline: "Men kichik yoshimdan kod yozishga qiziqaman va o'z loyihalarimni yarataman.",
 };
 
 // Ko'nikmalar (skill) — real darajalar bilan
 const SKILLS: { icon: IconType; name: string; level: number; color: string }[] = [
-  { icon: FaReact, name: "React / Next.js", level: 92, color: "#61dafb" },
-  { icon: FaJs, name: "TypeScript / JavaScript", level: 90, color: "#f0db4f" },
-  { icon: FaCss3Alt, name: "Tailwind / CSS", level: 85, color: "#38bdf8" },
-  { icon: FiCpu, name: "AI integratsiya (LLM)", level: 88, color: "#22d3ee" },
-  { icon: FaPython, name: "Python", level: 72, color: "#4b8bbe" },
-  { icon: FaKeyboard, name: "Tez yozish (Typing)", level: 96, color: "#22c55e" },
+  { icon: FaPython, name: "Python", level: 85, color: "#4b8bbe" },
+  { icon: FaHtml5, name: "HTML", level: 90, color: "#e34c26" },
+  { icon: FaCss3Alt, name: "CSS", level: 80, color: "#2965f1" },
+  { icon: FaJs, name: "JavaScript", level: 75, color: "#f0db4f" },
+  { icon: FaReact, name: "React / Next.js", level: 70, color: "#61dafb" },
+  { icon: FaKeyboard, name: "Tez yozish (Typing)", level: 92, color: "#22d3ee" },
 ];
 
 // Loyihalar
 const PROJECTS: { name: string; desc: string; tech: string; tag: string }[] = [
-  { name: "Aidevix", desc: "AI texnologiyalarini biznesga integratsiya qiluvchi kompaniya — asoschisi va CEO'si.", tech: "AI · Frontend · Integratsiya", tag: "Asosiy loyiha" },
-  { name: "STypeUz", desc: "Yozish tezligini oshirish platformasi — 20+ til, 25+ tema, reytinglar, o'yinlar, multiplayer poyga.", tech: "Next.js · TS · Tailwind", tag: "Platforma" },
+  { name: "STypeUz", desc: "Yozish tezligini oshirish platformasi — 20+ til, 25+ tema, reytinglar, o'yinlar, multiplayer poyga.", tech: "Next.js · TS · Tailwind", tag: "Asosiy loyiha" },
+  { name: "Yangi loyihalar...", desc: "Kelajakdagi loyihalarim shu yerda ko'rinadi. Kod yozishda davom etaman!", tech: "Python · JS · React", tag: "Tez kunda" },
 ];
 
 export default function OwnerView({ t, onClose }: OwnerViewProps) {
@@ -80,7 +81,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
           >
             <img
               src={ME.photo}
-              alt={`${ME.name} — Aidevix asoschisi`}
+              alt={`${ME.name} — dasturchi`}
               className="w-full h-full object-cover"
               draggable={false}
             />
@@ -89,7 +90,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap"
               style={{ background: "#041018cc", border: `1px solid ${t.accent}66`, color: t.accent }}
             >
-              {ME.badge} 👨‍💻
+              {ME.role} 👨‍💻
             </div>
           </div>
 
@@ -100,19 +101,19 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}55` }}
             >
               <FiStar size={11} />
-              STypeUz · Sayt egasi
+              STypeUz · Yaratuvchi
             </div>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white">{ME.name}</h3>
             <p className="text-sm mt-1 font-medium" style={{ color: t.accent }}>
-              {ME.role} · {ME.title}
+              {ME.role} / Website Creator
             </p>
 
             {/* Info chips — rasm yonida */}
             <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
               {[
-                { icon: FiZap, label: "Aidevix · CEO" },
-                { icon: FiCode, label: "Frontend muhandis" },
-                { icon: FiCpu, label: "AI integratsiya" },
+                { icon: FiCalendar, label: "27-may 2011" },
+                { icon: FiStar, label: "15 yosh" },
+                { icon: FiCode, label: "Dasturchi" },
               ].map((c) => (
                 <span
                   key={c.label}
@@ -127,9 +128,9 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
 
             <p className="text-sm text-gray-400 leading-relaxed mt-4">
               {ME.tagline} Hozirda{" "}
-              <strong className="text-white">Aidevix</strong> kompaniyasiga asoschilik
-              qilaman va <strong className="text-white">STypeUz</strong> kabi platformalarni
-              ishlab chiqyapman.
+              <strong className="text-white">STypeUz</strong> — yozish tezligini oshirish
+              platformasini yaratdim. Kelajakda yana ko'plab foydali loyihalar yaratishni
+              rejalashtiryapman.
             </p>
           </div>
         </div>
