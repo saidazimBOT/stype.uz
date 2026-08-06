@@ -37,6 +37,7 @@ import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import TelegramPromo from "./components/features/TelegramPromo";
+import LingohubAd from "./components/features/LingohubAd";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
@@ -882,17 +883,20 @@ export default function App() {
                 </div>
               )}
 
-              {/* Keyboard Visualizer (when enabled) */}
-              {showKeyboard && (
-                <div className="w-full max-w-2xl mt-4 animate-fade-in">
-                  <KeyboardVisualizer
-                    t={t}
-                    showHeatmap={showHeatmap}
-                    fingerGuide={fingerGuide}
-                    nextKey={finished ? undefined : text[cursor]}
-                  />
-                </div>
-              )}
+              {/* Keyboard Visualizer (when enabled) + Lingohub reklama */}
+              <div className="w-full max-w-3xl mt-4 animate-fade-in flex flex-col lg:flex-row gap-3 items-start justify-center">
+                {showKeyboard && (
+                  <div className="w-full lg:flex-1">
+                    <KeyboardVisualizer
+                      t={t}
+                      showHeatmap={showHeatmap}
+                      fingerGuide={fingerGuide}
+                      nextKey={finished ? undefined : text[cursor]}
+                    />
+                  </div>
+                )}
+                <LingohubAd className="w-full lg:w-64 flex-shrink-0" />
+              </div>
             </main>
           ) : null}
         </div>
