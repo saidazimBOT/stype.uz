@@ -26,9 +26,9 @@ import { Spinner, ErrorBox, PrimaryBtn, GhostBtn, Badge } from "./adminUi";
 // ── LEGACY OWNER CREDENTIALS (asosiy kirish — saqlanib qoladi) ──────────
 const ADMIN_TELEGRAM = "@said_khujayev";
 const ADMIN_TELEGRAM_URL = "https://t.me/said_khujayev";
-const ADMIN_LOGIN = "admin";
-const ADMIN_EMAIL = "saidazim@gmail.com";
-const ADMIN_PASSWORD = "0111954";
+const ADMIN_LOGIN = "adminstype@gmail.com";
+const ADMIN_EMAIL = "adminstype@gmail.com";
+const ADMIN_PASSWORD = "admin0550";
 const SESSION_KEY = "typeuz_admin_session";
 
 interface AdminPanelProps {
