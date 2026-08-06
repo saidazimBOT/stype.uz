@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { FiGlobe, FiMonitor, FiSettings, FiVolume2, FiZap } from "react-icons/fi";
-import { FaKeyboard, FaPalette } from "react-icons/fa6";
+import { FaHandPointer, FaKeyboard, FaPalette } from "react-icons/fa6";
 import { THEME_LIST, THEME_GROUPS } from "../../data/themes";
 import { LANG_LABELS, LANG_GROUPS } from "../../data/texts";
 import type { ThemeColors } from "../../types";
@@ -22,6 +22,8 @@ interface SettingsModalProps {
   setShowKeyboard: (show: boolean) => void;
   showHeatmap: boolean;
   setShowHeatmap: (show: boolean) => void;
+  fingerGuide: boolean;
+  setFingerGuide: (show: boolean) => void;
   onClose: () => void;
 }
 
@@ -39,6 +41,8 @@ export default function SettingsModal({
   setShowKeyboard,
   showHeatmap,
   setShowHeatmap,
+  fingerGuide,
+  setFingerGuide,
   onClose,
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState("themes");
@@ -267,6 +271,27 @@ export default function SettingsModal({
                 <div
                   className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${
                     showHeatmap ? "left-[26px]" : "left-[2px]"
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: t.surface }}>
+              <div>
+                <div className="text-sm text-white flex items-center gap-1.5">
+                  <FaHandPointer size={14} className="text-gray-400" />
+                  Finger Guide
+                </div>
+                <div className="text-xs text-gray-500">Color-code keys by finger + highlight the next key</div>
+              </div>
+              <button
+                onClick={() => setFingerGuide(!fingerGuide)}
+                className={`w-12 h-6 rounded-full transition-all relative`}
+                style={{ background: fingerGuide ? t.accent : "#4b5563" }}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${
+                    fingerGuide ? "left-[26px]" : "left-[2px]"
                   }`}
                 />
               </button>

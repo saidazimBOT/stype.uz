@@ -28,9 +28,7 @@ import ProgressDashboard from "./components/features/ProgressDashboard";
 import CountryRanking from "./components/features/CountryRanking";
 import KeyboardVisualizer from "./components/features/KeyboardVisualizer";
 import BattleHub from "./components/features/Battle/BattleHub";
-import { ConvexClientProvider, getConvexClient, getStoredUsername } from "./lib/battle";
-import { getTypingRecorder } from "./lib/convexBridge";
-import SiteOverlays from "./components/features/SiteOverlays";
+import { ConvexClientProvider } from "./lib/battle";
 import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
@@ -81,6 +79,7 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useLocalStorage("typeuz_sound", true);
   const [showKeyboard, setShowKeyboard] = useLocalStorage("typeuz_showkb", false);
   const [showHeatmap, setShowHeatmap] = useLocalStorage("typeuz_heatmap", false);
+  const [fingerGuide, setFingerGuide] = useLocalStorage("typeuz_finger", true);
   const [showSettings, setShowSettings] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
@@ -414,23 +413,6 @@ export default function App() {
       // Admin panel uchun: kim type qilganini qayd qilamiz
       recordTyping({ wpm: fw, accuracy, errors, lang });
 
-      // Convex'ga real statistika yozish (backend ulangan bo'lsa)
-      try {
-        const recorder = getTypingRecorder();
-        if (recorder) {
-          void recorder({
-            wpm: fw,
-            accuracy,
-            errors,
-            lang,
-            duration: duration === "∞" ? 0 : (duration as number),
-            username: getStoredUsername(),
-          }).catch(() => {});
-        }
-      } catch {
-        // Convex yo'q — jim o'tkazamiz
-      }
-
       updateProgress("wpm", fw);
       updateProgress("accuracy", accuracy);
       updateProgress("tests", 1);
@@ -509,7 +491,6 @@ export default function App() {
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
     <ConvexClientProvider>
-      {getConvexClient() ? <SiteOverlays t={t} /> : null}
     <div
       suppressHydrationWarning
       className="min-h-screen flex flex-col isolate"
@@ -709,6 +690,8 @@ export default function App() {
               setShowKeyboard={setShowKeyboard}
               showHeatmap={showHeatmap}
               setShowHeatmap={setShowHeatmap}
+              fingerGuide={fingerGuide}
+              setFingerGuide={setFingerGuide}
               onClose={() => setShowSettings(false)}
             />
           ) : view === "leaderboard" ? (
@@ -902,7 +885,12 @@ export default function App() {
               {/* Keyboard Visualizer (when enabled) */}
               {showKeyboard && (
                 <div className="w-full max-w-2xl mt-4 animate-fade-in">
-                  <KeyboardVisualizer t={t} showHeatmap={showHeatmap} />
+                  <KeyboardVisualizer
+                    t={t}
+                    showHeatmap={showHeatmap}
+                    fingerGuide={fingerGuide}
+                    nextKey={finished ? undefined : text[cursor]}
+                  />
                 </div>
               )}
             </main>

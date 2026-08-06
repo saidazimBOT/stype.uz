@@ -265,6 +265,8 @@ export interface SettingsModalProps {
   setShowKeyboard: (show: boolean) => void;
   showHeatmap: boolean;
   setShowHeatmap: (show: boolean) => void;
+  fingerGuide: boolean;
+  setFingerGuide: (show: boolean) => void;
   onClose: () => void;
 }
 
@@ -272,6 +274,8 @@ export interface KeyboardVisualizerProps extends ThemeProp {
   pressedKeys?: string[];
   showHeatmap?: boolean;
   layout?: string;
+  fingerGuide?: boolean;
+  nextKey?: string;
 }
 
 export interface AnimatedAvatarProps {
