@@ -72,6 +72,25 @@ body {
   .logo-glow, .logo-spin { animation: none; }
 }
 
+/* ── Flexbox scroll fix ──────────────────────────────────────────────────
+   Flex items default to min-height:auto, which prevents overflow-y-auto
+   from ever kicking in (the element grows past the viewport instead of
+   scrolling). This trap hid the About nav button at the bottom of the
+   sidebar and made tall views (About, Shop, Leaderboard...) unreachable
+   on short screens. min-height:0 lets scrollable flex children shrink
+   to their container and scroll internally. */
+.flex > .overflow-y-auto,
+.flex-col > .overflow-y-auto {
+  min-height: 0;
+}
+
+/* Typing view: with the scroll fix above, tall content (e.g. keyboard
+   visualizer on short screens) must not clip its top. "safe center"
+   falls back to flex-start when the content overflows. */
+main.overflow-y-auto {
+  justify-content: safe center;
+}
+
 /* Utility classes */
 .float { animation: float 4s ease-in-out infinite; }
 .glow { animation: pulseGlow 2s infinite; }

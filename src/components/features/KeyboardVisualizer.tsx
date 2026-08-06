@@ -103,6 +103,8 @@ interface KeyboardVisualizerProps {
   layout?: string;
   fingerGuide?: boolean;
   nextKey?: string;
+  /** Ekran klaviaturasi bosilganda chaqiriladi — matnga yozish uchun. */
+  onKeyPress?: (key: string) => void;
 }
 
 export default function KeyboardVisualizer({
@@ -112,6 +114,7 @@ export default function KeyboardVisualizer({
   layout = "qwerty",
   fingerGuide = false,
   nextKey,
+  onKeyPress,
 }: KeyboardVisualizerProps) {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [heatmap, setHeatmap] = useState<Record<string, number>>({});
@@ -219,6 +222,8 @@ export default function KeyboardVisualizer({
       else next.add(key);
       return next;
     });
+    // Ekran klaviaturasi tugmasi matnga belgi yozadi (Space → " ")
+    if (onKeyPress) onKeyPress(key === "Space" ? " " : key);
   };
 
   return (
@@ -282,6 +287,8 @@ export default function KeyboardVisualizer({
                 return (
                   <button
                     key={key}
+                    // focus o'g'irlanishini oldini olamiz — yozish inputi fokusda qoladi
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleKeyClick(key)}
                     title={finger ? FINGERS[finger].name : undefined}
                     className={`relative h-10 rounded-lg text-xs font-medium transition-all duration-75 flex items-center justify-center ${

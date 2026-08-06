@@ -240,7 +240,7 @@ export default function App() {
 
   useEffect(() => {
     if (inputRef.current && view === "type" && !finished) inputRef.current.focus();
-  }, [text, finished, view]);
+  }, [text, finished, view, showKeyboard]);
 
   // ── PARTICLE EFFECTS ────────────────────────────────────────────────
   const spawnP = useCallback((ok: boolean) => {
@@ -317,21 +317,15 @@ export default function App() {
   }, [typed, started]);
 
   // ── KEYBOARD HANDLING ───────────────────────────────────────────────
-  const handleKey = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (view !== "type" || finished) {
-        if (e.key === "Escape") {
-          setView("type");
-          setShowOwner(false);
-          e.preventDefault();
-        }
-        return;
-      }
+  // Yozish logikasi — fizik klaviatura va ekran klaviaturasi (visualizer)
+  // uchun umumiy: bitta belgi (yoki tab/escape) qabul qiladi.
+  const processKey = useCallback(
+    (rawKey: string) => {
+      if (view !== "type" || finished) return;
 
       // Kiritilgan tugmani ham kichik harfga aylantiramiz — matn bilan mos tushishi uchun
-      const k = e.key.toLowerCase();
+      const k = rawKey.toLowerCase();
       if (k === "tab") {
-        e.preventDefault();
         newText();
         return;
       }
@@ -392,6 +386,23 @@ export default function App() {
       setAccuracy(Math.round(((nt - ne) / nt) * 100));
     },
     [view, finished, text, cursor, started, soundEnabled, totalKs, errors, lang, usedLangs, newText, playClick, playError, playWin, spawnP, startRecording, recordEvent, updateProgress, setUsedLangs]
+  );
+
+  // Fizik klaviatura: yozish inputi uchun event handler
+  const handleKey = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (view !== "type" || finished) {
+        if (e.key === "Escape") {
+          setView("type");
+          setShowOwner(false);
+          e.preventDefault();
+        }
+        return;
+      }
+      if (e.key === "Tab") e.preventDefault();
+      processKey(e.key);
+    },
+    [view, finished, processKey]
   );
 
   // ── TEST COMPLETION ─────────────────────────────────────────────────
@@ -493,7 +504,7 @@ export default function App() {
     <ConvexClientProvider>
     <div
       suppressHydrationWarning
-      className="min-h-screen flex flex-col isolate"
+      className="min-h-screen h-dvh flex flex-col isolate"
       style={{
         background: t.bg,
         color: t.color || "#e5e7eb",
@@ -644,7 +655,7 @@ export default function App() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-14 md:w-44 px-1 md:px-4 py-4 border-r border-white/5 flex flex-col gap-0.5 text-xs md:text-sm flex-shrink-0 overflow-y-auto">
+        <aside className="w-14 md:w-44 px-1 md:px-4 py-4 border-r border-white/5 flex flex-col gap-0.5 text-xs md:text-sm flex-shrink-0 overflow-y-auto min-h-0">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -890,6 +901,7 @@ export default function App() {
                     showHeatmap={showHeatmap}
                     fingerGuide={fingerGuide}
                     nextKey={finished ? undefined : text[cursor]}
+                    onKeyPress={processKey}
                   />
                 </div>
               )}
