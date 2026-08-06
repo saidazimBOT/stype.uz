@@ -594,7 +594,7 @@ export default function App() {
               </button>
             </>
           )}
-          {/* 50 WPM → Telegram Premium aksiyasi */}
+          {/* 300 WPM → Telegram Premium aksiyasi */}
           <button
             onClick={() => {
               setShowPromo((s) => !s);
@@ -602,9 +602,9 @@ export default function App() {
               setShowOwner(false);
             }}
             className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title="50 WPM → 1 oylik Telegram Premium!"
+            title="300 WPM → 1 oylik Telegram Premium!"
           >
-            🏆 <span className="hidden sm:inline">50 WPM</span>
+            🏆 <span className="hidden sm:inline">300 WPM</span>
             <span className="hidden lg:inline">→ Premium</span>
           </button>
           {/* Sayt egasi */}

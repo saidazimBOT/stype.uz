@@ -7,7 +7,7 @@ import type { ThemeColors } from "../../types";
 // Telegram: sovg'a olish yoki savollar uchun
 const PROMO_TG = "@said_khujayev";
 const PROMO_TG_URL = "https://t.me/said_khujayev";
-const TARGET_WPM = 50;
+const TARGET_WPM = 300;
 
 interface TelegramPromoProps {
   t: ThemeColors;
@@ -84,7 +84,7 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
             animation: "shine 3s linear infinite",
           }}
         >
-          50 WPM — 1 oylik Telegram Premium!
+          300 WPM — 1 oylik Telegram Premium!
         </h3>
         <p className="text-sm text-gray-400 max-w-md mx-auto">
           <strong className="text-amber-400">{TARGET_WPM} WPM</strong> ga erishgan har bir foydalanuvchiga{" "}
