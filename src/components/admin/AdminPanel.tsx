@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Component, useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "../../../convex/_generated/api";
 import {
   FiAward, FiBarChart2, FiBell, FiCopy, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
   FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUser, FiUsers, FiZap,
@@ -65,11 +66,69 @@ const ALL_TABS: TabDef[] = [
 ];
 
 // ══════════════════════════════════════════════════════════════════════
-// ENTRY — Convex sozlanganmi?
+// ENTRY — Convex haqiqatan sozlanganmi?
 // ══════════════════════════════════════════════════════════════════════
 export default function AdminPanel(props: AdminPanelProps) {
-  const configured = useMemo(() => getConvexClient() !== null, []);
-  return configured ? <ServerAdminPanel {...props} /> : <LegacyAdminPanel {...props} />;
+  // Server rejimga faqat Convex URL mavjud BO'LSA VA api kodgen qilingan bo'lsa o'tamiz.
+  // convex/_generated/api.ts STUB (api = {}) bo'lsa useQuery(undefined) butun sahifani qulatadi —
+  // shuning uchun server rejimda ishlatiladigan funksiyalar haqiqiy ekanini tekshiramiz.
+  const configured = useMemo(() => {
+    const client = getConvexClient();
+    if (!client) return false;
+    return typeof (api as any)?.users?.me === "function";
+  }, []);
+  return (
+    <AdminErrorBoundary t={props.t} onClose={props.onClose}>
+      {configured ? <ServerAdminPanel {...props} /> : <LegacyAdminPanel {...props} />}
+    </AdminErrorBoundary>
+  );
+}
+
+// ── Xatolik himoyasi: admin bo'limidagi istalgan xato butun saytni qulatmasligi uchun ──
+class AdminErrorBoundary extends Component<
+  { t: ThemeColors; onClose: () => void; children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex-1 flex items-center justify-center px-4 py-10">
+          <div className="text-center max-w-md animate-pop-in">
+            <div
+              className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4"
+              style={{ background: "#ef444422", color: "#f87171", border: "1px solid #ef444444" }}
+            >
+              <FiShield size={30} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Admin panelda xatolik</h2>
+            <p className="text-xs text-gray-500 mb-1">
+              Kutilmagan xato yuz berdi — qolgan sayt ishlashda davom etadi.
+            </p>
+            <p className="text-[11px] text-red-400/80 font-mono break-words mb-5">
+              {String(this.state.error.message || this.state.error)}
+            </p>
+            <button
+              onClick={() => {
+                this.setState({ error: null });
+                this.props.onClose();
+              }}
+              className="px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
+              style={{ background: this.props.t.accent, color: "#000" }}
+            >
+              ← Saytga qaytish
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════

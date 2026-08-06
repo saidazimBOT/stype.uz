@@ -985,7 +985,7 @@ export default function App() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setTheme(th.id);
-                  setThemePanel(false);0
+                  setThemePanel(false);
                 }}
                 className="w-7 h-7 rounded-full transition-all hover:scale-125"
                 style={{

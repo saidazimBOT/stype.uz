@@ -10,7 +10,7 @@ import {
 import {
   readVisits, visitsPerDay, countToday, countThisWeek, uniqueVisitors, readTypingLog,
 } from "../../hooks/useVisitTracker";
-import { StatCard, Card, SectionHeader, Spinner, ErrorBox, EmptyState } from "./adminUi";
+import { StatCard, Card, SectionHeader, Spinner, EmptyState } from "./adminUi";
 import { LineChart, BarChart, type ChartPoint } from "./charts";
 import type { AdminStats } from "./types";
 
@@ -22,9 +22,6 @@ interface Props {
 }
 
 export default function DashboardSection({ t, serverAdmin, history, xp }: Props) {
-  const stats = useQuery(api.admin.adminStats) as AdminStats | undefined;
-  const [range, setRange] = useState<7 | 30>(7);
-
   // ── Lokal (legacy) statistika — har doim mavjud ─────────────────────
   const local = useMemo(() => {
     const raw = readVisits();
@@ -76,104 +73,10 @@ export default function DashboardSection({ t, serverAdmin, history, xp }: Props)
 
   const maxChart = Math.max(...local.chart.map((d) => d.count), 1);
 
-  // ── Server (real) analytics ──────────────────────────────────────────
-  const series = stats?.series ?? [];
-  const rangeSeries = range === 7 ? series.slice(-7) : series;
-  const wpmData: ChartPoint[] = rangeSeries.map((s) => ({
-    label: s.label,
-    value: s.wpm,
-    hint: `${s.tests} test`,
-  }));
-  const testsData: ChartPoint[] = rangeSeries.map((s) => ({ label: s.label, value: s.tests }));
-  const usersData: ChartPoint[] = rangeSeries.map((s) => ({ label: s.label, value: s.newUsers }));
-
   return (
     <div className="space-y-4">
-      {/* ══ SERVER ANALYTICS ══ */}
-      {serverAdmin && (
-        <div className="space-y-4">
-          <SectionHeader
-            t={t}
-            icon={FiTrendingUp}
-            title="Analytics Dashboard"
-            subtitle="Convex ma'lumotlari"
-            actions={
-              <div className="flex gap-1.5">
-                {([7, 30] as const).map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setRange(r)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all"
-                    style={{
-                      background: range === r ? t.accent + "22" : "transparent",
-                      color: range === r ? t.accent : "#6b7280",
-                      border: `1px solid ${range === r ? t.accent + "44" : "transparent"}`,
-                    }}
-                  >
-                    {r} kun
-                  </button>
-                ))}
-              </div>
-            }
-          />
-
-          {!stats ? (
-            <Card t={t}>
-              <Spinner t={t} label="Statistika yuklanmoqda..." />
-            </Card>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-                <StatCard t={t} icon={FiUsers} label="Jami foydalanuvchilar" value={stats.totals.users} color={t.accent} sub={`+${stats.totals.newUsers7d} (7 kun)`} />
-                <StatCard t={t} icon={FiActivity} label="Onlayn (5 daq.)" value={stats.totals.online} color="#22c55e" />
-                <StatCard t={t} icon={FiZap} label="Yangi bugun" value={stats.totals.newToday} color="#38bdf8" />
-                <StatCard t={t} icon={FiEdit3} label="Testlar bugun" value={stats.totals.testsToday} color="#f59e0b" />
-                <StatCard t={t} icon={FiTarget} label="O'rtacha WPM" value={stats.totals.avgWpm7d} color="#a78bfa" sub={`umumiy: ${stats.totals.avgWpm}`} />
-                <StatCard t={t} icon={FiBarChart2} label="O'rtacha aniqlik" value={`${stats.totals.avgAcc7d}%`} color="#22c55e" sub={`umumiy: ${stats.totals.avgAcc}%`} />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <Card t={t} className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <FiTarget size={13} style={{ color: t.accent }} />
-                      O'rtacha WPM ({range} kun)
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: t.accent }}>
-                      {stats.totals[range === 7 ? "avgWpm7d" : "avgWpm30d"]} WPM
-                    </span>
-                  </div>
-                  <LineChart t={t} data={wpmData} color="#a78bfa" />
-                </Card>
-                <Card t={t} className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <FiEdit3 size={13} style={{ color: t.accent }} />
-                      Testlar ({range} kun)
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: t.accent }}>
-                      {stats.totals[range === 7 ? "tests7d" : "tests30d"]}
-                    </span>
-                  </div>
-                  <BarChart t={t} data={testsData} color={t.accent} height={150} />
-                </Card>
-                <Card t={t} className="p-5 md:col-span-2">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <FiUsers size={13} style={{ color: "#38bdf8" }} />
-                      Yangi foydalanuvchilar ({range} kun)
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: "#38bdf8" }}>
-                      +{stats.totals[range === 7 ? "newUsers7d" : "newUsers30d"]}
-                    </span>
-                  </div>
-                  <BarChart t={t} data={usersData} color="#38bdf8" height={110} />
-                </Card>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      {/* ══ SERVER ANALYTICS (faqat Convex rejimda — hooklar xavfsiz mount bo'ladi) ══ */}
+      {serverAdmin && <ServerAnalytics t={t} />}
 
       {/* ══ LEGACY LOCAL STATS (har doim) ══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -300,6 +203,113 @@ export default function DashboardSection({ t, serverAdmin, history, xp }: Props)
           Real foydalanuvchi statistikasi (jami foydalanuvchilar, onlayn, testlar, WPM) Convex backend
           ulangan va admin rol berilganda ko'rinadi.
         </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SERVER ANALYTICS — faqat Convex rejimda mount bo'ladi.
+// Bu komponent ajratilgani sababi: legacy rejimda convex hook'larini
+// (useQuery) chaqirish butun sahifani qulatadi ("Could not find
+// ConvexReactClient in context"). serverAdmin=true bo'lgandagina mount
+// bo'lgani uchun hook'lar xavfsiz.
+// ══════════════════════════════════════════════════════════════════════
+function ServerAnalytics({ t }: { t: ThemeColors }) {
+  const stats = useQuery(api.admin.adminStats) as AdminStats | undefined;
+  const [range, setRange] = useState<7 | 30>(7);
+
+  const series = stats?.series ?? [];
+  const rangeSeries = range === 7 ? series.slice(-7) : series;
+  const wpmData: ChartPoint[] = rangeSeries.map((s) => ({
+    label: s.label,
+    value: s.wpm,
+    hint: `${s.tests} test`,
+  }));
+  const testsData: ChartPoint[] = rangeSeries.map((s) => ({ label: s.label, value: s.tests }));
+  const usersData: ChartPoint[] = rangeSeries.map((s) => ({ label: s.label, value: s.newUsers }));
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader
+        t={t}
+        icon={FiTrendingUp}
+        title="Analytics Dashboard"
+        subtitle="Convex ma'lumotlari"
+        actions={
+          <div className="flex gap-1.5">
+            {([7, 30] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all"
+                style={{
+                  background: range === r ? t.accent + "22" : "transparent",
+                  color: range === r ? t.accent : "#6b7280",
+                  border: `1px solid ${range === r ? t.accent + "44" : "transparent"}`,
+                }}
+              >
+                {r} kun
+              </button>
+            ))}
+          </div>
+        }
+      />
+
+      {!stats ? (
+        <Card t={t}>
+          <Spinner t={t} label="Statistika yuklanmoqda..." />
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <StatCard t={t} icon={FiUsers} label="Jami foydalanuvchilar" value={stats.totals.users} color={t.accent} sub={`+${stats.totals.newUsers7d} (7 kun)`} />
+            <StatCard t={t} icon={FiActivity} label="Onlayn (5 daq.)" value={stats.totals.online} color="#22c55e" />
+            <StatCard t={t} icon={FiZap} label="Yangi bugun" value={stats.totals.newToday} color="#38bdf8" />
+            <StatCard t={t} icon={FiEdit3} label="Testlar bugun" value={stats.totals.testsToday} color="#f59e0b" />
+            <StatCard t={t} icon={FiTarget} label="O'rtacha WPM" value={stats.totals.avgWpm7d} color="#a78bfa" sub={`umumiy: ${stats.totals.avgWpm}`} />
+            <StatCard t={t} icon={FiBarChart2} label="O'rtacha aniqlik" value={`${stats.totals.avgAcc7d}%`} color="#22c55e" sub={`umumiy: ${stats.totals.avgAcc}%`} />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card t={t} className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <FiTarget size={13} style={{ color: t.accent }} />
+                  O'rtacha WPM ({range} kun)
+                </div>
+                <span className="text-xs font-bold" style={{ color: t.accent }}>
+                  {stats.totals[range === 7 ? "avgWpm7d" : "avgWpm30d"]} WPM
+                </span>
+              </div>
+              <LineChart t={t} data={wpmData} color="#a78bfa" />
+            </Card>
+            <Card t={t} className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <FiEdit3 size={13} style={{ color: t.accent }} />
+                  Testlar ({range} kun)
+                </div>
+                <span className="text-xs font-bold" style={{ color: t.accent }}>
+                  {stats.totals[range === 7 ? "tests7d" : "tests30d"]}
+                </span>
+              </div>
+              <BarChart t={t} data={testsData} color={t.accent} height={150} />
+            </Card>
+            <Card t={t} className="p-5 md:col-span-2">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <FiUsers size={13} style={{ color: "#38bdf8" }} />
+                  Yangi foydalanuvchilar ({range} kun)
+                </div>
+                <span className="text-xs font-bold" style={{ color: "#38bdf8" }}>
+                  +{stats.totals[range === 7 ? "newUsers7d" : "newUsers30d"]}
+                </span>
+              </div>
+              <BarChart t={t} data={usersData} color="#38bdf8" height={110} />
+            </Card>
+          </div>
+        </>
       )}
     </div>
   );
