@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { FiMessageCircle, FiSend } from "react-icons/fi";
-import { getAvatarInfo } from "../../data/shop";
+import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../data/shop";
+import HeroAvatar from "./HeroAvatar";
 import type { ThemeColors, ChatUser, ChatMessage } from "../../types";
 
 const CHAT_USERS: ChatUser[] = [
@@ -23,9 +24,10 @@ interface ChatProps {
   t: ThemeColors;
   onClose: () => void;
   activeAvatar?: string;
+  heroEquip?: HeroEquip;
 }
 
-export default function Chat({ t, onClose, activeAvatar = "avatar_default" }: ChatProps) {
+export default function Chat({ t, onClose, activeAvatar = "avatar_default", heroEquip }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -123,15 +125,20 @@ export default function Chat({ t, onClose, activeAvatar = "avatar_default" }: Ch
         {messages.map((msg) => {
           const isMe = msg.user.name === "You";
           const av = isMe ? getAvatarInfo(activeAvatar) : null;
-          const AvIcon = av?.icon;
           return (
           <div key={msg.id} className="flex items-start gap-2.5 mb-3 animate-pop-in">
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
-              style={{ background: msg.user.color + "33", color: msg.user.color }}
-            >
-              {isMe && AvIcon ? <AvIcon size={13} /> : msg.user.avatar}
-            </div>
+            {isMe && av ? (
+              <div className="w-7 h-7 flex-shrink-0 mt-0.5">
+                <HeroAvatar equip={{ ...DEFAULT_HERO_EQUIP, ...heroEquip }} color={av.color} size={28} />
+              </div>
+            ) : (
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
+                style={{ background: msg.user.color + "33", color: msg.user.color }}
+              >
+                {msg.user.avatar}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-xs font-medium" style={{ color: msg.user.color }}>

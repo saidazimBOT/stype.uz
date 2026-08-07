@@ -3,12 +3,14 @@
 import { useState, useCallback } from "react";
 import { FiShoppingBag, FiCheck, FiLock, FiZap, FiStar, FiHeart } from "react-icons/fi";
 import { FaCrown, FaGem, FaFire, FaBolt, FaRocket } from "react-icons/fa6";
-import { GiSparkles, GiCrystalBall } from "react-icons/gi";
+import { GiSparkles, GiCrystalBall, GiSwordsPower } from "react-icons/gi";
 import CoinIcon from "../CoinIcon";
+import HeroAvatar from "../features/HeroAvatar";
 import type { ThemeColors } from "../../types";
-import type { ShopItem, EffectItem, ShopCategory } from "../../data/shop";
+import type { ShopItem, EffectItem, ShopCategory, HeroEquip, HeroSlot, HeroShopItem } from "../../data/shop";
 import {
-  THEME_SHOP, AVATAR_SHOP, EFFECT_SHOP,
+  THEME_SHOP, AVATAR_SHOP, EFFECT_SHOP, HERO_SHOP,
+  HERO_SLOT_LABELS, DEFAULT_HERO_EQUIP, getHeroItem, isHeroFreeItem,
   RARITY_COLORS, RARITY_LABELS,
 } from "../../data/shop";
 
@@ -18,10 +20,12 @@ interface ShopViewProps {
   purchased: string[];
   activeEffects: string[];
   activeAvatar: string;
+  heroEquip: HeroEquip;
   onClose: () => void;
   onPurchase: (itemId: string, price: number) => boolean;
   onSetTheme: (themeId: string) => void;
   onEquipAvatar: (avatarId: string) => void;
+  onEquipHero: (slot: HeroSlot, itemId: string) => void;
   onToggleEffect: (effectId: string) => void;
   currentTheme: string;
 }
@@ -43,6 +47,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
 const CATEGORIES: { id: ShopCategory; label: string; icon: typeof FiShoppingBag }[] = [
   { id: "themes", label: "Themes", icon: FiStar },
   { id: "avatars", label: "Avatars", icon: FaCrown },
+  { id: "hero", label: "Hero", icon: GiSwordsPower },
   { id: "effects", label: "Effects", icon: GiSparkles },
 ];
 
@@ -52,10 +57,12 @@ export default function ShopView({
   purchased,
   activeEffects,
   activeAvatar,
+  heroEquip,
   onClose,
   onPurchase,
   onSetTheme,
   onEquipAvatar,
+  onEquipHero,
   onToggleEffect,
   currentTheme,
 }: ShopViewProps) {
@@ -73,7 +80,7 @@ export default function ShopView({
     }
   }, [onPurchase]);
 
-  const isOwned = (id: string) => id === "default" || id === "blue" || id === "avatar_default" || id === "fx_sparkle" || purchased.includes(id);
+  const isOwned = (id: string) => id === "default" || id === "blue" || id === "avatar_default" || id === "fx_sparkle" || isHeroFreeItem(id) || purchased.includes(id);
 
   const renderThemeItem = (item: ShopItem) => {
     const owned = isOwned(item.id);
@@ -207,6 +214,72 @@ export default function ShopView({
     );
   };
 
+  const renderHeroItem = (item: HeroShopItem) => {
+    const owned = isOwned(item.id);
+    const isEquipped = heroEquip[item.slot] === item.id;
+    const canAfford = coins >= item.price;
+    const justBought = purchasedAnim === item.id;
+    const isNone = isHeroFreeItem(item.id);
+
+    return (
+      <button
+        key={item.id}
+        onClick={() => {
+          if (owned) {
+            onEquipHero(item.slot, item.id);
+          } else if (canAfford) {
+            handlePurchase(item);
+            onEquipHero(item.slot, item.id);
+          }
+        }}
+        className={`relative p-3 rounded-xl text-center transition-all duration-300 hover:scale-[1.02] group ${
+          justBought ? "animate-pulse" : ""
+        }`}
+        style={{
+          background: owned && isEquipped ? (item.color || t.accent) + "33" : t.surface,
+          border: `2px solid ${isEquipped ? item.color || t.accent : owned ? (item.color || t.accent) + "22" : "transparent"}`,
+          opacity: !owned && !canAfford ? 0.5 : 1,
+        }}
+      >
+        {/* Item preview — kiyimni qahramon ustida ko'rsatamiz */}
+        <div
+          className="w-14 h-16 mx-auto mb-1 flex items-end justify-center transition-all duration-300 group-hover:scale-110"
+          style={{ filter: `drop-shadow(0 0 8px ${(item.color || t.accent)}44)` }}
+        >
+          <HeroAvatar
+            equip={{ ...DEFAULT_HERO_EQUIP, [item.slot]: item.id }}
+            color={item.color || t.accent}
+            size={56}
+          />
+        </div>
+
+        {/* Name */}
+        <div className="font-bold text-white text-xs truncate">{item.name}</div>
+
+        {/* Rarity */}
+        <div className="mt-1.5">
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+            style={{ background: RARITY_COLORS[item.rarity] + "22", color: RARITY_COLORS[item.rarity] }}
+          >
+            {RARITY_LABELS[item.rarity]}
+          </span>
+        </div>
+        <div className="mt-1">
+          {owned ? (
+            <span className="text-[11px] font-bold" style={{ color: item.color || t.accent }}>
+              {isEquipped ? "Kiyilgan ✓" : isNone ? "Default" : "Sotib olingan"}
+            </span>
+          ) : (
+            <span className="text-[11px] font-bold flex items-center justify-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
+              {item.price === 0 ? "Free" : <><CoinIcon size={13} /> {item.price}</>}
+            </span>
+          )}
+        </div>
+      </button>
+    );
+  };
+
   const renderEffectItem = (item: EffectItem) => {
     const owned = isOwned(item.id);
     const isActive = activeEffects.includes(item.id);
@@ -284,7 +357,7 @@ export default function ShopView({
             <FiShoppingBag />
             Coin Shop
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">Buy themes, avatars & effects</p>
+          <p className="text-sm text-gray-500 mt-0.5">Buy themes, avatars, hero outfits & effects</p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
@@ -319,7 +392,7 @@ export default function ShopView({
       {/* Category Tabs */}
       <div className="flex gap-2 mb-6">
         {CATEGORIES.map((cat) => {
-          const count = cat.id === "themes" ? THEME_SHOP.length : cat.id === "avatars" ? AVATAR_SHOP.length : EFFECT_SHOP.length;
+          const count = cat.id === "themes" ? THEME_SHOP.length : cat.id === "avatars" ? AVATAR_SHOP.length : cat.id === "hero" ? HERO_SHOP.length : EFFECT_SHOP.length;
           return (
             <button
               key={cat.id}
@@ -349,6 +422,60 @@ export default function ShopView({
       {activeTab === "avatars" && (
         <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
           {AVATAR_SHOP.map(renderAvatarItem)}
+        </div>
+      )}
+
+      {activeTab === "hero" && (
+        <div>
+          {/* Jonli preview — qahramon hozirgi kiyimlarida */}
+          <div
+            className="p-5 rounded-2xl mb-5 text-center relative overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, ${t.accent}22, ${t.accent}0d)`,
+              border: `1px solid ${t.accent}44`,
+            }}
+          >
+            <div
+              className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{ background: `radial-gradient(circle at 50% 30%, ${t.accent}, transparent 70%)` }}
+            />
+            <div className="relative">
+              <div className="mb-2 flex justify-center">
+                <HeroAvatar equip={heroEquip} color={t.accent} size={120} />
+              </div>
+              <div className="text-sm font-bold text-white">Your Hero</div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                Kepka, ko'zoynak va kiyim — hammasi birga kiyingan holda ko'rinadi
+              </div>
+              <div className="mt-3 flex justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+                {(["hat", "glasses", "outfit"] as HeroSlot[]).map((slot) => {
+                  const id = heroEquip[slot];
+                  const it = getHeroItem(id);
+                  return (
+                    <span
+                      key={slot}
+                      className="px-2 py-1 rounded-full"
+                      style={{ background: (it?.color || t.accent) + "22", color: it?.color || t.accent }}
+                    >
+                      {HERO_SLOT_LABELS[slot]}: {it?.name || "—"}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Har bir slot uchun bo'lim */}
+          {(["hat", "glasses", "outfit"] as HeroSlot[]).map((slot) => (
+            <div key={slot} className="mb-5">
+              <div className="text-xs text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <span style={{ color: t.accent }}>◆</span> {HERO_SLOT_LABELS[slot]}
+              </div>
+              <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                {HERO_SHOP.filter((h) => h.slot === slot).map(renderHeroItem)}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

@@ -5,7 +5,7 @@ import { FiAward, FiEdit3, FiGlobe, FiMoon, FiSmile, FiStar, FiSun, FiTarget, Fi
 import { FaFire, FaGem, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
-import { getAvatarInfo } from "../../data/shop";
+import { getAvatarInfo, type HeroEquip } from "../../data/shop";
 import { fullName, type UserProfile } from "../../hooks/useProfile";
 import ProfileAvatar from "../features/ProfileAvatar";
 import type { ThemeColors, TestResult } from "../../types";
@@ -16,6 +16,7 @@ interface ProfileViewProps {
   history: TestResult[];
   activeAvatar?: string;
   profile?: UserProfile | null;
+  heroEquip?: HeroEquip;
   onEditProfile?: () => void;
 }
 
@@ -37,7 +38,7 @@ const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestRe
   { icon: FiGlobe, name: "Polyglot", desc: "3 languages", check: (h: TestResult[]) => new Set(h.map((t) => t.lang)).size >= 3 },
 ];
 
-export default function ProfileView({ t, onClose, history, activeAvatar = "avatar_default", profile, onEditProfile }: ProfileViewProps) {
+export default function ProfileView({ t, onClose, history, activeAvatar = "avatar_default", profile, heroEquip, onEditProfile }: ProfileViewProps) {
   const [xp] = useLocalStorage("typeuz_xp", 0);
 
   const name = fullName(profile) || "Typist #888";
@@ -78,7 +79,7 @@ export default function ProfileView({ t, onClose, history, activeAvatar = "avata
         style={{ background: t.surface, border: `1px solid ${t.accent}22` }}
       >
         <div className="relative group">
-          <ProfileAvatar profile={profile} size={80} />
+          <ProfileAvatar profile={profile} size={80} heroEquip={heroEquip} />
           {/* Rarity indicator ring */}
           <div
             className="absolute inset-0 rounded-full animate-ping opacity-20 pointer-events-none"

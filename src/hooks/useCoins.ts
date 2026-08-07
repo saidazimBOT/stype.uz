@@ -1,14 +1,18 @@
 import { useState, useCallback, useEffect } from "react";
+import { DEFAULT_HERO_EQUIP, type HeroEquip, type HeroSlot } from "../data/shop";
 
 const STORAGE_COINS = "typeuz_coins";
 const STORAGE_PURCHASED = "typeuz_purchased";
 const STORAGE_EFFECTS = "typeuz_effects";
+/** Qahramon kiyimlari (heroEquip) localStorage kaliti — ProfileAvatar ham ishlatadi */
+export const STORAGE_HERO = "typeuz_hero";
 
 export interface CoinsState {
   coins: number;
   purchased: string[];       // IDs of purchased items (themes, avatars)
   activeEffects: string[];   // IDs of currently active effects
   activeAvatar: string;      // ID of currently active avatar
+  heroEquip: HeroEquip;      // Qahramon kiyimlari (hat/glasses/outfit)
 }
 
 export interface CoinsReturn extends CoinsState {
@@ -17,6 +21,7 @@ export interface CoinsReturn extends CoinsState {
   purchase: (itemId: string, price: number) => boolean;
   isPurchased: (itemId: string) => boolean;
   equipAvatar: (avatarId: string) => void;
+  equipHero: (slot: HeroSlot, itemId: string) => void;
   toggleEffect: (effectId: string) => void;
   hasEffect: (effectId: string) => boolean;
   setCoins: React.Dispatch<React.SetStateAction<number>>;
@@ -28,6 +33,7 @@ function getDefaultState(): CoinsState {
     purchased: [],
     activeEffects: ["fx_sparkle"], // default effect always active
     activeAvatar: "avatar_default",
+    heroEquip: { ...DEFAULT_HERO_EQUIP },
   };
 }
 
@@ -37,14 +43,17 @@ export function useCoins(): CoinsReturn {
       const saved = localStorage.getItem(STORAGE_COINS);
       const purchased = localStorage.getItem(STORAGE_PURCHASED);
       const effects = localStorage.getItem(STORAGE_EFFECTS);
+      const hero = localStorage.getItem(STORAGE_HERO);
       const coins = saved ? parseInt(saved, 10) || 50 : 50;
       const pItems = purchased ? JSON.parse(purchased) : [];
       const eItems = effects ? JSON.parse(effects) : { activeEffects: ["fx_sparkle"], activeAvatar: "avatar_default" };
+      const hItems = hero ? JSON.parse(hero) : {};
       return {
         coins,
         purchased: pItems,
         activeEffects: eItems.activeEffects || ["fx_sparkle"],
         activeAvatar: eItems.activeAvatar || "avatar_default",
+        heroEquip: { ...DEFAULT_HERO_EQUIP, ...hItems },
       };
     } catch {
       return getDefaultState();
@@ -68,6 +77,11 @@ export function useCoins(): CoinsReturn {
       JSON.stringify({ activeEffects: state.activeEffects, activeAvatar: state.activeAvatar })
     );
   }, [state.activeEffects, state.activeAvatar]);
+
+  // Persist hero equip
+  useEffect(() => {
+    localStorage.setItem(STORAGE_HERO, JSON.stringify(state.heroEquip));
+  }, [state.heroEquip]);
 
   const addCoins = useCallback((amount: number) => {
     setState((s) => ({ ...s, coins: s.coins + amount }));
@@ -108,6 +122,10 @@ export function useCoins(): CoinsReturn {
     setState((s) => ({ ...s, activeAvatar: avatarId }));
   }, []);
 
+  const equipHero = useCallback((slot: HeroSlot, itemId: string) => {
+    setState((s) => ({ ...s, heroEquip: { ...s.heroEquip, [slot]: itemId } }));
+  }, []);
+
   const toggleEffect = useCallback((effectId: string) => {
     setState((s) => {
       const active = s.activeEffects.includes(effectId)
@@ -128,6 +146,7 @@ export function useCoins(): CoinsReturn {
     purchase,
     isPurchased,
     equipAvatar,
+    equipHero,
     toggleEffect,
     hasEffect,
     setCoins: (v) => setState((s) => ({

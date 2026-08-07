@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc } from "../../../../convex/_generated/dataModel";
+import type { HeroEquip } from "../../../data/shop";
 import {
   FiCheck,
   FiCopy,
@@ -41,19 +42,20 @@ interface BattleHubProps {
     addCoins: (n: number) => void;
     activeAvatar: string;
   };
+  heroEquip?: HeroEquip;
   addXp: (n: number) => void;
 }
 
-export default function BattleHub({ t, onClose, coinsStore, addXp }: BattleHubProps) {
+export default function BattleHub({ t, onClose, coinsStore, heroEquip, addXp }: BattleHubProps) {
   const configured = useMemo(() => getConvexClient() !== null, []);
   if (!configured) {
     return <BackendMissing t={t} onClose={onClose} />;
   }
-  return <BattleApp t={t} onClose={onClose} coinsStore={coinsStore} addXp={addXp} />;
+  return <BattleApp t={t} onClose={onClose} coinsStore={coinsStore} heroEquip={heroEquip} addXp={addXp} />;
 }
 
 // ══════════════════════════════════════════════════════════════════════
-function BattleApp({ t, onClose, coinsStore, addXp }: BattleHubProps) {
+function BattleApp({ t, onClose, coinsStore, heroEquip, addXp }: BattleHubProps) {
   const { authLoading, isAuthenticated, me, setUsername } = useBattleProfile();
   const [screen, setScreen] = useState<"hub" | "1v1" | "team">("hub");
   const [roomCode, setRoomCode] = useState<string | null>(null);
@@ -137,6 +139,7 @@ function BattleApp({ t, onClose, coinsStore, addXp }: BattleHubProps) {
           onLeave={backToHub}
           onError={setNotice}
           myAvatar={coinsStore.activeAvatar}
+          heroEquip={heroEquip}
         />
       ) : screen === "hub" ? (
         <ModeSelect t={t} onPick={setScreen} onEnterCode={setRoomCode} onError={setNotice} />
@@ -547,12 +550,14 @@ function RoomScreen({
   onLeave,
   onError,
   myAvatar,
+  heroEquip,
 }: {
   t: ThemeColors;
   code: string;
   onLeave: () => void;
   onError: (msg: string) => void;
   myAvatar: string;
+  heroEquip?: HeroEquip;
 }) {
   const room = useQuery(api.rooms.getRoom, { code });
   const myToken = useQuery(api.users.myToken);
@@ -608,6 +613,7 @@ function RoomScreen({
         isHost={isHost}
         myToken={myToken ?? ""}
         myAvatar={myAvatar}
+        heroEquip={heroEquip}
         onStart={async () => {
           try {
             await startRoom({ code });
@@ -639,6 +645,7 @@ function RoomScreen({
         code={code}
         myToken={myToken ?? ""}
         myAvatar={myAvatar}
+        heroEquip={heroEquip}
         onLeave={handleLeave}
       />
     );
@@ -651,6 +658,7 @@ function RoomScreen({
       code={code}
       myToken={myToken ?? ""}
       myAvatar={myAvatar}
+      heroEquip={heroEquip}
       onRematch={async () => {
         try {
           await rematch({ code });
@@ -696,6 +704,7 @@ function LobbyView({
   isHost,
   myToken,
   myAvatar,
+  heroEquip,
   onStart,
   onSwitchTeam,
   onLeave,
@@ -705,6 +714,7 @@ function LobbyView({
   isHost: boolean;
   myToken: string;
   myAvatar: string;
+  heroEquip?: HeroEquip;
   onStart: () => void;
   onSwitchTeam: (team: "A" | "B") => void;
   onLeave: () => void;
@@ -769,7 +779,7 @@ function LobbyView({
                 <div className="space-y-2">
                   {members.map((p) => (
                     <div key={p.tokenIdentifier} className="flex items-center gap-2">
-                      <AvatarChip avatar={p.avatar} size={26} />
+                      <AvatarChip avatar={p.avatar} size={26} heroEquip={p.tokenIdentifier === myToken ? heroEquip : undefined} />
                       <span className="text-sm text-gray-200 truncate">
                         {p.username}
                         {p.tokenIdentifier === myToken && (
@@ -805,7 +815,7 @@ function LobbyView({
           <div className="grid gap-2">
             {room.players.map((p) => (
               <div key={p.tokenIdentifier} className="flex items-center gap-3">
-                <AvatarChip avatar={p.avatar} size={30} />
+                <AvatarChip avatar={p.avatar} size={30} heroEquip={p.tokenIdentifier === myToken ? heroEquip : undefined} />
                 <span className="text-sm text-gray-200">
                   {p.username}
                   {p.tokenIdentifier === myToken && (
@@ -898,18 +908,19 @@ function CountdownView({ t, room, onLeave }: { t: ThemeColors; room: Room; onLea
 // ══════════════════════════════════════════════════════════════════════
 // Racing
 // ══════════════════════════════════════════════════════════════════════
-function RaceRow({ t, p, isMe, textLen, showTeam }: {
+function RaceRow({ t, p, isMe, textLen, showTeam, heroEquip }: {
   t: ThemeColors;
   p: RoomPlayer;
   isMe: boolean;
   textLen: number;
   showTeam: boolean;
+  heroEquip?: HeroEquip;
 }) {
   const pct = progressPct(p.correct, textLen);
   return (
     <div className="mb-3">
       <div className="flex items-center gap-2 mb-1">
-        <AvatarChip avatar={p.avatar} size={24} />
+        <AvatarChip avatar={p.avatar} size={24} heroEquip={isMe ? heroEquip : undefined} />
         <span className={`text-xs truncate ${isMe ? "font-bold" : "text-gray-400"}`} style={isMe ? { color: t.accent } : undefined}>
           {p.username}
           {isMe && " (siz)"}
@@ -961,6 +972,7 @@ function RaceView({
   code,
   myToken,
   myAvatar,
+  heroEquip,
   onLeave,
 }: {
   t: ThemeColors;
@@ -968,6 +980,7 @@ function RaceView({
   code: string;
   myToken: string;
   myAvatar: string;
+  heroEquip?: HeroEquip;
   onLeave: () => void;
 }) {
   const textLen = room.text.length;
@@ -1049,6 +1062,7 @@ function RaceView({
             isMe={p.tokenIdentifier === myToken}
             textLen={textLen}
             showTeam={isTeam}
+            heroEquip={heroEquip}
           />
         ))}
       </div>
@@ -1083,6 +1097,7 @@ function ResultsView({
   room,
   code,
   myToken,
+  heroEquip,
   onRematch,
   onLeave,
 }: {
@@ -1091,6 +1106,7 @@ function ResultsView({
   code: string;
   myToken: string;
   myAvatar: string;
+  heroEquip?: HeroEquip;
   onRematch: () => void;
   onLeave: () => void;
 }) {
@@ -1206,7 +1222,7 @@ function ResultsView({
           {sorted.map((p, i) => (
             <div key={p.tokenIdentifier} className="flex items-center gap-3 text-sm">
               <span className="w-5 text-gray-500 font-bold">{i + 1}.</span>
-              <AvatarChip avatar={p.avatar} size={26} />
+              <AvatarChip avatar={p.avatar} size={26} heroEquip={p.tokenIdentifier === myToken ? heroEquip : undefined} />
               <span className={p.tokenIdentifier === myToken ? "font-bold" : "text-gray-300"} style={p.tokenIdentifier === myToken ? { color: t.accent } : undefined}>
                 {p.username}
                 {p.tokenIdentifier === myToken && " (siz)"}

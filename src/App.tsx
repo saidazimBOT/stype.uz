@@ -644,7 +644,7 @@ export default function App() {
           >
             {isSignedUp ? (
               <>
-                <ProfileAvatar profile={profile} size={18} />
+                <ProfileAvatar profile={profile} size={18} heroEquip={coinsStore.heroEquip} />
                 <span className="hidden sm:inline max-w-[70px] truncate">
                   {fullName(profile)?.split(" ")[0] || "Profil"}
                 </span>
@@ -744,7 +744,7 @@ export default function App() {
               onClose={() => setShowSettings(false)}
             />
           ) : view === "leaderboard" ? (
-            <LeaderboardView t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
+            <LeaderboardView t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "countryrank" ? (
             <CountryRanking t={t} onClose={() => setView("type")} />
           ) : view === "profile" ? (
@@ -754,6 +754,7 @@ export default function App() {
               history={history}
               activeAvatar={coinsStore.activeAvatar}
               profile={profile}
+              heroEquip={coinsStore.heroEquip}
               onEditProfile={() => setShowSignUp(true)}
             />
           ) : view === "history" ? (
@@ -775,11 +776,11 @@ export default function App() {
           ) : view === "seasonal" ? (
             <SeasonalEvent t={t} onClose={() => setView("type")} missions={missions} updateProgress={updateProgress} />
           ) : view === "multiplyer" ? (
-            <BattleHub t={t} onClose={() => setView("type")} coinsStore={coinsStore} addXp={addXp} />
+            <BattleHub t={t} onClose={() => setView("type")} coinsStore={coinsStore} heroEquip={coinsStore.heroEquip} addXp={addXp} />
           ) : view === "friends" ? (
-            <FriendSystem t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
+            <FriendSystem t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "chat" ? (
-            <Chat t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} />
+            <Chat t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "ai" ? (
             <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "custom" ? (
@@ -795,10 +796,12 @@ export default function App() {
               purchased={coinsStore.purchased}
               activeEffects={coinsStore.activeEffects}
               activeAvatar={coinsStore.activeAvatar}
+              heroEquip={coinsStore.heroEquip}
               onClose={() => setView("type")}
               onPurchase={coinsStore.purchase}
               onSetTheme={setTheme}
               onEquipAvatar={coinsStore.equipAvatar}
+              onEquipHero={coinsStore.equipHero}
               onToggleEffect={coinsStore.toggleEffect}
               currentTheme={theme}
             />
@@ -1036,7 +1039,7 @@ export default function App() {
           return (
             <>
               {isSignedUp ? (
-                <ProfileAvatar profile={profile} size={28} />
+                <ProfileAvatar profile={profile} size={28} heroEquip={coinsStore.heroEquip} />
               ) : (
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all"

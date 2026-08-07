@@ -15,7 +15,7 @@ export interface ShopItem {
   preview?: string;
 }
 
-export type ShopCategory = "themes" | "avatars" | "effects";
+export type ShopCategory = "themes" | "avatars" | "hero" | "effects";
 
 // ── Theme Unlock Prices ─────────────────────────────────────────────────
 // Classic themes are FREE, Premium themes cost coins
@@ -70,6 +70,62 @@ export const AVATAR_SHOP: ShopItem[] = [
   { id: "avatar_sun", name: "Sun Avatar", desc: "Bright sunny warmth", price: 50, icon: FiSun, color: "#f59e0b", rarity: "common" },
   { id: "avatar_heart", name: "Heart Avatar", desc: "Loving pink aura", price: 40, icon: FiHeart, color: "#ec4899", rarity: "common" },
 ];
+
+// ── Hero Items (wearable) ───────────────────────────────────────────────
+export type HeroSlot = "hat" | "glasses" | "outfit";
+
+export interface HeroEquip {
+  hat: string;
+  glasses: string;
+  outfit: string;
+}
+
+export interface HeroShopItem extends ShopItem {
+  slot: HeroSlot;
+}
+
+export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
+  hat: "Hats",
+  glasses: "Glasses",
+  outfit: "Outfits",
+};
+
+export const DEFAULT_HERO_EQUIP: HeroEquip = {
+  hat: "hero_hat_none",
+  glasses: "hero_glasses_none",
+  outfit: "hero_outfit_none",
+};
+
+export const HERO_SHOP: HeroShopItem[] = [
+  // ── Hats ──
+  { id: "hero_hat_none", name: "No Hat", desc: "Default look", price: 0, slot: "hat", color: "#9ca3af", rarity: "common" },
+  { id: "hero_cap", name: "Baseball Cap", desc: "Sporty sky-blue cap", price: 30, slot: "hat", color: "#38bdf8", rarity: "common" },
+  { id: "hero_beanie", name: "Cozy Beanie", desc: "Warm winter beanie", price: 25, slot: "hat", color: "#ec4899", rarity: "rare" },
+  { id: "hero_halo", name: "Angel Halo", desc: "Floating golden halo", price: 40, slot: "hat", color: "#fbbf24", rarity: "rare" },
+  { id: "hero_wizard", name: "Wizard Hat", desc: "Magical pointed hat", price: 50, slot: "hat", color: "#a78bfa", rarity: "epic" },
+  { id: "hero_crown", name: "Golden Crown", desc: "Royal golden crown 👑", price: 80, slot: "hat", color: "#f59e0b", rarity: "legendary" },
+  // ── Glasses ──
+  { id: "hero_glasses_none", name: "No Glasses", desc: "Default look", price: 0, slot: "glasses", color: "#9ca3af", rarity: "common" },
+  { id: "hero_rounds", name: "Round Glasses", desc: "Classic nerd style", price: 20, slot: "glasses", color: "#e5e7eb", rarity: "common" },
+  { id: "hero_sunglasses", name: "Sunglasses", desc: "Cool black shades", price: 35, slot: "glasses", color: "#111827", rarity: "rare" },
+  { id: "hero_star", name: "Star Glasses", desc: "Shining star shades", price: 45, slot: "glasses", color: "#f59e0b", rarity: "rare" },
+  { id: "hero_visor", name: "Cyber Visor", desc: "Futuristic neon visor", price: 60, slot: "glasses", color: "#22d3ee", rarity: "epic" },
+  // ── Outfits ──
+  { id: "hero_outfit_none", name: "Default Shirt", desc: "Basic t-shirt", price: 0, slot: "outfit", color: "#64748b", rarity: "common" },
+  { id: "hero_tshirt", name: "Neon T-shirt", desc: "Bright neon tee", price: 20, slot: "outfit", color: "#22c55e", rarity: "common" },
+  { id: "hero_hoodie", name: "Street Hoodie", desc: "Cozy street hoodie", price: 40, slot: "outfit", color: "#38bdf8", rarity: "rare" },
+  { id: "hero_jersey", name: "Gamer Jersey", desc: "Pro gamer jersey", price: 50, slot: "outfit", color: "#ec4899", rarity: "epic" },
+  { id: "hero_suit", name: "Black Suit", desc: "Formal business suit", price: 70, slot: "outfit", color: "#334155", rarity: "epic" },
+  { id: "hero_armor", name: "Knight Armor", desc: "Legendary silver armor", price: 100, slot: "outfit", color: "#94a3b8", rarity: "legendary" },
+];
+
+export function getHeroItem(id: string): HeroShopItem | undefined {
+  return HERO_SHOP.find((h) => h.id === id);
+}
+
+export function isHeroFreeItem(id: string): boolean {
+  return id === "hero_hat_none" || id === "hero_glasses_none" || id === "hero_outfit_none";
+}
 
 // ── Effect Items ────────────────────────────────────────────────────────
 export interface EffectItem extends ShopItem {

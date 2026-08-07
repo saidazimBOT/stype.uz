@@ -1,22 +1,35 @@
 "use client";
 
-import type { IconType } from "react-icons";
-import { getAvatarInfo } from "../../data/shop";
+import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../data/shop";
+import { STORAGE_HERO } from "../../hooks/useCoins";
 import type { UserProfile } from "../../hooks/useProfile";
+import HeroAvatar from "./HeroAvatar";
 
 interface ProfileAvatarProps {
   profile: UserProfile | null | undefined;
   size?: number;
   className?: string;
+  /** Qahramon kiyimlari — berilmasa, sotib olingan kiyimlar localStorage dan olinadi */
+  heroEquip?: Partial<HeroEquip>;
+}
+
+function readStoredHeroEquip(): Partial<HeroEquip> {
+  try {
+    const raw = localStorage.getItem(STORAGE_HERO);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 }
 
 /**
- * Foydalanuvchi rasmini ko'rsatadi; rasm yo'q bo'lsa — shop avatari.
+ * Foydalanuvchi rasmini ko'rsatadi; rasm yo'q bo'lsa — shop avatari / qahramon.
  * Navbar, profil sahifasi, chat va battle'da ishlatiladi.
  */
-export default function ProfileAvatar({ profile, size = 32, className }: ProfileAvatarProps) {
+export default function ProfileAvatar({ profile, size = 32, className, heroEquip }: ProfileAvatarProps) {
   const photo = profile?.photo;
   const avatarId = profile?.avatarId || "avatar_default";
+  const equip: Partial<HeroEquip> = heroEquip ?? readStoredHeroEquip();
 
   if (photo) {
     return (
@@ -35,20 +48,14 @@ export default function ProfileAvatar({ profile, size = 32, className }: Profile
   }
 
   const av = getAvatarInfo(avatarId);
-  const AvIcon = av.icon as IconType;
+
   return (
     <div
-      className={`rounded-full flex items-center justify-center flex-shrink-0 ${className || ""}`}
-      style={{
-        width: size,
-        height: size,
-        background: `linear-gradient(135deg, ${av.color}44, ${av.color}88)`,
-        border: `2px solid ${av.color}`,
-        boxShadow: `0 0 12px ${av.color}33`,
-      }}
-      aria-label="Profil avatari"
+      className={`relative flex-shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+      aria-label="Qahramon avatari"
     >
-      <AvIcon size={Math.round(size * 0.5)} style={{ color: av.color }} />
+      <HeroAvatar equip={{ ...DEFAULT_HERO_EQUIP, ...equip }} color={av.color} size={size} />
     </div>
   );
 }

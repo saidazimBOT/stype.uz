@@ -1,4 +1,5 @@
-import { getAvatarInfo } from "../../../data/shop";
+import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../../data/shop";
+import HeroAvatar from "../HeroAvatar";
 
 export const BATTLE_REWARDS = {
   "1v1": {
@@ -23,11 +24,21 @@ export function progressPct(correct: number, textLen: number): number {
 export function AvatarChip({
   avatar,
   size = 28,
+  heroEquip,
 }: {
   avatar: string;
   size?: number;
+  /** O'z qahramonining kiyimlari — berilsa, kiyim kiyingan qahramon ko'rinadi */
+  heroEquip?: HeroEquip;
 }) {
   const info = getAvatarInfo(avatar);
+  if (heroEquip) {
+    return (
+      <div className="flex-shrink-0" style={{ width: size, height: size }}>
+        <HeroAvatar equip={{ ...DEFAULT_HERO_EQUIP, ...heroEquip }} color={info.color} size={size} />
+      </div>
+    );
+  }
   const Icon = info.icon;
   return (
     <div
