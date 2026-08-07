@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { ThemeColors } from "../../types";
-import { FiDollarSign, FiMinus, FiPlus } from "react-icons/fi";
+import { FiDollarSign, FiGift, FiMinus, FiPlus } from "react-icons/fi";
 import {
   Card, SectionHeader, Spinner, EmptyState, ErrorBox, SearchInput, AvatarDot, RoleBadge,
   PrimaryBtn, GhostBtn, TextInput, TextArea, Select, Badge, fmtDateTime,
@@ -32,6 +32,33 @@ export default function EconomySection({ t }: { t: ThemeColors }) {
   const users = useQuery(api.admin.listUsers, { search: debounced || undefined, limit: 40 }) as AdminUser[] | undefined;
   const transactions = useQuery(api.admin.listTransactions, { search: debounced || undefined, limit: 60 }) as TxItem[] | undefined;
   const adjust = useMutation(api.admin.adjustBalance);
+  const giftAll = useMutation(api.admin.giftCoinsToAll);
+
+  // ── Barchaga sovg'a (mass gift) ──
+  const [giftAmount, setGiftAmount] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
+  const [giftBusy, setGiftBusy] = useState(false);
+  const [giftError, setGiftError] = useState("");
+  const [giftOk, setGiftOk] = useState("");
+
+  const giftAmt = Math.round(Number(giftAmount) || 0);
+  const giftInvalid = giftAmt <= 0;
+
+  const submitGiftAll = async () => {
+    setGiftBusy(true);
+    setGiftError("");
+    setGiftOk("");
+    try {
+      const res = (await giftAll({ amount: giftAmt, message: giftMessage.trim() || undefined })) as { count: number };
+      setGiftOk(`✓ ${res.count} ta foydalanuvchiga +${giftAmt} 🪙 yuborildi!`);
+      setGiftAmount("");
+      setGiftMessage("");
+    } catch (e) {
+      setGiftError(errMsg(e));
+    } finally {
+      setGiftBusy(false);
+    }
+  };
 
   const amt = Math.round(Number(amount) || 0);
   const current = selected ? (kind === "coins" ? selected.coins : selected.xp) : 0;
@@ -231,6 +258,58 @@ export default function EconomySection({ t }: { t: ThemeColors }) {
           )}
         </Card>
       </div>
+
+      {/* Barchaga sovg'a yuborish */}
+      <Card t={t} className="p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <FiGift size={15} style={{ color: "#f59e0b" }} />
+          <div className="text-sm font-medium text-gray-300">Barchaga sovg'a yuborish</div>
+        </div>
+        <p className="text-[11px] text-gray-500 mb-4">
+          Hamma ro'yxatdan o'tgan (ban qilinmagan) foydalanuvchilarga bir xil coin beradi.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] text-gray-500 mb-1">Miqdor (🪙)</label>
+            <TextInput t={t} value={giftAmount} onChange={setGiftAmount} type="number" placeholder="masalan: 50" accent />
+          </div>
+          <div>
+            <label className="block text-[11px] text-gray-500 mb-1">Xabar (ixtiyoriy)</label>
+            <TextInput t={t} value={giftMessage} onChange={setGiftMessage} placeholder="masalan: Barchaga rahmat!" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {[10, 50, 100, 500].map((n) => (
+            <button
+              key={n}
+              onClick={() => setGiftAmount(String(n))}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-105"
+              style={{
+                background: giftAmt === n ? "#f59e0b33" : "#22c55e1a",
+                color: giftAmt === n ? "#fbbf24" : "#4ade80",
+                border: `1px solid ${giftAmt === n ? "#f59e0b66" : "#22c55e44"}`,
+              }}
+            >
+              +{n}
+            </button>
+          ))}
+        </div>
+
+        {giftError && <ErrorBox message={giftError} />}
+        {giftOk && (
+          <div className="mt-3 px-3 py-2 rounded-xl text-xs text-green-400 bg-green-500/10 border border-green-500/30 animate-pop-in">
+            {giftOk}
+          </div>
+        )}
+
+        <div className="flex justify-end mt-3">
+          <PrimaryBtn t={t} onClick={submitGiftAll} disabled={giftBusy || giftInvalid}>
+            <FiGift size={12} /> {giftBusy ? "Yuborilmoqda..." : `Hammaga +${giftAmt || 0} 🪙 yuborish`}
+          </PrimaryBtn>
+        </div>
+      </Card>
 
       {/* Tranzaksiya tarixi */}
       <Card t={t} className="p-5">

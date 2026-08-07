@@ -3,6 +3,7 @@
 import { FiExternalLink, FiGlobe, FiX } from "react-icons/fi";
 import { FaBullhorn, FaLanguage, FaGraduationCap } from "react-icons/fa6";
 import type { ThemeColors } from "../../types";
+import LingohubLogo from "./LingohubLogo";
 
 // Lingohub.uz — reklama qilinadigan sayt
 const LINGOHUB_URL = "https://lingohub.uz";
@@ -11,71 +12,6 @@ const LINGOHUB_NAME = "lingohub.uz";
 interface LingohubPromoProps {
   t: ThemeColors;
   onClose: () => void;
-}
-
-// ── Lingohub logosi (kumush/metal uslubidagi nutq pufakchasi + LH) ────
-function LingohubLogo({ size = 132 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size * 1.08}
-      viewBox="0 0 100 108"
-      className="animate-bounce-in drop-shadow-2xl"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="lhRing" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f8fafc" />
-          <stop offset="35%" stopColor="#64748b" />
-          <stop offset="50%" stopColor="#e2e8f0" />
-          <stop offset="72%" stopColor="#475569" />
-          <stop offset="100%" stopColor="#cbd5e1" />
-        </linearGradient>
-        <linearGradient id="lhMetal" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f1f5f9" />
-          <stop offset="100%" stopColor="#94a3b8" />
-        </linearGradient>
-        <radialGradient id="lhInner" cx="0.35" cy="0.3" r="1.1">
-          <stop offset="0%" stopColor="#2b3c58" />
-          <stop offset="70%" stopColor="#0d1a2e" />
-          <stop offset="100%" stopColor="#081120" />
-        </radialGradient>
-      </defs>
-
-      {/* Nutq pufakchasi dumi */}
-      <path d="M 28 84 L 46 84 L 33 100 Z" fill="url(#lhRing)" />
-      {/* Metall halqa */}
-      <circle cx="50" cy="50" r="46" fill="none" stroke="url(#lhRing)" strokeWidth="10" />
-      <circle cx="50" cy="50" r="41" fill="url(#lhInner)" stroke="#ffffff2b" strokeWidth="1" />
-
-      {/* Signal to'lqinlari */}
-      <path d="M 13 76 Q 13 50 13 24" stroke="url(#lhMetal)" strokeWidth="4" strokeLinecap="round" opacity="0.55" fill="none" />
-      <path d="M 21 70 Q 21 50 21 30" stroke="url(#lhMetal)" strokeWidth="4" strokeLinecap="round" opacity="0.75" fill="none" />
-      <path d="M 29 64 Q 29 50 29 36" stroke="url(#lhMetal)" strokeWidth="4" strokeLinecap="round" opacity="1" fill="none" />
-
-      {/* LH monogramma */}
-      <text
-        x="50"
-        y="63"
-        textAnchor="middle"
-        fontFamily="'Inter', sans-serif"
-        fontWeight="800"
-        fontSize="36"
-        fill="url(#lhMetal)"
-      >
-        LH
-      </text>
-
-      {/* Yorqin akslar (lens flare) */}
-      <circle cx="82" cy="15" r="9" fill="#ffffff3d" />
-      <circle cx="82" cy="15" r="3.5" fill="#ffffff" opacity="0.95">
-        <animate attributeName="opacity" values="0.95;0.45;0.95" dur="2.2s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="16" cy="30" r="2" fill="#ffffff" opacity="0.7">
-        <animate attributeName="opacity" values="0.7;0.2;0.7" dur="3s" repeatCount="indefinite" />
-      </circle>
-    </svg>
-  );
 }
 
 // Xususiyatlar (sayt haqida qisqa ma'lumot)
@@ -134,8 +70,8 @@ export default function LingohubPromo({ t, onClose }: LingohubPromoProps) {
         ))}
 
         {/* Logo */}
-        <div className="mb-4 inline-block">
-          <LingohubLogo />
+        <div className="mb-3 inline-block">
+          <LingohubLogo size={132} className="animate-bounce-in" />
         </div>
 
         {/* Sayt nomi — bosilganda saytga o'tadi */}

@@ -26,7 +26,7 @@ export function fullName(p: UserProfile | null | undefined): string {
 }
 
 /** Profil uchun "username" — battle va chatda ko'rinadi (faqat lotin/kirill/raqam/_) */
-function usernameFromProfile(p: UserProfile): string {
+export function usernameFromProfile(p: UserProfile): string {
   const base = p.firstName.trim().toLowerCase();
   const clean = base.replace(/[^a-zA-Z0-9_\u0400-\u04FF]/g, "");
   if (clean.length >= 2) return clean.slice(0, 20);

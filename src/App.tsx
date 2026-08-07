@@ -42,6 +42,8 @@ import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import TelegramPromo from "./components/features/TelegramPromo";
 import LingohubPromo from "./components/features/LingohubPromo";
+import LingohubLogo from "./components/features/LingohubLogo";
+import AccountSyncBridge from "./components/features/AccountSyncBridge";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
@@ -56,7 +58,7 @@ import {
   FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaBullhorn, FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
+import { FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
@@ -512,6 +514,7 @@ export default function App() {
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
     <ConvexClientProvider>
+    <AccountSyncBridge />
     <div
       suppressHydrationWarning
       className="min-h-screen h-dvh flex flex-col isolate"
@@ -671,7 +674,7 @@ export default function App() {
             className="ad-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
             title="Lingohub.uz — 27 tilda bepul til o'rganish"
           >
-            <FaBullhorn size={12} />
+            <LingohubLogo size={20} />
             <span className="hidden sm:inline">Lingohub</span>
           </button>
           {/* Sayt egasi */}

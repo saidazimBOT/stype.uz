@@ -61,11 +61,12 @@ function BattleApp({ t, onClose, coinsStore, heroEquip, addXp }: BattleHubProps)
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Server profildan coins/xp ni local hook'larga sinxronlash (faqat o'sish tomonga)
+  // Server profildan XP ni local hook'ga sinxronlash (faqat o'sish tomonga).
+  // Coins endi AccountSyncBridge orqali delta usulida sinxronlanadi — bu yerda
+  // Math.max qilinsa sovg'a/reyting deltasi 2 marta hisoblanib qolishi mumkin.
   const prevXpRef = useRef<number | null>(null);
   useEffect(() => {
     if (!me) return;
-    coinsStore.setCoins((prev) => Math.max(prev, me.coins));
     if (prevXpRef.current === null) {
       prevXpRef.current = me.xp;
       return;
@@ -73,7 +74,7 @@ function BattleApp({ t, onClose, coinsStore, heroEquip, addXp }: BattleHubProps)
     const d = me.xp - prevXpRef.current;
     if (d > 0) addXp(d);
     prevXpRef.current = me.xp;
-  }, [me, coinsStore.setCoins, addXp]);
+  }, [me, addXp]);
 
   if (authLoading || !isAuthenticated) {
     return (

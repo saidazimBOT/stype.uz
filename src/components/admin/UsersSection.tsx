@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { ThemeColors } from "../../types";
-import { FiEye, FiTrash2, FiXCircle } from "react-icons/fi";
+import { FiEye, FiGift, FiTrash2, FiXCircle } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa6";
 import {
   Card, SectionHeader, Spinner, EmptyState, ErrorBox, SearchInput, Modal, ConfirmDialog,
-  AvatarDot, RoleBadge, PrimaryBtn, GhostBtn, SmallBtn, Badge, timeAgo, fmtDateTime, TextArea,
+  AvatarDot, RoleBadge, PrimaryBtn, GhostBtn, SmallBtn, Badge, timeAgo, fmtDateTime, TextArea, TextInput, Field,
 } from "./adminUi";
 import { achievementIcon } from "./achievementIcons";
 import type { AdminUser, UserProfile } from "./types";
@@ -24,6 +24,7 @@ export default function UsersSection({
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [profile, setProfile] = useState<AdminUser | null>(null);
+  const [gift, setGift] = useState<AdminUser | null>(null);
   const [confirm, setConfirm] = useState<null | { type: "ban" | "unban" | "delete"; user: AdminUser }>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -36,6 +37,7 @@ export default function UsersSection({
   const users = useQuery(api.admin.listUsers, { search: debounced || undefined, limit: 200 }) as AdminUser[] | undefined;
   const banUser = useMutation(api.admin.setUserBan);
   const deleteUser = useMutation(api.admin.deleteUser);
+  const giftCoins = useMutation(api.admin.giftCoins);
 
   const isOwner = myRole === "owner";
 
@@ -119,6 +121,9 @@ export default function UsersSection({
                         <SmallBtn t={t} color={t.accent} onClick={() => setProfile(u)}>
                           <span className="flex items-center gap-1"><FiEye size={11} /> Profil</span>
                         </SmallBtn>
+                        <SmallBtn t={t} color="#f59e0b" onClick={() => setGift(u)}>
+                          <span className="flex items-center gap-1"><FiGift size={11} /> Gift</span>
+                        </SmallBtn>
                         {u.role !== "owner" && (
                           u.banned ? (
                             <SmallBtn t={t} color="#22c55e" onClick={() => setConfirm({ type: "unban", user: u })}>
@@ -152,6 +157,15 @@ export default function UsersSection({
           myRole={myRole}
           onClose={() => setProfile(null)}
           onChanged={() => setProfile(null)}
+        />
+      )}
+
+      {gift && (
+        <GiftModal
+          t={t}
+          user={gift}
+          giftCoins={giftCoins}
+          onClose={() => setGift(null)}
         />
       )}
 
@@ -357,6 +371,99 @@ function UserProfileModal({
           </div>
         </div>
       )}
+    </Modal>
+  );
+}
+
+// ── Coin sovg'a (padarka) oynasi ────────────────────────────────────────
+function GiftModal({
+  t,
+  user,
+  giftCoins,
+  onClose,
+}: {
+  t: ThemeColors;
+  user: AdminUser;
+  giftCoins: (args: { userId: string; amount: number; message?: string }) => Promise<unknown>;
+  onClose: () => void;
+}) {
+  const [amount, setAmount] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+
+  const amt = Math.round(Number(amount) || 0);
+  const invalid = amt <= 0;
+
+  const submit = async () => {
+    setBusy(true);
+    setError("");
+    setOk("");
+    try {
+      await giftCoins({ userId: user._id, amount: amt, message: message.trim() || undefined });
+      setOk(`✓ ${amt} 🪙 ${user.username || "foydalanuvchi"} ga yuborildi!`);
+      setAmount("");
+      setMessage("");
+    } catch (e) {
+      setError(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal t={t} title="🎁 Coin sovg'a (padarka)" onClose={busy ? () => {} : onClose}>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#ffffff06" }}>
+          <AvatarDot avatar={user.avatar} size={38} />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold text-white truncate">{user.username || "(nomsiz)"}</div>
+            <div className="text-[11px] text-gray-500">
+              Joriy balans: <span className="font-bold text-yellow-400">🪙 {user.coins}</span>
+            </div>
+          </div>
+          <RoleBadge t={t} role={user.role} />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {[10, 50, 100, 500, 1000, 5000].map((n) => (
+            <button
+              key={n}
+              onClick={() => setAmount(String(n))}
+              className="px-2 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105"
+              style={{
+                background: Number(amount) === n ? "#f59e0b33" : "#22c55e1a",
+                color: Number(amount) === n ? "#fbbf24" : "#4ade80",
+                border: `1px solid ${Number(amount) === n ? "#f59e0b66" : "#22c55e44"}`,
+              }}
+            >
+              +{n}
+            </button>
+          ))}
+        </div>
+
+        <Field t={t} label="Miqdor (🪙)">
+          <TextInput t={t} value={amount} onChange={setAmount} type="number" placeholder="masalan: 100" accent autoFocus />
+        </Field>
+        <Field t={t} label="Xabar (ixtiyoriy)" hint="Masalan: saytimizga kirganingiz uchun rahmat!">
+          <TextInput t={t} value={message} onChange={setMessage} placeholder="Tabrik matni..." />
+        </Field>
+
+        {error && <ErrorBox message={error} />}
+        {ok && (
+          <div className="px-3 py-2 rounded-xl text-xs text-green-400 bg-green-500/10 border border-green-500/30 animate-pop-in">
+            {ok}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+          <GhostBtn t={t} onClick={onClose}>Yopish</GhostBtn>
+          <PrimaryBtn t={t} onClick={submit} disabled={busy || invalid}>
+            <FiGift size={12} /> {busy ? "Yuborilmoqda..." : `Sovg'a qilish (+${amt || 0} 🪙)`}
+          </PrimaryBtn>
+        </div>
+      </div>
     </Modal>
   );
 }

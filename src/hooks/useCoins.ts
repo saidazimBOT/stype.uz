@@ -65,6 +65,18 @@ export function useCoins(): CoinsReturn {
     localStorage.setItem(STORAGE_COINS, String(state.coins));
   }, [state.coins]);
 
+  // Server (Convex) bilan sinxronlash — admin sovg'a qilgan coinlar hamyonga tushadi
+  useEffect(() => {
+    const onSync = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail;
+      if (typeof detail === "number" && Number.isFinite(detail) && detail > 0) {
+        setState((s) => (detail > s.coins ? { ...s, coins: detail } : s));
+      }
+    };
+    window.addEventListener("typeuz-coins-sync", onSync);
+    return () => window.removeEventListener("typeuz-coins-sync", onSync);
+  }, []);
+
   // Persist purchased
   useEffect(() => {
     localStorage.setItem(STORAGE_PURCHASED, JSON.stringify(state.purchased));

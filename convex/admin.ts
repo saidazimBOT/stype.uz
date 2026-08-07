@@ -431,6 +431,87 @@ export const listTransactions = query({
 });
 
 // ══════════════════════════════════════════════════════════════════════
+// COIN GIFT (SOVG'A / PADARKA)
+// ══════════════════════════════════════════════════════════════════════
+
+/** Bir martalik sovg'a uchun yuqori chegara — xato kiritilgan katta sonlardan himoya */
+const GIFT_MAX = 1_000_000;
+
+/** Bitta foydalanuvchiga coin sovg'a qilish (faqat musbat miqdor). */
+export const giftCoins = mutation({
+  args: {
+    userId: v.id("users"),
+    amount: v.number(),
+    message: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const amount = Math.round(args.amount);
+    if (amount <= 0) throw new Error("Sovg'a miqdori musbat bo'lishi kerak");
+    if (amount > GIFT_MAX) throw new Error(`Sovg'a miqdori ${GIFT_MAX.toLocaleString()} dan oshmasligi kerak`);
+    const target = await ctx.db.get(args.userId);
+    if (!target) throw new Error("Foydalanuvchi topilmadi");
+
+    const next = target.coins + amount;
+    await ctx.db.patch(target._id, { coins: next });
+
+    const reason = `🎁 Sovg'a${args.message?.trim() ? `: ${args.message.trim()}` : ""}`;
+    await ctx.db.insert("coinTransactions", {
+      tokenIdentifier: target.tokenIdentifier,
+      username: target.username || "?",
+      kind: "coins",
+      amount,
+      balanceAfter: next,
+      reason,
+      adminName: displayName(admin.user),
+      createdAt: Date.now(),
+    });
+
+    await logAdminAction(ctx, displayName(admin.user), "coin_gift", target.username || "?", `+${amount} coins (${reason})`);
+    return { newBalance: next };
+  },
+});
+
+/** Barcha (ban qilinmagan) foydalanuvchilarga bir xil coin sovg'a qilish. */
+export const giftCoinsToAll = mutation({
+  args: {
+    amount: v.number(),
+    message: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const amount = Math.round(args.amount);
+    if (amount <= 0) throw new Error("Miqdor musbat bo'lishi kerak");
+    if (amount > GIFT_MAX) throw new Error(`Miqdor ${GIFT_MAX.toLocaleString()} dan oshmasligi kerak`);
+
+    const users = await ctx.db.query("users").collect();
+    const reason = `🎁 Barchaga sovg'a${args.message?.trim() ? `: ${args.message.trim()}` : ""}`;
+    const now = Date.now();
+    let count = 0;
+
+    for (const u of users) {
+      if (u.banned) continue;
+      const next = u.coins + amount;
+      await ctx.db.patch(u._id, { coins: next });
+      await ctx.db.insert("coinTransactions", {
+        tokenIdentifier: u.tokenIdentifier,
+        username: u.username || "?",
+        kind: "coins",
+        amount,
+        balanceAfter: next,
+        reason,
+        adminName: displayName(admin.user),
+        createdAt: now,
+      });
+      count++;
+    }
+
+    await logAdminAction(ctx, displayName(admin.user), "coin_gift_all", `${count} ta foydalanuvchi`, `+${amount} coins (${reason})`);
+    return { count };
+  },
+});
+
+// ══════════════════════════════════════════════════════════════════════
 // TYPING TEXT MANAGEMENT
 // ══════════════════════════════════════════════════════════════════════
 
