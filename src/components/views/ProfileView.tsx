@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { FiAward, FiGlobe, FiMoon, FiSmile, FiStar, FiSun, FiTarget, FiUser, FiZap } from "react-icons/fi";
+import { FiAward, FiEdit3, FiGlobe, FiMoon, FiSmile, FiStar, FiSun, FiTarget, FiUser, FiZap } from "react-icons/fi";
 import { FaFire, FaGem, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { getAvatarInfo } from "../../data/shop";
+import { fullName, type UserProfile } from "../../hooks/useProfile";
+import ProfileAvatar from "../features/ProfileAvatar";
 import type { ThemeColors, TestResult } from "../../types";
 
 interface ProfileViewProps {
@@ -13,6 +15,8 @@ interface ProfileViewProps {
   onClose: () => void;
   history: TestResult[];
   activeAvatar?: string;
+  profile?: UserProfile | null;
+  onEditProfile?: () => void;
 }
 
 const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestResult[]) => boolean }[] = [
@@ -33,8 +37,13 @@ const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestRe
   { icon: FiGlobe, name: "Polyglot", desc: "3 languages", check: (h: TestResult[]) => new Set(h.map((t) => t.lang)).size >= 3 },
 ];
 
-export default function ProfileView({ t, onClose, history, activeAvatar = "avatar_default" }: ProfileViewProps) {
+export default function ProfileView({ t, onClose, history, activeAvatar = "avatar_default", profile, onEditProfile }: ProfileViewProps) {
   const [xp] = useLocalStorage("typeuz_xp", 0);
+
+  const name = fullName(profile) || "Typist #888";
+  const memberSince = profile?.signedUpAt
+    ? new Date(profile.signedUpAt).getFullYear()
+    : "2024";
 
   const stats = useMemo(() => {
     if (!history || history.length === 0) return { best: 0, avgWpm: 0, avgAcc: 100, tests: 0 };
@@ -68,37 +77,34 @@ export default function ProfileView({ t, onClose, history, activeAvatar = "avata
         className="flex items-center gap-6 p-6 rounded-2xl mb-6"
         style={{ background: t.surface, border: `1px solid ${t.accent}22` }}
       >
-        {(() => {
-          const av = getAvatarInfo(activeAvatar);
-          const AvIcon = av.icon;
-          return (
-            <div className="relative group">
-              <div
-                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold transition-all duration-300 group-hover:scale-110"
-                style={{
-                  background: `linear-gradient(135deg, ${av.color}44, ${av.color}88)`,
-                  border: `2px solid ${av.color}`,
-                  boxShadow: `0 0 24px ${av.color}44`,
-                }}
-              >
-                <AvIcon size={32} style={{ color: av.color }} />
-              </div>
-              {/* Rarity indicator ring */}
-              <div
-                className="absolute inset-0 rounded-full animate-ping opacity-20"
-                style={{ border: `2px solid ${av.color}` }}
-              />
-              <div
-                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs animate-bounce"
-                style={{ background: av.color }}
-              >
-                🇺🇿
-              </div>
-            </div>
-          );
-        })()}
+        <div className="relative group">
+          <ProfileAvatar profile={profile} size={80} />
+          {/* Rarity indicator ring */}
+          <div
+            className="absolute inset-0 rounded-full animate-ping opacity-20 pointer-events-none"
+            style={{ border: `2px solid ${getAvatarInfo(activeAvatar).color}` }}
+          />
+          <div
+            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs animate-bounce"
+            style={{ background: getAvatarInfo(activeAvatar).color }}
+          >
+            🇺🇿
+          </div>
+        </div>
         <div className="flex-1">
-          <div className="text-xl font-bold text-white">Typist #888</div>
+          <div className="flex items-center gap-2">
+            <div className="text-xl font-bold text-white">{name}</div>
+            {onEditProfile && (
+              <button
+                onClick={onEditProfile}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-all"
+                title="Profilni tahrirlash"
+                aria-label="Profilni tahrirlash"
+              >
+                <FiEdit3 size={14} />
+              </button>
+            )}
+          </div>
           <div className="text-sm mb-2 flex items-center gap-1.5" style={{ color: t.accent }}>
             <FiAward size={14} />
             Precision Pro · {xp.toLocaleString()} XP
@@ -111,7 +117,7 @@ export default function ProfileView({ t, onClose, history, activeAvatar = "avata
               🇺🇿 Uzbekistan
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
-              Member since 2024
+              Member since {memberSince}
             </span>
             {stats.tests > 0 && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">

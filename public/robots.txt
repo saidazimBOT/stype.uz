@@ -12,4 +12,3 @@ User-agent: GPTBot
 Disallow: /
 
 Sitemap: https://styping.uz/sitemap.xml
-Sitemap: https://styping.uz/image-sitemap.xml

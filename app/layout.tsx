@@ -11,9 +11,9 @@ const LANGUAGES = [
 // ── SEO METADATA ───────────────────────────────────────────────────────────
 const siteUrl = "https://styping.uz";
 const siteName = "STypeUz";
-const title = "STypeUz - Typing Speed Test in 20+ Languages | Improve Your Typing";
+const title = "STypeUz - Free Typing Speed Test in 20+ Languages | WPM Checker";
 const description =
-  "Test and improve your typing speed with STypeUz. 20+ languages including Uzbek, Russian, English, and more. 25+ beautiful themes, mini-games, global leaderboards, and progress tracking. Free online typing practice.";
+  "Free online typing speed test with STypeUz. Measure WPM, accuracy and errors in 20+ languages. Touch typing practice, multiplayer races and mini-games.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -70,9 +70,9 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "uz_UZ",
     alternateLocale: [
-      "ru_RU", "uz_UZ", "de_DE", "fr_FR", "es_ES", "it_IT",
+      "en_US", "ru_RU", "de_DE", "fr_FR", "es_ES", "it_IT",
       "pt_PT", "nl_NL", "pl_PL", "tr_TR", "ar_SA", "ja_JP",
       "zh_CN", "ko_KR", "hi_IN",
     ],
@@ -138,8 +138,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // userScalable/maximumScale olib tashlandi: Google & Lighthouse "disables zoom"
+  // xatosini beradi va bu qidiruv reytingiga salbiy ta'sir qilishi mumkin.
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#090f15" },
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
@@ -150,72 +150,96 @@ export const viewport: Viewport = {
 // ── JSON-LD STRUCTURED DATA ───────────────────────────────────────────────
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: siteName,
-  url: siteUrl,
-  applicationCategory: "EducationalApplication",
-  operatingSystem: "Any",
-  browserRequirements: "Requires JavaScript",
-  description,
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-    availability: "https://schema.org/InStock",
-  },
-  author: {
-    "@type": "Organization",
-    name: "STypeUz",
-    url: siteUrl,
-  },
-  inLanguage: LANGUAGES,
-  keywords: "typing speed test, typing practice, keyboard training, WPM test, touch typing, stypeuz",
-  screenshot: `${siteUrl}/og-image.png`,
-  softwareVersion: "3.0",
-  image: [
+  "@graph": [
     {
-      "@type": "ImageObject",
-      url: `${siteUrl}/og-image.png`,
-      contentUrl: `${siteUrl}/og-image.png`,
-      width: 1200,
-      height: 630,
-      caption: "STypeUz — Typing Speed Test in 20+ Languages",
-      representativeOfPage: true,
+      "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
+      name: siteName,
+      url: siteUrl,
+      logo: `${siteUrl}/favicon.png`,
+      image: `${siteUrl}/og-image.png`,
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "UZ",
+        addressLocality: "Uzbekistan",
+      },
     },
     {
-      "@type": "ImageObject",
-      url: `${siteUrl}/saidazim-stypeuz-developer.webp`,
-      contentUrl: `${siteUrl}/saidazim-stypeuz-developer.webp`,
-      width: 600,
-      height: 901,
-      caption: "Saidazim — STypeUz platformasini yaratgan dasturchi",
+      "@type": "WebApplication",
+      name: siteName,
+      url: siteUrl,
+      applicationCategory: "EducationalApplication",
+      operatingSystem: "Any",
+      browserRequirements: "Requires JavaScript",
+      description,
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+      },
+      author: {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: "STypeUz",
+        url: siteUrl,
+      },
+      publisher: {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: "STypeUz",
+        url: siteUrl,
+      },
+      inLanguage: LANGUAGES,
+      keywords: "typing speed test, typing practice, keyboard training, WPM test, touch typing, stypeuz",
+      screenshot: `${siteUrl}/og-image.png`,
+      softwareVersion: "3.0",
+      image: [
+        {
+          "@type": "ImageObject",
+          url: `${siteUrl}/og-image.png`,
+          contentUrl: `${siteUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          caption: "STypeUz — Typing Speed Test in 20+ Languages",
+          representativeOfPage: true,
+        },
+        {
+          "@type": "ImageObject",
+          url: `${siteUrl}/saidazim-stypeuz-developer.webp`,
+          contentUrl: `${siteUrl}/saidazim-stypeuz-developer.webp`,
+          width: 600,
+          height: 901,
+          caption: "Saidazim — STypeUz platformasini yaratgan dasturchi",
+        },
+        {
+          "@type": "ImageObject",
+          url: `${siteUrl}/stypeuz-team-nf2957.webp`,
+          contentUrl: `${siteUrl}/stypeuz-team-nf2957.webp`,
+          width: 800,
+          height: 1067,
+          caption: "NF-2957 — dasturlash guruhining jamoa surati",
+        },
+        {
+          "@type": "ImageObject",
+          url: `${siteUrl}/mentor-sunnatbek-yusupov.webp`,
+          contentUrl: `${siteUrl}/mentor-sunnatbek-yusupov.webp`,
+          width: 480,
+          height: 640,
+          caption: "Sunnatbek Yusupov — mening ustozim",
+        },
+      ],
+      featureList: [
+        "20+ language support",
+        "25+ themes",
+        "Real-time WPM tracking",
+        "Multiplayer racing",
+        "Mini games",
+        "Progress dashboard",
+        "Daily rewards",
+        "Weekly missions",
+      ],
     },
-    {
-      "@type": "ImageObject",
-      url: `${siteUrl}/stypeuz-team-nf2957.webp`,
-      contentUrl: `${siteUrl}/stypeuz-team-nf2957.webp`,
-      width: 800,
-      height: 1067,
-      caption: "NF-2957 — dasturlash guruhining jamoa surati",
-    },
-    {
-      "@type": "ImageObject",
-      url: `${siteUrl}/mentor-sunnatbek-yusupov.webp`,
-      contentUrl: `${siteUrl}/mentor-sunnatbek-yusupov.webp`,
-      width: 480,
-      height: 640,
-      caption: "Sunnatbek Yusupov — mening ustozim",
-    },
-  ],
-  featureList: [
-    "20+ language support",
-    "25+ themes",
-    "Real-time WPM tracking",
-    "Multiplayer racing",
-    "Mini games",
-    "Progress dashboard",
-    "Daily rewards",
-    "Weekly missions",
   ],
 };
 

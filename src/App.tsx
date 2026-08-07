@@ -7,6 +7,9 @@ import { createAudioController } from "./utils/audio";
 import { charsEqual } from "./utils/typingChars";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useDailyReward } from "./components/features/DailyLogin";
+import { useProfile, fullName } from "./hooks/useProfile";
+import SignUpModal from "./components/features/SignUpModal";
+import ProfileAvatar from "./components/features/ProfileAvatar";
 import { useMissions } from "./components/features/WeeklyMissions";
 import { useReplay } from "./components/features/TypingReplay";
 import { useCoins } from "./hooks/useCoins";
@@ -86,6 +89,7 @@ export default function App() {
   const [showOwner, setShowOwner] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
+  const [showSignUp, setShowSignUp] = useState(false);
 
   // Coin notification helper
   const showCoinNotif = useCallback((amount: number, source: CoinNotif["source"]) => {
@@ -117,6 +121,9 @@ export default function App() {
   const [favorites, setFavorites] = useLocalStorage<string[]>("typeuz_favorites", []);
   const [usedLangs, setUsedLangs] = useLocalStorage<string[]>("typeuz_usedlangs", []);
   const cursorRef = useRef(0);
+
+  // Foydalanuvchi profili (ism, familiya, rasm)
+  const { profile, saveProfile, isSignedUp } = useProfile();
 
   // Feature hooks
   const daily = useDailyReward();
@@ -619,6 +626,36 @@ export default function App() {
             🏆 <span className="hidden sm:inline">300 WPM</span>
             <span className="hidden lg:inline">→ Premium</span>
           </button>
+          {/* Sign up / Profil */}
+          <button
+            onClick={() => {
+              setShowSignUp(true);
+              setShowPromo(false);
+              setShowSettings(false);
+              setShowOwner(false);
+            }}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title={isSignedUp ? "Profilni tahrirlash" : "Sign up — profil yaratish"}
+            style={{
+              background: isSignedUp ? "#ffffff0d" : t.accent + "22",
+              color: isSignedUp ? "#9ca3af" : t.accent,
+              border: `1px solid ${isSignedUp ? "#ffffff14" : t.accent + "55"}`,
+            }}
+          >
+            {isSignedUp ? (
+              <>
+                <ProfileAvatar profile={profile} size={18} />
+                <span className="hidden sm:inline max-w-[70px] truncate">
+                  {fullName(profile)?.split(" ")[0] || "Profil"}
+                </span>
+              </>
+            ) : (
+              <>
+                <FiUser size={13} />
+                <span className="hidden sm:inline">Sign up</span>
+              </>
+            )}
+          </button>
           {/* Sayt egasi */}
           <button
             onClick={() => {
@@ -711,7 +748,14 @@ export default function App() {
           ) : view === "countryrank" ? (
             <CountryRanking t={t} onClose={() => setView("type")} />
           ) : view === "profile" ? (
-            <ProfileView t={t} onClose={() => setView("type")} history={history} activeAvatar={coinsStore.activeAvatar} />
+            <ProfileView
+              t={t}
+              onClose={() => setView("type")}
+              history={history}
+              activeAvatar={coinsStore.activeAvatar}
+              profile={profile}
+              onEditProfile={() => setShowSignUp(true)}
+            />
           ) : view === "history" ? (
             <HistoryView
               t={t}
@@ -774,6 +818,19 @@ export default function App() {
           ) : view === "type" ? (
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
+              {/* SEO H1 — sahifaning asosiy sarlavhasi */}
+              <h1
+                className="text-center mb-1 animate-fade-in"
+                style={{ color: t.accent }}
+              >
+                <span className="block text-base md:text-xl font-bold tracking-tight">
+                  STypeUz — Free Online Typing Speed Test
+                </span>
+                <span className="block text-[11px] md:text-xs text-gray-500 font-medium mt-1 uppercase tracking-widest">
+                  Test & improve your WPM in 20+ languages
+                </span>
+              </h1>
+
               {/* Stats */}
               <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
                 <div className="text-center">
@@ -906,10 +963,58 @@ export default function App() {
                   />
                 </div>
               )}
+
+              {/* SEO CONTENT — Googlebot (JS isiz) indekslash uchun semantik matn */}
+              <section className="w-full max-w-2xl mt-8 pt-6 border-t border-white/5 text-left">
+                <h2 className="text-sm md:text-base font-bold mb-2" style={{ color: t.accent }}>
+                  Why use STypeUz?
+                </h2>
+                <p className="text-[12px] leading-relaxed text-gray-500">
+                  STypeUz is a free online typing speed test that helps you measure and improve your
+                  typing speed in words per minute (WPM). Practice touch typing in 20+ languages
+                  including Uzbek, Russian, English, German and more. Choose from 15, 30 or 60 second
+                  tests, or type freely without a timer.
+                </p>
+                <h3 className="text-xs md:text-sm font-semibold mt-4 mb-1.5 text-gray-300">
+                  Features
+                </h3>
+                <ul className="text-[12px] leading-relaxed text-gray-500 list-disc pl-5 space-y-1">
+                  <li>Real-time WPM, accuracy and error tracking while you type</li>
+                  <li>25+ beautiful themes, keyboard visualizer and finger guide for touch typing</li>
+                  <li>Multiplayer typing races, leaderboards and country rankings</li>
+                  <li>Daily rewards, weekly missions, progress dashboard and typing DNA analysis</li>
+                  <li>Mini games — Flappy Bird, Snake and Tetris — to train your fingers</li>
+                  <li>Create your free profile with name and photo, then start typing right away!</li>
+                </ul>
+              </section>
             </main>
           ) : null}
         </div>
       </div>
+
+      {/* Sign up modal — birinchi kirishda majburiy */}
+      {!isSignedUp && (
+        <SignUpModal
+          t={t}
+          required
+          onSave={(p) => {
+            saveProfile(p);
+            setShowSignUp(false);
+          }}
+        />
+      )}
+      {isSignedUp && showSignUp && (
+        <SignUpModal
+          t={t}
+          initial={profile ?? undefined}
+          required={false}
+          onSave={(p) => {
+            saveProfile(p);
+            setShowSignUp(false);
+          }}
+          onClose={() => setShowSignUp(false)}
+        />
+      )}
 
       {/* Coin earning notifications */}
       <CoinNotification notifications={coinNotifs} onDismiss={dismissCoinNotif} />
@@ -964,21 +1069,26 @@ export default function App() {
         </button>
         {(() => {
           const av = getAvatarInfo(coinsStore.activeAvatar);
-          const AvIcon = av.icon;
           return (
             <>
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-                style={{ background: `linear-gradient(135deg, ${av.color}, ${av.color}88)`, boxShadow: `0 0 10px ${av.color}44` }}
-                title={av.name}
-              >
-                <AvIcon size={14} className="text-white" />
-              </div>
+              {isSignedUp ? (
+                <ProfileAvatar profile={profile} size={28} />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                  style={{ background: `linear-gradient(135deg, ${av.color}, ${av.color}88)`, boxShadow: `0 0 10px ${av.color}44` }}
+                  title={av.name}
+                >
+                  <av.icon size={14} className="text-white" />
+                </div>
+              )}
               <div className="hidden sm:block">
                 <div className="font-semibold" style={{ color: t.accent }}>
+                  {isSignedUp ? fullName(profile) : `${av.name} · ${LANG_LABELS[lang]}`}
+                </div>
+                <div className="text-gray-500">
                   {coinsStore.coins.toLocaleString()} <CoinIcon size={13} /> · {xp.toLocaleString()} XP
                 </div>
-                <div className="text-gray-500">{LANG_LABELS[lang]}</div>
               </div>
             </>
           );
