@@ -818,19 +818,6 @@ export default function App() {
           ) : view === "type" ? (
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
-              {/* SEO H1 — sahifaning asosiy sarlavhasi */}
-              <h1
-                className="text-center mb-1 animate-fade-in"
-                style={{ color: t.accent }}
-              >
-                <span className="block text-base md:text-xl font-bold tracking-tight">
-                  STypeUz — Free Online Typing Speed Test
-                </span>
-                <span className="block text-[11px] md:text-xs text-gray-500 font-medium mt-1 uppercase tracking-widest">
-                  Test & improve your WPM in 20+ languages
-                </span>
-              </h1>
-
               {/* Stats */}
               <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
                 <div className="text-center">
@@ -964,29 +951,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* SEO CONTENT — Googlebot (JS isiz) indekslash uchun semantik matn */}
-              <section className="w-full max-w-2xl mt-8 pt-6 border-t border-white/5 text-left">
-                <h2 className="text-sm md:text-base font-bold mb-2" style={{ color: t.accent }}>
-                  Why use STypeUz?
-                </h2>
-                <p className="text-[12px] leading-relaxed text-gray-500">
-                  STypeUz is a free online typing speed test that helps you measure and improve your
-                  typing speed in words per minute (WPM). Practice touch typing in 20+ languages
-                  including Uzbek, Russian, English, German and more. Choose from 15, 30 or 60 second
-                  tests, or type freely without a timer.
-                </p>
-                <h3 className="text-xs md:text-sm font-semibold mt-4 mb-1.5 text-gray-300">
-                  Features
-                </h3>
-                <ul className="text-[12px] leading-relaxed text-gray-500 list-disc pl-5 space-y-1">
-                  <li>Real-time WPM, accuracy and error tracking while you type</li>
-                  <li>25+ beautiful themes, keyboard visualizer and finger guide for touch typing</li>
-                  <li>Multiplayer typing races, leaderboards and country rankings</li>
-                  <li>Daily rewards, weekly missions, progress dashboard and typing DNA analysis</li>
-                  <li>Mini games — Flappy Bird, Snake and Tetris — to train your fingers</li>
-                  <li>Create your free profile with name and photo, then start typing right away!</li>
-                </ul>
-              </section>
             </main>
           ) : null}
         </div>
