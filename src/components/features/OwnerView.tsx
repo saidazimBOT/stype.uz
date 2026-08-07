@@ -21,7 +21,7 @@ const ME = {
   name: "Saidazim",
   role: "Dasturchi",
   mentor: "Sunnatbek Yusupov",
-  photo: "/creator.png",
+  photo: "/saidazim-stypeuz-developer.webp",
   born: "2011-yil",
   birthday: "27-may",
   age: "15 yosh",
@@ -45,10 +45,28 @@ const GROUP = {
 };
 
 // ── Lightbox galereyasi (guruh + ustoz rasmlari) ──────────────────────
-const GALLERY: { src: string; alt: string; caption: string }[] = [
-  { src: "/creator.png", alt: "Saidazim — dasturchi", caption: "Saidazim — portfolio rasmi" },
-  { src: "/group.webp", alt: "Guruhim — NF-2957", caption: "NF-2957 — guruh surati" },
-  { src: "/mentor.webp", alt: "Ustozim — Sunnatbek Yusupov", caption: "Ustozim — Sunnatbek Yusupov" },
+const GALLERY: { src: string; alt: string; caption: string; width: number; height: number }[] = [
+  {
+    src: "/saidazim-stypeuz-developer.webp",
+    alt: "Saidazim — STypeUz dasturchisi",
+    caption: "Saidazim — STypeUz platformasini yaratgan dasturchi",
+    width: 600,
+    height: 901,
+  },
+  {
+    src: "/stypeuz-team-nf2957.webp",
+    alt: "NF-2957 dasturlash guruhi — STypeUz jamoasi",
+    caption: "NF-2957 — dasturlash guruhining jamoa surati, STypeUz",
+    width: 800,
+    height: 1067,
+  },
+  {
+    src: "/mentor-sunnatbek-yusupov.webp",
+    alt: "Sunnatbek Yusupov — STypeUz ustozim",
+    caption: "Sunnatbek Yusupov — mening ustozim, STypeUz",
+    width: 480,
+    height: 640,
+  },
 ];
 
 // Ko'nikmalar (skill) — real darajalar bilan
@@ -153,7 +171,12 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
           >
             <img
               src={ME.photo}
-              alt={`${ME.name} — dasturchi`}
+              alt={`${ME.name} — STypeUz dasturchisi`}
+              title={`${ME.name} — STypeUz platformasini yaratgan dasturchi`}
+              width={600}
+              height={901}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
               draggable={false}
             />
@@ -243,8 +266,13 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             }}
           >
             <img
-              src="/mentor.webp"
-              alt={`Ustozim — ${ME.mentor}`}
+              src="/mentor-sunnatbek-yusupov.webp"
+              alt={`${ME.mentor} — STypeUz ustozim`}
+              title={`${ME.mentor} — STypeUz ustozim`}
+              width={480}
+              height={640}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
               draggable={false}
             />
@@ -298,8 +326,13 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             }}
           >
             <img
-              src="/group.webp"
-              alt={`Guruhim — ${GROUP.name}`}
+              src="/stypeuz-team-nf2957.webp"
+              alt={`${GROUP.name} — STypeUz jamoasi`}
+              title={`${GROUP.name} — STypeUz dasturlash guruhining jamoa surati`}
+              width={800}
+              height={1067}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
               draggable={false}
             />
@@ -522,6 +555,9 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             <img
               src={GALLERY[lightbox].src}
               alt={GALLERY[lightbox].alt}
+              title={GALLERY[lightbox].caption}
+              width={GALLERY[lightbox].width}
+              height={GALLERY[lightbox].height}
               className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl"
               draggable={false}
             />

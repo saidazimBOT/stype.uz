@@ -3,8 +3,13 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
+# Google Images — barcha rasmlar indekslash uchun ochiq
+User-agent: Googlebot-Image
+Allow: /
+
 # Block AI crawlers
 User-agent: GPTBot
 Disallow: /
 
 Sitemap: https://styping.uz/sitemap.xml
+Sitemap: https://styping.uz/image-sitemap.xml

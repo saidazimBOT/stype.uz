@@ -83,9 +83,11 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/og-image.png",
+        secureUrl: `${siteUrl}/og-image.png`,
+        type: "image/png",
         width: 1200,
         height: 630,
-        alt: "STypeUz - Typing Speed Test",
+        alt: "STypeUz - Typing Speed Test in 20+ Languages | Free Online Typing Practice",
       },
     ],
   },
@@ -95,7 +97,12 @@ export const metadata: Metadata = {
     creator: "@stypeuz",
     title,
     description,
-    images: ["/og-image.png"],
+    images: [
+      {
+        url: "/og-image.png",
+        alt: "STypeUz - Typing Speed Test in 20+ Languages | Free Online Typing Practice",
+      },
+    ],
   },
   icons: {
     icon: [
@@ -165,6 +172,41 @@ const jsonLd = {
   keywords: "typing speed test, typing practice, keyboard training, WPM test, touch typing, stypeuz",
   screenshot: `${siteUrl}/og-image.png`,
   softwareVersion: "3.0",
+  image: [
+    {
+      "@type": "ImageObject",
+      url: `${siteUrl}/og-image.png`,
+      contentUrl: `${siteUrl}/og-image.png`,
+      width: 1200,
+      height: 630,
+      caption: "STypeUz — Typing Speed Test in 20+ Languages",
+      representativeOfPage: true,
+    },
+    {
+      "@type": "ImageObject",
+      url: `${siteUrl}/saidazim-stypeuz-developer.webp`,
+      contentUrl: `${siteUrl}/saidazim-stypeuz-developer.webp`,
+      width: 600,
+      height: 901,
+      caption: "Saidazim — STypeUz platformasini yaratgan dasturchi",
+    },
+    {
+      "@type": "ImageObject",
+      url: `${siteUrl}/stypeuz-team-nf2957.webp`,
+      contentUrl: `${siteUrl}/stypeuz-team-nf2957.webp`,
+      width: 800,
+      height: 1067,
+      caption: "NF-2957 — dasturlash guruhining jamoa surati",
+    },
+    {
+      "@type": "ImageObject",
+      url: `${siteUrl}/mentor-sunnatbek-yusupov.webp`,
+      contentUrl: `${siteUrl}/mentor-sunnatbek-yusupov.webp`,
+      width: 480,
+      height: 640,
+      caption: "Sunnatbek Yusupov — mening ustozim",
+    },
+  ],
   featureList: [
     "20+ language support",
     "25+ themes",
