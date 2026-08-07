@@ -142,6 +142,36 @@ main.overflow-y-auto {
   border-color: #f59e0b;
   color: #fff;
 }
+
+/* ── Lingohub.uz reklama tugmasi (ad-badge) ─────────────────────────── */
+@keyframes adShine {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+@keyframes adGlow {
+  0%, 100% { box-shadow: 0 0 6px #38bdf833; }
+  50% { box-shadow: 0 0 16px #38bdf888; }
+}
+.ad-badge {
+  background: linear-gradient(90deg, #38bdf833, #818cf8aa, #38bdf833);
+  background-size: 200%;
+  border: 1px solid #38bdf866;
+  color: #bae6fd;
+  animation: adShine 2.5s linear infinite, adGlow 2s ease-in-out infinite;
+}
+.ad-badge:hover {
+  border-color: #7dd3fc;
+  color: #fff;
+}
+
+/* Metall kumush (chrome) matn — lingohub.uz logosi */
+.chrome-text {
+  background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 40%, #94a3b8 55%, #f1f5f9 75%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 14px rgba(148, 163, 184, 0.35));
+}
 @keyframes trophyBounce {
   0%, 100% { transform: translateY(0) rotate(-3deg); }
   50% { transform: translateY(-12px) rotate(3deg); }
@@ -505,5 +535,6 @@ input:focus, textarea:focus {
 @media (prefers-reduced-motion: reduce) {
   .caret-bar, .err-char, .animate-pop-in, .aurora-layer .aurora, .live-ping, .bar-fill, .row-in,
   .promo-badge, .trophy-bounce, .sparkle-float, .progress-shine, .confetti-piece,
-  .coin-badge, .coin-emoji, .coin-ring, .coin-amount, .coin-particle, .trail-coin { animation: none; }
+  .coin-badge, .coin-emoji, .coin-ring, .coin-amount, .coin-particle, .trail-coin,
+  .ad-badge { animation: none; }
 }

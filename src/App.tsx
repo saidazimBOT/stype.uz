@@ -41,6 +41,7 @@ import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import TelegramPromo from "./components/features/TelegramPromo";
+import LingohubPromo from "./components/features/LingohubPromo";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
@@ -55,7 +56,7 @@ import {
   FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
+import { FaBullhorn, FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
@@ -87,6 +88,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
+  const [showLingohub, setShowLingohub] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -619,6 +621,7 @@ export default function App() {
               setShowPromo((s) => !s);
               setShowSettings(false);
               setShowOwner(false);
+              setShowLingohub(false);
             }}
             className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
             title="300 WPM → 1 oylik Telegram Premium!"
@@ -633,6 +636,7 @@ export default function App() {
               setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
+              setShowLingohub(false);
             }}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
             title={isSignedUp ? "Profilni tahrirlash" : "Sign up — profil yaratish"}
@@ -656,12 +660,27 @@ export default function App() {
               </>
             )}
           </button>
+          {/* Lingohub.uz reklamasi — Egasi tugmasi yonida */}
+          <button
+            onClick={() => {
+              setShowLingohub((s) => !s);
+              setShowPromo(false);
+              setShowSettings(false);
+              setShowOwner(false);
+            }}
+            className="ad-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title="Lingohub.uz — 27 tilda bepul til o'rganish"
+          >
+            <FaBullhorn size={12} />
+            <span className="hidden sm:inline">Lingohub</span>
+          </button>
           {/* Sayt egasi */}
           <button
             onClick={() => {
               setShowOwner((s) => !s);
               setShowPromo(false);
               setShowSettings(false);
+              setShowLingohub(false);
             }}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
             title="Sayt egasi haqida"
@@ -679,6 +698,7 @@ export default function App() {
               setShowSettings((s) => !s);
               setShowPromo(false);
               setShowOwner(false);
+              setShowLingohub(false);
             }}
             className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
           >
@@ -700,6 +720,7 @@ export default function App() {
               onClick={() => {
                 setShowOwner(false);
                 setShowPromo(false);
+                setShowLingohub(false);
                 setView(view === item.id ? "type" : item.id);
               }}
               className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5"
@@ -717,8 +738,11 @@ export default function App() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Telegram Premium promo */}
-          {showPromo ? (
+          {/* Lingohub.uz reklama paneli */}
+          {showLingohub ? (
+            <LingohubPromo t={t} onClose={() => setShowLingohub(false)} />
+          ) : /* Telegram Premium promo */
+          showPromo ? (
             <TelegramPromo t={t} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
           ) : /* Sayt egasi */
           showOwner ? (
@@ -999,6 +1023,7 @@ export default function App() {
               setShowSettings(false);
               setShowPromo(false);
               setShowOwner(false);
+              setShowLingohub(false);
             }}
             title={`${av.name} · Open Coin Shop`}
           >
@@ -1020,7 +1045,10 @@ export default function App() {
       >
         {/* Admin button (footer) */}
         <button
-          onClick={() => setView(view === "admin" ? "type" : "admin")}
+          onClick={() => {
+            setShowLingohub(false);
+            setView(view === "admin" ? "type" : "admin");
+          }}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 mr-1"
           style={{
             background: view === "admin" ? t.accent + "33" : "#ffffff0d",
