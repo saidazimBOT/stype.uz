@@ -693,7 +693,7 @@ export default function App() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-14 md:w-44 px-1 md:px-4 py-4 border-r border-white/5 flex flex-col gap-0.5 text-xs md:text-sm flex-shrink-0 overflow-y-auto min-h-0">
+        <aside className="w-14 md:w-44 px-1 md:px-3 pt-3 pb-16 border-r border-white/5 flex flex-col gap-0.5 text-xs md:text-sm flex-shrink-0 overflow-y-auto min-h-0">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -702,7 +702,7 @@ export default function App() {
                 setShowPromo(false);
                 setView(view === item.id ? "type" : item.id);
               }}
-              className="flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg text-left transition-all hover:bg-white/5"
+              className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5"
               style={{
                 color: view === item.id ? t.accent : "#6b7280",
                 background: view === item.id ? t.accent + "11" : "transparent",
@@ -858,7 +858,7 @@ export default function App() {
               <div className="w-full max-w-2xl relative">
                 <div
                   className={`leading-relaxed tracking-wide text-center select-none ${
-                    FONT_SIZES[fontSize] || "text-xl"
+                    FONT_SIZES[fontSize] || FONT_SIZES.md
                   }`}
                   style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
                   onClick={() => inputRef.current?.focus()}

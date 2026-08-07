@@ -61,5 +61,5 @@ export const THEME_GROUPS: ThemeGroup[] = [
   },
 ];
 
-export const FONT_SIZES: Record<string, string> = { sm: "text-xl", md: "text-2xl", lg: "text-3xl", xl: "text-4xl" };
+export const FONT_SIZES: Record<string, string> = { sm: "text-base", md: "text-lg", lg: "text-xl", xl: "text-2xl" };
 export const DURATIONS: (number | string)[] = [15, 30, 60, "∞"];
