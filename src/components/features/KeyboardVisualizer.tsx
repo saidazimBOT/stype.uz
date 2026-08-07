@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { ThemeColors } from "../../types";
+import { isDashChar } from "../../utils/typingChars";
 
 const KEY_ROWS: string[][] = [
   ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", "Backspace"],
@@ -87,6 +88,8 @@ const CYRILLIC_TO_QWERTY: Record<string, string> = {
 function toPhysicalKey(ch: string): string {
   if (ch === "Space") return " ";
   const lower = ch.toLowerCase();
+  // Tire turlari (—, –, −) klaviaturada yo'q — "-" tugmasi sifatida ko'rsatamiz
+  if (isDashChar(lower)) return "-";
   return CYRILLIC_TO_QWERTY[lower] || lower;
 }
 
@@ -223,6 +226,7 @@ export default function KeyboardVisualizer({
       return next;
     });
     // Ekran klaviaturasi tugmasi matnga belgi yozadi (Space → " ")
+    // Tire "-" tugmasi bosilsa, "—" kabi tire kerak bo'lganda ham to'g'ri hisoblanadi
     if (onKeyPress) onKeyPress(key === "Space" ? " " : key);
   };
 

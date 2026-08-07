@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { ThemeColors } from "../../../types";
+import { charsEqual } from "../../../utils/typingChars";
 
 interface TypingArenaProps {
   t: ThemeColors;
@@ -74,7 +75,7 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
 
       let correct = 0;
       for (let i = 0; i < nextTyped.length; i++) {
-        if (nextTyped[i] === text[i]) correct++;
+        if (charsEqual(nextTyped[i], text[i])) correct++;
         else break;
       }
 
@@ -115,7 +116,7 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
   const curEnd = nextSpace === -1 ? text.length : nextSpace;
   let wordHasError = false;
   for (let w = curStart; w < Math.min(curEnd, typed.length); w++) {
-    if (typed[w] !== text[w]) {
+    if (!charsEqual(typed[w], text[w])) {
       wordHasError = true;
       break;
     }
@@ -123,7 +124,7 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
 
   const rendered = text.split("").map((ch, i) => {
     let cls = "relative text-gray-600";
-    if (i < typed.length && typed[i] !== text[i]) {
+    if (i < typed.length && !charsEqual(typed[i], text[i])) {
       cls = "relative text-red-400 bg-red-900/30 rounded err-char";
     } else if (i < typed.length) {
       cls = "relative text-white";

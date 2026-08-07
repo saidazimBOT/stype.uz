@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TEXTS, LANG_LABELS } from "./data/texts";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
 import { createAudioController } from "./utils/audio";
+import { charsEqual } from "./utils/typingChars";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useDailyReward } from "./components/features/DailyLogin";
 import { useMissions } from "./components/features/WeeklyMissions";
@@ -344,7 +345,7 @@ export default function App() {
         startRecording(text);
       }
 
-      const ok = k === text[cursor];
+      const ok = charsEqual(k, text[cursor]);
       setTotalKs((n) => n + 1);
 
       if (soundEnabled) {
@@ -454,7 +455,7 @@ export default function App() {
   const curEnd = nextSpace === -1 ? text.length : nextSpace;
   let wordHasError = false;
   for (let w = curStart; w < Math.min(curEnd, typed.length); w++) {
-    if (typed[w] !== text[w]) {
+    if (!charsEqual(typed[w], text[w])) {
       wordHasError = true;
       break;
     }
@@ -463,7 +464,7 @@ export default function App() {
   const rendered = text.split("").map((ch, i) => {
     let cls = "relative text-gray-600";
     if (i < cursor) cls = "relative text-white";
-    if (i < typed.length && typed[i] !== text[i]) {
+    if (i < typed.length && !charsEqual(typed[i], text[i])) {
       cls = "relative text-red-400 bg-red-900/30 rounded err-char";
     } else if (wordHasError && i >= cursor && i < curEnd) {
       cls = "relative text-red-400/70";
