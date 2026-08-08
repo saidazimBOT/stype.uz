@@ -58,7 +58,7 @@ import {
   FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaDna, FaKeyboard, FaMedal, FaPalette, FaTrophy } from "react-icons/fa6";
+import { FaDna, FaKeyboard, FaMedal, FaPalette, FaTelegram, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
@@ -663,6 +663,18 @@ export default function App() {
               </>
             )}
           </button>
+          {/* Telegram kanal — t.me/khoja_akbar */}
+          <a
+            href="https://t.me/khoja_akbar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
+            title="Telegram kanalimizga qo'shiling"
+            style={{ background: "#229ed926", color: "#5fb8e8", border: "1px solid #229ed955" }}
+          >
+            <FaTelegram size={13} />
+            <span className="hidden sm:inline">Telegram</span>
+          </a>
           {/* Lingohub.uz reklamasi — Egasi tugmasi yonida */}
           <button
             onClick={() => {
