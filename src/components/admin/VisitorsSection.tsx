@@ -6,6 +6,7 @@ import { FiEdit3, FiEye, FiMonitor, FiSend, FiSmartphone, FiTrash2 } from "react
 import {
   readVisits, clearVisits, readTypingLog, clearTypingLog,
 } from "../../hooks/useVisitTracker";
+import { LANG_FLAGS } from "../../data/texts";
 import { Card, SectionHeader, EmptyState, fmtTime } from "./adminUi";
 
 const DEVICE_ICONS: Record<string, typeof FiMonitor> = {
@@ -142,7 +143,7 @@ export default function VisitorsSection({ t, refreshKey, onRefresh }: Props) {
                       </td>
                       <td className="py-2 pr-3">
                         <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ background: "#ffffff0d", color: "#9ca3af" }}>
-                          {v.lang}
+                          {LANG_FLAGS[v.lang.toLowerCase()] || "🏳️"} {v.lang}
                         </span>
                       </td>
                       <td className="py-2 pr-3 text-gray-400">{v.theme}</td>
@@ -208,7 +209,7 @@ export default function VisitorsSection({ t, refreshKey, onRefresh }: Props) {
                       </td>
                       <td className="py-2 pr-3">
                         <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ background: "#ffffff0d", color: "#9ca3af" }}>
-                          {ty.lang}
+                          {LANG_FLAGS[ty.lang.toLowerCase()] || "🏳️"} {ty.lang}
                         </span>
                       </td>
                       <td className="py-2 pr-3 font-bold" style={{ color: t.accent }}>{ty.wpm}</td>

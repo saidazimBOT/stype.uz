@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { FiGlobe, FiMonitor, FiSettings, FiVolume2, FiZap } from "react-icons/fi";
+import { FiGlobe, FiImage, FiMonitor, FiSettings, FiUpload, FiVolume2, FiX, FiZap } from "react-icons/fi";
 import { FaHandPointer, FaKeyboard, FaPalette } from "react-icons/fa6";
 import { THEME_LIST, THEME_GROUPS } from "../../data/themes";
-import { LANG_LABELS, LANG_GROUPS } from "../../data/texts";
+import { LANG_LABELS, LANG_FLAGS, LANG_GROUPS } from "../../data/texts";
 import type { ThemeColors } from "../../types";
 
 interface SettingsModalProps {
@@ -24,6 +24,10 @@ interface SettingsModalProps {
   setShowHeatmap: (show: boolean) => void;
   fingerGuide: boolean;
   setFingerGuide: (show: boolean) => void;
+  bgImage: string;
+  setBgImage: (img: string) => void;
+  bgDim: number;
+  setBgDim: (dim: number) => void;
   onClose: () => void;
 }
 
@@ -43,12 +47,31 @@ export default function SettingsModal({
   setShowHeatmap,
   fingerGuide,
   setFingerGuide,
+  bgImage,
+  setBgImage,
+  bgDim,
+  setBgDim,
   onClose,
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState("themes");
+  const [bgUploading, setBgUploading] = useState(false);
+
+  const handleBgUpload = async (file: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setBgUploading(true);
+    try {
+      const dataUrl = await compressImage(file);
+      setBgImage(dataUrl);
+    } catch {
+      // Yuklash xatosi — hech narsa qilmaymiz
+    } finally {
+      setBgUploading(false);
+    }
+  };
 
   const tabs: { id: string; label: ReactNode }[] = [
     { id: "themes", label: (<><FaPalette className="inline-block mr-1" /> Themes</>) },
+    { id: "background", label: (<><FiImage className="inline-block mr-1" /> Background</>) },
     { id: "language", label: (<><FiGlobe className="inline-block mr-1" /> Language</>) },
     { id: "display", label: (<><FiMonitor className="inline-block mr-1" /> Display</>) },
   ];
@@ -66,7 +89,7 @@ export default function SettingsModal({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -174,12 +197,103 @@ export default function SettingsModal({
                       border: `1px solid ${lang === code ? t.accent + "44" : "transparent"}`,
                     }}
                   >
+                    <span className="mr-1.5 inline-block">{LANG_FLAGS[code] || "🏳️"}</span>
                     {LANG_LABELS[code] || code}
                   </button>
                 ))}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Background Tab */}
+      {activeTab === "background" && (
+        <div>
+          <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">
+            Background Image
+          </div>
+
+          {/* Preview */}
+          <div
+            className="w-full h-40 rounded-xl mb-4 overflow-hidden relative flex items-center justify-center border"
+            style={{
+              background: bgImage
+                ? `linear-gradient(rgba(8, 10, 15, ${bgDim}), rgba(8, 10, 15, ${bgDim})), url("${bgImage}") center / cover no-repeat`
+                : t.surface,
+              borderColor: bgImage ? "transparent" : "#ffffff14",
+            }}
+          >
+            {!bgImage && (
+              <span className="text-xs text-gray-500">
+                No custom background — theme colors are used
+              </span>
+            )}
+          </div>
+
+          {/* Upload */}
+          <label
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-medium cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]"
+            style={{ background: t.accent, color: "#000" }}
+          >
+            {bgUploading ? (
+              "Processing…"
+            ) : (
+              <>
+                <FiUpload size={15} />
+                Upload background image
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={bgUploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleBgUpload(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+
+          {bgImage && (
+            <button
+              onClick={() => setBgImage("")}
+              className="mt-2 w-full py-2 rounded-xl text-sm transition-all hover:bg-white/5 text-red-400"
+            >
+              <FiX size={14} className="inline-block mr-1" />
+              Remove background
+            </button>
+          )}
+
+          {/* Dim control */}
+          <div
+            className={`mt-6 p-4 rounded-xl transition-opacity ${bgImage ? "" : "opacity-50"}`}
+            style={{ background: t.surface }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-white flex items-center gap-1.5">
+                <FiImage size={14} className="text-gray-400" />
+                Darken
+              </div>
+              <span className="text-xs text-gray-500">{Math.round(bgDim * 100)}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={0.9}
+              step={0.05}
+              value={bgDim}
+              onChange={(e) => setBgDim(parseFloat(e.target.value))}
+              disabled={!bgImage}
+              className="w-full"
+              style={{ accentColor: t.accent, cursor: bgImage ? "pointer" : "not-allowed" }}
+            />
+            <p className="text-xs text-gray-600 mt-2">
+              Darken the background so text stays readable.
+            </p>
+          </div>
         </div>
       )}
 
@@ -301,4 +415,28 @@ export default function SettingsModal({
       )}
     </div>
   );
+}
+
+// Rasmni localStorage'ga sig'dirish uchun kichraytirib siqib olamiz
+function compressImage(file: File, maxWidth = 1600, quality = 0.72): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("canvas unavailable"));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 }

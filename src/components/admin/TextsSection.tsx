@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { ThemeColors } from "../../types";
 import { FiEdit3, FiPlus, FiTrash2 } from "react-icons/fi";
-import { TEXTS, LANG_LABELS } from "../../data/texts";
+import { TEXTS, LANG_LABELS, LANG_FLAGS } from "../../data/texts";
 import { RACE_TEXTS } from "../../../convex/raceTexts";
 import {
   Card, SectionHeader, Spinner, EmptyState, ErrorBox, SearchInput, Modal, ConfirmDialog,
@@ -102,7 +102,7 @@ export default function TextsSection({ t }: { t: ThemeColors }) {
           t={t}
           value={lang}
           onChange={setLang}
-          options={[{ value: "", label: "Barcha tillar" }, ...LANGS.map((l) => ({ value: l, label: LANG_LABELS[l] }))]}
+          options={[{ value: "", label: "Barcha tillar" }, ...LANGS.map((l) => ({ value: l, label: `${LANG_FLAGS[l] || "🏳️"} ${LANG_LABELS[l]}` }))]}
         />
         <Select
           t={t}
@@ -145,7 +145,7 @@ export default function TextsSection({ t }: { t: ThemeColors }) {
                     “{tx.text}”
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <Badge t={t} color={t.accent}>{LANG_LABELS[tx.lang] || tx.lang.toUpperCase()}</Badge>
+                    <Badge t={t} color={t.accent}>{LANG_FLAGS[tx.lang] || "🏳️"} {LANG_LABELS[tx.lang] || tx.lang.toUpperCase()}</Badge>
                     <DifficultyBadge t={t} d={tx.difficulty} />
                     <span className="text-[10px] text-gray-600">{tx.category}</span>
                     <span className="text-[10px] text-gray-700">{tx.text.length} belgi</span>
@@ -246,7 +246,7 @@ function TextFormModal({
             t={t}
             value={lang}
             onChange={setLang}
-            options={LANGS.map((l) => ({ value: l, label: LANG_LABELS[l] }))}
+            options={LANGS.map((l) => ({ value: l, label: `${LANG_FLAGS[l] || "🏳️"} ${LANG_LABELS[l]}` }))}
           />
         </div>
         <div>

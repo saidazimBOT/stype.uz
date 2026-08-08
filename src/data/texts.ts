@@ -177,6 +177,17 @@ export const LANG_LABELS: LanguageInfo = {
   da: "Dansk", cs: "Čeština", ro: "Română", hu: "Magyar", uk: "Українська",
 };
 
+// Til kodlari → davlat bayrog'i emoji
+// (ar uchun umumiy arab davlati bayrog'i ishlatiladi)
+export const LANG_FLAGS: Record<string, string> = {
+  en: "🇬🇧", ru: "🇷🇺", uz: "🇺🇿", de: "🇩🇪", fr: "🇫🇷",
+  es: "🇪🇸", it: "🇮🇹", pt: "🇵🇹", nl: "🇳🇱",
+  pl: "🇵🇱", tr: "🇹🇷", ar: "🇸🇦", ja: "🇯🇵",
+  zh: "🇨🇳", ko: "🇰🇷", hi: "🇮🇳", th: "🇹🇭", vi: "🇻🇳",
+  id: "🇮🇩", sv: "🇸🇪", fi: "🇫🇮", no: "🇳🇴",
+  da: "🇩🇰", cs: "🇨🇿", ro: "🇷🇴", hu: "🇭🇺", uk: "🇺🇦",
+};
+
 export const LANG_CODES: string[] = Object.keys(TEXTS);
 
 export const LANG_GROUPS: LanguageGroup[] = [

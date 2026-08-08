@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FaMedal, FaTrophy } from "react-icons/fa6";
 import { LEADERBOARD } from "../../data/leaderboard";
+import { LANG_FLAGS } from "../../data/texts";
 import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../data/shop";
 import HeroAvatar from "../features/HeroAvatar";
 import type { ThemeColors } from "../../types";
@@ -48,7 +49,7 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
               border: `1px solid ${filter === f ? t.accent + "44" : "transparent"}`,
             }}
           >
-            {f === "all" ? "All" : f.toUpperCase()}
+            {f === "all" ? "All" : `${LANG_FLAGS[f] || "🏳️"} ${f.toUpperCase()}`}
           </button>
         ))}
       </div>
@@ -120,7 +121,7 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
                 className="text-xs px-2 py-0.5 rounded-full"
                 style={{ background: "#ffffff0d", color: "#9ca3af" }}
               >
-                {p.lang.toUpperCase()}
+                {LANG_FLAGS[p.lang] || "🏳️"} {p.lang.toUpperCase()}
               </span>
             </div>
           </div>

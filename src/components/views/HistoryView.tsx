@@ -1,6 +1,7 @@
 "use client";
 
 import { FiHeart, FiList, FiPlay, FiX } from "react-icons/fi";
+import { LANG_FLAGS } from "../../data/texts";
 import type { ThemeColors, TestResult } from "../../types";
 
 interface HistoryViewProps {
@@ -87,7 +88,7 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
               <div>
                 <div className="text-xs text-gray-500">{h.date}</div>
                 <div className="text-xs text-gray-600 mt-0.5">
-                  {h.lang?.toUpperCase()} · {h.duration === "∞" ? "Free" : `${h.duration}s`}
+                  {LANG_FLAGS[h.lang || ""] || "🏳️"} {h.lang?.toUpperCase()} · {h.duration === "∞" ? "Free" : `${h.duration}s`}
                 </div>
               </div>
               <div className="text-right font-bold" style={{ color: t.accent }}>
@@ -100,7 +101,7 @@ export default function HistoryView({ t, onClose, history, favorites, onFavorite
                   className="text-xs px-2 py-0.5 rounded-full"
                   style={{ background: "#ffffff0d", color: "#9ca3af" }}
                 >
-                  {h.lang?.toUpperCase()}
+                  {LANG_FLAGS[h.lang || ""] || "🏳️"} {h.lang?.toUpperCase()}
                 </span>
               </div>
               <div

@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { ThemeColors } from "../../types";
 import { FiEye, FiGift, FiTrash2, FiXCircle } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa6";
+import { LANG_FLAGS } from "../../data/texts";
 import {
   Card, SectionHeader, Spinner, EmptyState, ErrorBox, SearchInput, Modal, ConfirmDialog,
   AvatarDot, RoleBadge, PrimaryBtn, GhostBtn, SmallBtn, Badge, timeAgo, fmtDateTime, TextArea, TextInput, Field,
@@ -336,7 +337,7 @@ function UserProfileModal({
                         <td className="py-1.5 pr-3 font-bold" style={{ color: t.accent }}>{r.wpm}</td>
                         <td className="py-1.5 pr-3" style={{ color: r.accuracy >= 95 ? "#22c55e" : r.accuracy >= 80 ? "#f59e0b" : "#ef4444" }}>{r.accuracy}%</td>
                         <td className="py-1.5 pr-3 text-gray-400">{r.errors}</td>
-                        <td className="py-1.5 pr-3"><span className="px-1.5 py-0.5 rounded text-[9px]" style={{ background: "#ffffff0d", color: "#9ca3af" }}>{r.lang.toUpperCase()}</span></td>
+                        <td className="py-1.5 pr-3"><span className="px-1.5 py-0.5 rounded text-[9px]" style={{ background: "#ffffff0d", color: "#9ca3af" }}>{LANG_FLAGS[r.lang] || "🏳️"} {r.lang.toUpperCase()}</span></td>
                         <td className="py-1.5">{r.duration ? `${r.duration}s` : "∞"}</td>
                       </tr>
                     ))}

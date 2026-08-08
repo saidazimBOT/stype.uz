@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { TEXTS, LANG_LABELS } from "./data/texts";
+import { TEXTS, LANG_LABELS, LANG_FLAGS } from "./data/texts";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
 import { createAudioController } from "./utils/audio";
 import { charsEqual } from "./utils/typingChars";
@@ -92,6 +92,8 @@ export default function App() {
   const [showKeyboard, setShowKeyboard] = useLocalStorage("typeuz_showkb", false);
   const [showHeatmap, setShowHeatmap] = useLocalStorage("typeuz_heatmap", false);
   const [fingerGuide, setFingerGuide] = useLocalStorage("typeuz_finger", true);
+  const [bgImage, setBgImage] = useLocalStorage("typeuz_bgimage", "");
+  const [bgDim, setBgDim] = useLocalStorage("typeuz_bgdim", 0.55);
   const [showSettings, setShowSettings] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
@@ -527,6 +529,14 @@ export default function App() {
         background: t.bg,
         color: t.color || "#e5e7eb",
         fontFamily: "'Inter', sans-serif",
+        ...(bgImage
+          ? {
+              backgroundImage: `linear-gradient(rgba(8, 10, 15, ${bgDim}), rgba(8, 10, 15, ${bgDim})), url("${bgImage}")`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }
+          : {}),
       }}
     >
       {/* Ambient animated background */}
@@ -595,7 +605,9 @@ export default function App() {
                   background: lang === l ? t.accent + "33" : "transparent",
                   color: lang === l ? t.accent : "#6b7280",
                 }}
+                title={LANG_LABELS[l]}
               >
+                <span className="mr-0.5">{LANG_FLAGS[l]}</span>
                 {l.toUpperCase()}
               </button>
             ))}
@@ -797,6 +809,10 @@ export default function App() {
               setShowHeatmap={setShowHeatmap}
               fingerGuide={fingerGuide}
               setFingerGuide={setFingerGuide}
+              bgImage={bgImage}
+              setBgImage={setBgImage}
+              bgDim={bgDim}
+              setBgDim={setBgDim}
               onClose={() => setShowSettings(false)}
             />
           ) : view === "leaderboard" ? (
@@ -1111,7 +1127,7 @@ export default function App() {
               )}
               <div className="hidden sm:block">
                 <div className="font-semibold" style={{ color: t.accent }}>
-                  {isSignedUp ? fullName(profile) : `${av.name} · ${LANG_LABELS[lang]}`}
+                  {isSignedUp ? fullName(profile) : `${av.name} · ${LANG_FLAGS[lang] || "🏳️"} ${LANG_LABELS[lang]}`}
                 </div>
                 <div className="text-gray-500">
                   {coinsStore.coins.toLocaleString()} <CoinIcon size={13} /> · {xp.toLocaleString()} XP

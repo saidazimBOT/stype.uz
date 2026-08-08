@@ -5,7 +5,7 @@
 // bilan har safar bir xil natija chiqadi.
 
 import type { DailyState, ReplayRecording, TestResult } from "../types";
-import { LANG_LABELS } from "./texts";
+import { LANG_LABELS, LANG_FLAGS } from "./texts";
 
 // ── Deterministik PRNG + hash (DNK chizig'i uchun) ──────────────────────
 function fnv1a(str: string): number {
@@ -194,7 +194,9 @@ export function buildDnaProfile(
             ? "Erkin rejim"
             : "Aralash";
   const prefLangRaw = mode(history.map((h) => h.lang)) ?? usedLangs[0] ?? "";
-  const prefLang = LANG_LABELS[prefLangRaw] ? `${LANG_LABELS[prefLangRaw]} (${prefLangRaw})` : prefLangRaw || "—";
+  const prefLang = LANG_LABELS[prefLangRaw]
+    ? `${LANG_FLAGS[prefLangRaw] || "🏳️"} ${LANG_LABELS[prefLangRaw]} (${prefLangRaw})`
+    : prefLangRaw || "—";
 
   // Eng faol soat (history.date toLocaleTimeString formatda — 24s yoki 12s bo'lishi mumkin)
   const hourCount = new Map<number, number>();
