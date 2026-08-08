@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────────────────
+#  STypeUz Telegram Bot — Cloudflare Worker konfiguratsiyasi
+# ─────────────────────────────────────────────────────────────────────────
+#  Deploy:  npx wrangler deploy
+#
+#  KV: Cloudflare Dashboard → Workers → KV → Create a namespace →
+#      "TG_KV" deb nomlang → ID'sini quyidagiga yozing.
+#  (yoki: npx wrangler kv namespace create TG_KV — chiqishda ID ko'rinadi)
+
+name = "stypeuz-telegram-bot"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "TG_KV"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+
+# ── O'zgaruvchilar (maxfiy bo'lmagan) ────────────────────────────────────
+[vars]
+SITE_URL = "https://styping.uz/"
+CHANNEL_URL = "https://t.me/khoja_akbar"
+
+# ── Maxfiy (secret) — shularni wrangler orqali o'rnating: ────────────────
+#   npx wrangler secret put BOT_TOKEN      ← @BotFather dan
+#   npx wrangler secret put NOTIFY_SECRET  ← o'zingiz ixtiro qilgan uzun kalit
+#   npx wrangler secret put OWNER_ID       ← sizning Telegram chat ID'ingiz (ixtiyoriy)
+#   npx wrangler secret put BOT_USERNAME   ← bot username (masalan: stypeuz_bot)

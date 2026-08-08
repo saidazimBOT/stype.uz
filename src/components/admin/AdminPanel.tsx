@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../../../convex/_generated/api";
 import {
   FiAward, FiBarChart2, FiBell, FiCopy, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
@@ -169,6 +169,54 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
   const { authLoading, isAuthenticated, me, myToken, isServerAdmin, signIn, signOut, claimAdmin } =
     useAdminProfile();
   const [legacyLoggedIn, setLegacyLoggedIn] = useLocalStorage(SESSION_KEY, false);
+  const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+
+  // Convex o'rnatilgan va legacy (owner parol) bilan kirilgan bo'lsa — Convex admin
+  // sessiyasini avtomatik o'rnatamiz. Shunda "Ro'yxatdan o'tganlar" va boshqa server
+  // bo'limlari REAL ma'lumotlarni ko'rsatadi (backend kutilmoqda shablon o'rniga).
+  const handlersRef = useRef({ signIn, claimAdmin });
+  handlersRef.current = { signIn, claimAdmin };
+  // Eng oxirgi isServerAdmin holati — signIn'dan keyin allaqachon admin ekanini tekshirish uchun
+  const serverAdminRef = useRef(isServerAdmin);
+  serverAdminRef.current = isServerAdmin;
+
+  useEffect(() => {
+    if (authLoading || !legacyLoggedIn || isServerAdmin) return;
+    let cancelled = false;
+    setConnecting(true);
+    setConnectError("");
+    (async () => {
+      try {
+        // Anonymous provider — agar hali kirilmagan bo'lsa kirgizadi (idempotent)
+        await handlersRef.current.signIn();
+        // Agar sign-in'dan keyin allaqachon admin bo'lib chiqsa (avval claim qilingan) —
+        // claimAdmin qayta chaqirilmaydi (aks holda "allaqachon mavjud" xatosi chiqadi)
+        if (serverAdminRef.current) return;
+        // Owner / admin rolini so'raymiz — birinchi so'rovchi owner bo'ladi
+        await handlersRef.current.claimAdmin();
+      } catch (e) {
+        // Shunda admin bo'lib ulgursak (me query yuklandi) — bu xato emas:
+        // claimAdmin allaqachon claim qilingan holatda "allaqachon mavjud" qaytaradi.
+        if (!cancelled && !serverAdminRef.current) setConnectError(errMsg(e));
+      } finally {
+        if (!cancelled) setConnecting(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, legacyLoggedIn, isServerAdmin, retryKey]);
+
+  // Server admin bo'lgach, ulanish holatini tozalaymiz
+  useEffect(() => {
+    if (isServerAdmin) {
+      setConnecting(false);
+      setConnectError("");
+    }
+  }, [isServerAdmin]);
 
   if (authLoading) {
     return (
@@ -192,6 +240,15 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
     );
   }
 
+  // Legacy parol bilan kirilgan, lekin backendga ulanish hali davom etmoqda
+  if (legacyLoggedIn && !isServerAdmin && connecting) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Spinner t={t} label="Backendga ulanmoqda..." />
+      </div>
+    );
+  }
+
   return (
     <AdminShell
       t={t}
@@ -204,6 +261,16 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
       myRole={me?.role ?? ""}
       history={history}
       xp={xp}
+      notice={connectError}
+      onRetryConnect={() => {
+        setConnectError("");
+        setRetryKey((k) => k + 1);
+      }}
+      onUseGate={() => {
+        // Convex kirish eshigiga o'tamiz — u yerda owner rolini qo'lda so'rash mumkin
+        setConnectError("");
+        setLegacyLoggedIn(false);
+      }}
     />
   );
 }
@@ -466,6 +533,9 @@ function AdminShell({
   myRole,
   history,
   xp,
+  notice,
+  onRetryConnect,
+  onUseGate,
 }: {
   t: ThemeColors;
   onClose: () => void;
@@ -474,6 +544,9 @@ function AdminShell({
   myRole: string;
   history: TestResult[];
   xp: number;
+  notice?: string;
+  onRetryConnect?: () => void;
+  onUseGate?: () => void;
 }) {
   const [tab, setTab] = useState<TabId>("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -590,6 +663,34 @@ function AdminShell({
 
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col min-h-0">
+        {/* Backendga ulanish xatosi haqida ogohlantirish */}
+        {notice && (
+          <div className="flex items-start gap-2 px-4 py-2.5 text-[11px] text-red-300 bg-red-500/10 border-b border-red-500/20">
+            <FiShield size={13} className="mt-0.5 flex-shrink-0" />
+            <span className="leading-relaxed">
+              {notice}{" "}
+              {onRetryConnect ? (
+                <button
+                  onClick={onRetryConnect}
+                  className="underline hover:text-white transition-colors"
+                >
+                  Qayta urinish
+                </button>
+              ) : null}
+              {onUseGate ? (
+                <>
+                  {" "}·{" "}
+                  <button
+                    onClick={onUseGate}
+                    className="underline hover:text-white transition-colors"
+                  >
+                    Convex orqali kirish
+                  </button>
+                </>
+              ) : null}
+            </span>
+          </div>
+        )}
         {/* Mobile header */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center gap-2">
