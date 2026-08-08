@@ -14,6 +14,7 @@ export type TableNames =
   | "typingTexts"
   | "coinTransactions"
   | "settings"
+  | "chatMessages"
   | "authAccounts"
   | "authSessions"
   | "authVerificationTokens"

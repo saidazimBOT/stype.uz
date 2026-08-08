@@ -186,4 +186,15 @@ export default defineSchema({
     updatedAt: v.number(),
     updatedByName: v.string(),
   }),
+
+  // ── Global chat xabarlari (hama kirgan odamlar gaplashadi) ─────────────
+  chatMessages: defineTable({
+    tokenIdentifier: v.string(),
+    username: v.string(),
+    avatar: v.string(),
+    text: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_token", ["tokenIdentifier", "createdAt"]),
 });
