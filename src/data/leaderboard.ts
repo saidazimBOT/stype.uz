@@ -17,6 +17,16 @@ export const LEADERBOARD: LeaderboardEntry[] = [
   { rank: 13, name: "TastaturTitan", country: "🇦🇹", countryName: "Austria", wpm: 148, acc: 96, lang: "de", avatar: "TT", color: "#6366f1" },
   { rank: 14, name: "TeclaRapida", country: "🇪🇸", countryName: "Spain", wpm: 144, acc: 95, lang: "es", avatar: "TR", color: "#ef4444" },
   { rank: 15, name: "ToucheVitesse", country: "🇫🇷", countryName: "France", wpm: 139, acc: 94, lang: "fr", avatar: "TV", color: "#ff0080" },
+  { rank: 16, name: "DesiDactyl", country: "🇮🇳", countryName: "India", wpm: 134, acc: 95, lang: "en", avatar: "DD", color: "#f97316" },
+  { rank: 17, name: "TeclaTropical", country: "🇧🇷", countryName: "Brazil", wpm: 131, acc: 94, lang: "pt", avatar: "TT", color: "#22d3ee" },
+  { rank: 18, name: "MiddleEastTyper", country: "🇦🇪", countryName: "UAE", wpm: 127, acc: 95, lang: "en", avatar: "ME", color: "#84cc16" },
+  { rank: 19, name: "SchnelleFinger", country: "🇨🇭", countryName: "Switzerland", wpm: 124, acc: 96, lang: "de", avatar: "SF", color: "#f43f5e" },
+  { rank: 20, name: "HizliEller", country: "🇹🇷", countryName: "Turkey", wpm: 121, acc: 93, lang: "tr", avatar: "HE", color: "#eab308" },
+  { rank: 21, name: "QazaqKeys", country: "🇰🇿", countryName: "Kazakhstan", wpm: 117, acc: 94, lang: "ru", avatar: "QK", color: "#06b6d4" },
+  { rank: 22, name: "SnelleVingers", country: "🇳🇱", countryName: "Netherlands", wpm: 114, acc: 95, lang: "nl", avatar: "SV", color: "#a3e635" },
+  { rank: 23, name: "SzybkiePalce", country: "🇵🇱", countryName: "Poland", wpm: 111, acc: 94, lang: "pl", avatar: "SP", color: "#fb7185" },
+  { rank: 24, name: "NordicKeys", country: "🇸🇪", countryName: "Sweden", wpm: 108, acc: 95, lang: "sv", avatar: "NK", color: "#818cf8" },
+  { rank: 25, name: "ShvidkiPaltsi", country: "🇺🇦", countryName: "Ukraine", wpm: 105, acc: 93, lang: "uk", avatar: "UA", color: "#facc15" },
 ];
 
 export const COUNTRY_LIST: { flag: string; name: string }[] = [
