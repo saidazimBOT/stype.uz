@@ -21,6 +21,18 @@ export interface AdminUser {
   createdAt: number;
 }
 
+/** Ro'yxatdan o'tganlar bo'limi — sign up qilgan foydalanuvchi */
+export interface RegisteredUser {
+  _id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+  role: Role;
+  signedUpAt: number;
+  lastSeen: number;
+}
+
 export interface AdminStats {
   totals: {
     users: number;

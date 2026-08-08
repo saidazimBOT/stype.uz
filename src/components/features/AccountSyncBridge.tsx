@@ -76,12 +76,15 @@ function AccountSyncBridgeInner() {
     if (isLoading || !isAuthenticated || !profile) return;
     const username = usernameFromProfile(profile);
     const avatar = readActiveAvatar();
-    const sig = JSON.stringify({ username, avatar });
+    const sig = JSON.stringify({ username, avatar, firstName: profile.firstName, lastName: profile.lastName });
     if (lastSyncRef.current === sig) return;
     lastSyncRef.current = sig;
     setUsername({
       username,
       avatar,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      signedUpAt: profile.signedUpAt,
       coins: readLocalNumber(COINS_KEY) || 50,
       xp: readLocalNumber(XP_KEY),
     }).catch(() => {

@@ -208,6 +208,36 @@ export const listUsers = query({
   },
 });
 
+// ── Ro'yxatdan o'tganlar (sign up) — admin paneldagi alohida bo'lim ────
+export const listRegisteredUsers = query({
+  args: { search: v.optional(v.string()), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const all = await ctx.db.query("users").order("desc").take(5000);
+    // Faqat sign up orqali profil yaratganlar (username yoki firstName borlar)
+    const registered = all.filter((u: any) => u.username || u.firstName);
+    const q = (args.search || "").trim().toLowerCase();
+    const filtered = q
+      ? registered.filter(
+          (u: any) =>
+            (u.username || "").toLowerCase().includes(q) ||
+            (u.firstName || "").toLowerCase().includes(q) ||
+            (u.lastName || "").toLowerCase().includes(q)
+        )
+      : registered;
+    return filtered.slice(0, args.limit ?? 1000).map((u: any) => ({
+      _id: u._id,
+      username: u.username || "",
+      firstName: u.firstName || "",
+      lastName: u.lastName || "",
+      avatar: u.avatar,
+      role: u.role ?? "user",
+      signedUpAt: u.signedUpAt ?? u._creationTime,
+      lastSeen: u.lastSeen,
+    }));
+  },
+});
+
 export const getUserProfile = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {

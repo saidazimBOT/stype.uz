@@ -44,6 +44,9 @@ export const setUsername = mutation({
   args: {
     username: v.string(),
     avatar: v.optional(v.string()),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    signedUpAt: v.optional(v.number()),
     coins: v.optional(v.number()),
     xp: v.optional(v.number()),
     bestWpm: v.optional(v.number()),
@@ -68,10 +71,16 @@ export const setUsername = mutation({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
       .first();
 
+    const firstName = args.firstName?.trim();
+    const lastName = args.lastName?.trim();
+
     if (existing) {
       await ctx.db.patch(existing._id, {
         username: raw,
         avatar: args.avatar ?? existing.avatar,
+        firstName: firstName !== undefined ? firstName : existing.firstName,
+        lastName: lastName !== undefined ? lastName : existing.lastName,
+        signedUpAt: args.signedUpAt ?? existing.signedUpAt,
         lastSeen: now,
       });
       return existing._id;
@@ -81,6 +90,9 @@ export const setUsername = mutation({
       tokenIdentifier,
       username: raw,
       avatar: args.avatar ?? "avatar_default",
+      firstName,
+      lastName,
+      signedUpAt: args.signedUpAt,
       coins: args.coins ?? 50,
       xp: args.xp ?? 0,
       wins: 0,

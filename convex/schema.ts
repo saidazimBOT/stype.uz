@@ -9,6 +9,11 @@ export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(),
     username: v.optional(v.string()),
+    // Sign up paytida kiritilgan haqiqiy ism / familiya (admin panelda ko'rinadi)
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    // Ro'yxatdan o'tgan vaqt (profil yaratilgan sana)
+    signedUpAt: v.optional(v.number()),
     avatar: v.string(),
     coins: v.number(),
     xp: v.number(),

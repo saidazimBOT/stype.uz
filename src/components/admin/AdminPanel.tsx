@@ -4,7 +4,7 @@ import { Component, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../../../convex/_generated/api";
 import {
   FiAward, FiBarChart2, FiBell, FiCopy, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
-  FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUser, FiUsers, FiZap,
+  FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUser, FiUserPlus, FiUsers, FiZap,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
@@ -14,6 +14,7 @@ import type { ThemeColors, TestResult } from "../../types";
 import GscDashboard from "./GscDashboard";
 import DashboardSection from "./DashboardSection";
 import UsersSection from "./UsersSection";
+import RegisteredUsersSection from "./RegisteredUsersSection";
 import TextsSection from "./TextsSection";
 import EconomySection from "./EconomySection";
 import AchievementsSection from "./AchievementsSection";
@@ -41,7 +42,7 @@ interface AdminPanelProps {
 
 // ── TABS ────────────────────────────────────────────────────────────────
 type TabId =
-  | "dashboard" | "users" | "texts" | "economy" | "achievements" | "reports"
+  | "dashboard" | "users" | "registered" | "texts" | "economy" | "achievements" | "reports"
   | "announcements" | "logs" | "settings" | "visitors" | "gsc";
 
 interface TabDef {
@@ -54,6 +55,8 @@ interface TabDef {
 const ALL_TABS: TabDef[] = [
   { id: "dashboard", label: "Dashboard", icon: FiBarChart2 },
   { id: "users", label: "Users", icon: FiUsers, server: true },
+  // Ro'yxatdan o'tganlar — har ikkala rejimda ko'rinadi (statik rejimda yo'l-yo'riq ko'rsatadi)
+  { id: "registered", label: "Ro'yxatdan o'tganlar", icon: FiUserPlus },
   { id: "texts", label: "Texts", icon: FiEdit3, server: true },
   { id: "economy", label: "Coins & XP", icon: FiDollarSign, server: true },
   { id: "achievements", label: "Achievements", icon: FiAward, server: true },
@@ -489,6 +492,8 @@ function AdminShell({
         return <DashboardSection t={t} serverAdmin={serverAdmin} history={history} xp={xp} />;
       case "users":
         return <UsersSection t={t} myRole={myRole} />;
+      case "registered":
+        return <RegisteredUsersSection t={t} serverMode={serverAdmin} />;
       case "texts":
         return <TextsSection t={t} />;
       case "economy":
