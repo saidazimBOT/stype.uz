@@ -35,7 +35,7 @@ import ProgressDashboard from "./components/features/ProgressDashboard";
 import CountryRanking from "./components/features/CountryRanking";
 import KeyboardVisualizer from "./components/features/KeyboardVisualizer";
 import BattleHub from "./components/features/Battle/BattleHub";
-import { ConvexClientProvider } from "./lib/battle";
+import { ConvexClientProvider, getConvexClient } from "./lib/battle";
 import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
@@ -56,6 +56,8 @@ import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
+import { getTypingRecorder, getUserToken } from "./lib/convexBridge";
+import { TypingRecorderBridge } from "./components/features/SiteOverlays";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
@@ -443,12 +445,20 @@ export default function App() {
   // ── TEST COMPLETION ─────────────────────────────────────────────────
   useEffect(() => {
     if (finished && started && typed.length > 0) {
-      const e = (Date.now() - startTimeRef.current!) / 60000;
+      const elapsedMs = Date.now() - startTimeRef.current!;
+      const e = elapsedMs / 60000;
       const fw = Math.round((typed.length / 5) / e);
+      // HAQIQIY natija — faqat foydalanuvchi klaviaturada yozganlariga asoslanadi:
+      // correct = to'g'ri yozilgan belgilar, total = jami bosilgan belgilar (xatolar bilan),
+      // time = aniq o'tgan vaqt (soniyalarda), userId = tizimga kirgan foydalanuvchi ID si
       const result: TestResult = {
         wpm: fw,
         accuracy,
         errors,
+        correct: typed.length,
+        total: totalKs,
+        time: Math.max(0, Math.round(elapsedMs / 1000)),
+        userId: getUserToken() ?? undefined,
         lang,
         duration,
         date: new Date().toLocaleTimeString(),
@@ -456,8 +466,33 @@ export default function App() {
       };
       setHistory((h) => [result, ...h.slice(0, 49)]);
 
-      // Admin panel uchun: kim type qilganini qayd qilamiz
-      recordTyping({ wpm: fw, accuracy, errors, lang });
+      // Admin panel uchun: kim type qilganini qayd qilamiz (to'liq haqiqiy ko'rsatkichlar bilan)
+      recordTyping({
+        wpm: fw,
+        accuracy,
+        errors,
+        correct: typed.length,
+        total: totalKs,
+        elapsed: result.time,
+        lang,
+      });
+
+      // Convex serverga ham HAQIQIY natijani yozamiz — foydalanuvchi login qilgan
+      // bo'lsa, server uning ID sini (tokenIdentifier) avtomatik saqlaydi.
+      const recorder = getTypingRecorder();
+      if (recorder) {
+        void recorder({
+          wpm: fw,
+          accuracy,
+          errors,
+          correct: typed.length,
+          total: totalKs,
+          time: result.time,
+          lang,
+          duration: typeof duration === "number" ? duration : 0,
+          username: fullName(profile) || undefined,
+        }).catch(() => {});
+      }
 
       updateProgress("wpm", fw);
       updateProgress("accuracy", accuracy);
@@ -526,6 +561,8 @@ export default function App() {
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
     <ConvexClientProvider>
+    {/* Convex sozlanmagan bo'lsa ko'prikni render qilmaymiz — hooks provider tashqarisida ishlamaydi */}
+    {getConvexClient() && <TypingRecorderBridge />}
     <AccountSyncBridge />
     <SupabaseCoinSync />
     <div
@@ -1018,6 +1055,14 @@ export default function App() {
                     </span>
                     <span>
                       {T("type.errors")} <strong className="text-red-400">{errors}</strong>
+                    </span>
+                    <span>
+                      {T("type.correct")}:{" "}
+                      <strong style={{ color: t.accent }}>{typed.length}</strong>
+                    </span>
+                    <span>
+                      {T("type.total")}:{" "}
+                      <strong className="text-gray-300">{totalKs}</strong>
                     </span>
                     {typed.length > 0 && (
                       <>

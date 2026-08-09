@@ -61,6 +61,8 @@ const en: Dict = {
   "type.keepPracticing": "Keep practicing!",
   "type.tryAgain": "Try Again",
   "type.errors": "Errors:",
+  "type.correct": "Correct",
+  "type.total": "Total",
   "type.xp": "XP:",
   "type.free": "Free",
 
@@ -282,6 +284,8 @@ const uz: Dict = {
   "type.keepPracticing": "Mashq qilishda davom eting!",
   "type.tryAgain": "Qayta urinish",
   "type.errors": "Xatolar:",
+  "type.correct": "To'g'ri",
+  "type.total": "Jami",
   "type.xp": "XP:",
   "type.free": "Bepul",
 
@@ -504,6 +508,8 @@ const ru: Dict = {
   "type.keepPracticing": "Продолжайте практиковаться!",
   "type.tryAgain": "Попробовать снова",
   "type.errors": "Ошибки:",
+  "type.correct": "Верно",
+  "type.total": "Всего",
   "type.xp": "ОП:",
   "type.free": "Бесплатно",
 

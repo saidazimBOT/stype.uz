@@ -57,6 +57,14 @@ export interface TestResult {
   wpm: number;
   accuracy: number;
   errors: number;
+  /** To'g'ri yozilgan belgilar soni — WPM shu qiymatga asoslanadi */
+  correct: number;
+  /** Jami bosilgan belgilar (xatolar bilan birga) */
+  total: number;
+  /** Test davomiyligi — soniyalarda */
+  time: number;
+  /** Foydalanuvchi ID (Convex token) — tizimga kirgan bo'lsa */
+  userId?: string;
   lang: string;
   duration: number | string;
   date: string;

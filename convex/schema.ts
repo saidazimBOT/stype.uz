@@ -71,12 +71,18 @@ export default defineSchema({
     .index("by_status", ["status", "createdAt"]),
 
   // ── Type test natijalari (analytics) ──────────────────────────────────
+  // Barcha qiymatlar foydalanuvchining HAQIQIY klaviatura kiritishi va
+  // aniq o'tgan vaqtiga asoslanadi: correct = to'g'ri belgilar,
+  // total = jami bosilgan belgilar (xatolar bilan), time = soniyalar.
   typingResults: defineTable({
     tokenIdentifier: v.string(),
     username: v.string(),
     wpm: v.number(),
     accuracy: v.number(),
     errors: v.number(),
+    correct: v.number(),
+    total: v.number(),
+    time: v.number(),
     lang: v.string(),
     duration: v.number(),
     createdAt: v.number(),

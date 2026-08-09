@@ -255,6 +255,12 @@ export interface TypingRecord {
   wpm: number;
   accuracy: number;
   errors: number;
+  /** To'g'ri yozilgan belgilar soni */
+  correct?: number;
+  /** Jami bosilgan belgilar (xatolar bilan) */
+  total?: number;
+  /** Test davomiyligi — soniyalarda */
+  elapsed?: number;
   lang: string;
   browser: string;
   device: string;
@@ -286,6 +292,9 @@ export function recordTyping(result: {
   wpm: number;
   accuracy: number;
   errors: number;
+  correct?: number;
+  total?: number;
+  elapsed?: number;
   lang: string;
 }): void {
   try {
@@ -297,6 +306,9 @@ export function recordTyping(result: {
       wpm: result.wpm,
       accuracy: result.accuracy,
       errors: result.errors,
+      correct: result.correct,
+      total: result.total,
+      elapsed: result.elapsed,
       lang: result.lang,
       browser: getBrowser(),
       device,

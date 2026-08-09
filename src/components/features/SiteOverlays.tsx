@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { ThemeColors } from "../../types";
 import { FiBell, FiX } from "react-icons/fi";
-import { setTypingRecorder, type RecordTypingArgs } from "../../lib/convexBridge";
+import { setTypingRecorder, setUserToken, type RecordTypingArgs } from "../../lib/convexBridge";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import type { PublicSettings } from "../admin/types";
 
@@ -22,13 +22,21 @@ function Heartbeat() {
 }
 
 // ── Type natijalarini serverga yozish ko'prigi ──────────────────────────
-function TypingRecorderBridge() {
+export function TypingRecorderBridge() {
   const record = useMutation(api.typingResults.recordTypingResult);
+  const myToken = useQuery(api.users.myToken) as string | null | undefined;
+
+  // Joriy foydalanuvchi ID sini ko'prik orqali App.tsx ga uzatamiz
+  useEffect(() => {
+    setUserToken(myToken ?? null);
+  }, [myToken]);
+
   useEffect(() => {
     const fn = (args: RecordTypingArgs) => record({ ...args });
     setTypingRecorder(fn);
     return () => setTypingRecorder(null);
   }, [record]);
+
   return null;
 }
 
