@@ -48,6 +48,7 @@ import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
 import CoinIcon from "./components/CoinIcon";
+import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
@@ -636,7 +637,7 @@ export default function App() {
               </button>
             </>
           )}
-          {/* 300 WPM → Telegram Premium aksiyasi */}
+          {/* 200 WPM → Telegram Premium aksiyasi (sovg'a qutisi belgisi bilan) */}
           <button
             onClick={() => {
               setShowPromo((s) => !s);
@@ -645,10 +646,10 @@ export default function App() {
               setShowLingohub(false);
             }}
             className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title="300 WPM → 1 oylik Telegram Premium!"
+            title="200 WPM → 1 oylik Telegram Premium sovg'asi!"
           >
-            🏆 <span className="hidden sm:inline">300 WPM</span>
-            <span className="hidden lg:inline">→ Premium</span>
+            <GiftIcon size={16} />
+            <span>Sovg'a bor</span>
           </button>
           {/* Sign up / Profil */}
           <button

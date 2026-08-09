@@ -2,12 +2,13 @@
 
 import { useMemo } from "react";
 import { FiCheckCircle, FiGift, FiSend, FiShield, FiTrendingUp, FiZap } from "react-icons/fi";
+import GiftIcon from "../GiftIcon";
 import type { ThemeColors } from "../../types";
 
 // Telegram: sovg'a olish yoki savollar uchun
 const PROMO_TG = "@said_khujayev";
 const PROMO_TG_URL = "https://t.me/said_khujayev";
-const TARGET_WPM = 300;
+const TARGET_WPM = 200;
 
 interface TelegramPromoProps {
   t: ThemeColors;
@@ -72,7 +73,9 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
           </span>
         ))}
 
-        <div className="trophy-bounce text-6xl mb-3 inline-block">🏆</div>
+        <div className="trophy-bounce mb-3 inline-flex items-center justify-center">
+          <GiftIcon size={72} />
+        </div>
         <h3
           className="text-2xl sm:text-3xl font-extrabold mb-2"
           style={{
@@ -84,11 +87,12 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
             animation: "shine 3s linear infinite",
           }}
         >
-          300 WPM — 1 oylik Telegram Premium!
+          {TARGET_WPM} WPM — 1 oylik Telegram Premium!
         </h3>
         <p className="text-sm text-gray-400 max-w-md mx-auto">
           <strong className="text-amber-400">{TARGET_WPM} WPM</strong> ga erishgan har bir foydalanuvchiga{" "}
           <strong className="text-white">1 oylik Telegram Premium</strong> sovg'a qilinadi. 🎁
+          Natijangizni <strong className="text-amber-400">skrin qilib</strong> Telegram orqali yuboring!
         </p>
 
         {/* Progress */}
@@ -151,8 +155,8 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
           <h4 className="text-xl font-bold text-white mb-1">Tabriklaymiz!</h4>
           <p className="text-sm text-gray-400 mb-4">
             Siz <strong className="text-green-400">{bestWpm} WPM</strong> natija bilan mukofotni qo'lga
-            kiritdingiz. Telegram orqali bizga yozing —{" "}
-            <strong className="text-white">1 oylik Telegram Premium</strong> sovg'angizni yuboramiz!
+            kiritdingiz! Natijangizni <strong className="text-white">skrin qilib</strong> Telegram orqali
+            yuboring — <strong className="text-white">1 oylik Telegram Premium</strong> sovg'angizni yuboramiz!
           </p>
           <a
             href={PROMO_TG_URL}
@@ -174,7 +178,8 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
           <h4 className="text-lg font-bold text-white mb-1">Hali ozgina qoldi!</h4>
           <p className="text-sm text-gray-400 mb-4">
             Tez-tez mashq qiling va <strong className="text-amber-400">{TARGET_WPM} WPM</strong> ga erishing.
-            Natijaga erishganingizdan so'ng Telegram orqali bizga yozing!
+            Natijaga erishganingizdan so'ng natijangizni <strong className="text-amber-400">skrin qilib</strong>{" "}
+            Telegram orqali yuboring!
           </p>
           <a
             href={PROMO_TG_URL}
@@ -200,7 +205,7 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
             "Natijangiz ekranda ko'rinadi va admin tomonidan tekshiriladi (ekran ko'rinishi / video orqali).",
             "Sovg'a faqat haqiqiy natijalar uchun beriladi — aldash aniqlansa, mukofot bekor qilinadi.",
             "Har bir foydalanuvchiga oyiga bitta sovg'a beriladi.",
-            "Sovg'ani olish uchun natijangiz bilan Telegram orqali murojaat qiling.",
+            "Sovg'ani olish uchun natijangizni skrin qilib Telegram orqali yuboring.",
           ].map((rule) => (
             <li key={rule} className="flex items-start gap-2">
               <FiCheckCircle className="mt-0.5 flex-shrink-0" style={{ color: "#22c55e" }} />
