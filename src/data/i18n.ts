@@ -44,6 +44,8 @@ const en: Dict = {
   "navbar.promoTitle": "200 WPM → 1 month Telegram Premium gift!",
   "navbar.admin": "Admin",
   "navbar.coinShop": "Open Coin Shop",
+  "navbar.login": "Log in",
+  "navbar.loginTitle": "Log in to your account",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -203,6 +205,30 @@ const en: Dict = {
   "signup.errFile": "Could not read the file",
   "signup.errName": "First name must be at least 2 characters",
   "signup.photoAlt": "Profile photo",
+  "signup.email": "Email",
+  "signup.emailPlaceholder": "e.g. john@mail.com",
+  "signup.password": "Password",
+  "signup.passwordPlaceholder": "minimum 6 characters",
+  "signup.errEmail": "Enter a valid email address",
+  "signup.errPassword": "Password must be at least 6 characters",
+  "signup.errAuth": "Registration failed — this email may already be registered",
+  "signup.errNetwork": "Could not connect to the server. Check your internet and try again.",
+  "signup.confirmEmail": "Check your email to confirm your account, then log in",
+  "signup.haveAccount": "Already have an account? Log in",
+  "signup.accountSection": "Account (cloud)",
+  "signup.accountNote": "Your account is stored in the cloud — you can log in from any device",
+
+  // ── LOGIN MODAL ──
+  "login.header": "Log in",
+  "login.subtitle": "Log in with your email and password",
+  "login.close": "Close",
+  "login.email": "Email",
+  "login.password": "Password",
+  "login.submit": "Log in",
+  "login.errInvalid": "Wrong email or password",
+  "login.errGeneric": "Log in failed — try again",
+  "login.noAccount": "No account yet? Sign up",
+  "login.footerNote": "Your account is saved on the server — available on any device",
 };
 
 const uz: Dict = {
@@ -239,6 +265,8 @@ const uz: Dict = {
   "navbar.promoTitle": "200 WPM → 1 oylik Telegram Premium sovg'asi!",
   "navbar.admin": "Admin",
   "navbar.coinShop": "Do'konni ochish",
+  "navbar.login": "Kirish",
+  "navbar.loginTitle": "Hisobingizga kirish",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -372,6 +400,30 @@ const uz: Dict = {
   "signup.errFile": "Faylni o'qib bo'lmadi",
   "signup.errName": "Ism kamida 2 harfdan iborat bo'lishi kerak",
   "signup.photoAlt": "Profil rasmi",
+  "signup.email": "Email",
+  "signup.emailPlaceholder": "masalan: aziz@mail.com",
+  "signup.password": "Parol",
+  "signup.passwordPlaceholder": "kamida 6 belgi",
+  "signup.errEmail": "To'g'ri email kiriting",
+  "signup.errPassword": "Parol kamida 6 belgidan iborat bo'lishi kerak",
+  "signup.errAuth": "Ro'yxatdan o'tishda xatolik — bu email allaqachon ro'yxatdan o'tgan bo'lishi mumkin",
+  "signup.errNetwork": "Serverga ulanib bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+  "signup.confirmEmail": "Hisobni tasdiqlash uchun email'ingizni tekshiring, so'ng kiring",
+  "signup.haveAccount": "Hisobingiz bormi? Kiring",
+  "signup.accountSection": "Hisob (bulut)",
+  "signup.accountNote": "Hisobingiz bulutda saqlanadi — istalgan qurilmadan kirishingiz mumkin",
+
+  // ── LOGIN MODAL ──
+  "login.header": "Kirish",
+  "login.subtitle": "Email va parol bilan kiring",
+  "login.close": "Yopish",
+  "login.email": "Email",
+  "login.password": "Parol",
+  "login.submit": "Kirish",
+  "login.errInvalid": "Email yoki parol noto'g'ri",
+  "login.errGeneric": "Kirishda xatolik — qayta urinib ko'ring",
+  "login.noAccount": "Hisobingiz yo'qmi? Ro'yxatdan o'ting",
+  "login.footerNote": "Hisobingiz serverda saqlanadi — istalgan qurilmada mavjud",
 
   // ── TYPING DNA ──
   "dna.tests": "Testlar",
@@ -435,6 +487,8 @@ const ru: Dict = {
   "navbar.promoTitle": "200 WPM → 1 месяц Telegram Premium в подарок!",
   "navbar.admin": "Админ",
   "navbar.coinShop": "Открыть магазин",
+  "navbar.login": "Войти",
+  "navbar.loginTitle": "Вход в аккаунт",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -568,6 +622,30 @@ const ru: Dict = {
   "signup.errFile": "Не удалось прочитать файл",
   "signup.errName": "Имя должно содержать минимум 2 символа",
   "signup.photoAlt": "Фото профиля",
+  "signup.email": "Email",
+  "signup.emailPlaceholder": "например: john@mail.com",
+  "signup.password": "Пароль",
+  "signup.passwordPlaceholder": "минимум 6 символов",
+  "signup.errEmail": "Введите корректный email",
+  "signup.errPassword": "Пароль должен содержать минимум 6 символов",
+  "signup.errAuth": "Ошибка регистрации — возможно, этот email уже зарегистрирован",
+  "signup.errNetwork": "Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.",
+  "signup.confirmEmail": "Проверьте email, чтобы подтвердить аккаунт, затем войдите",
+  "signup.haveAccount": "Уже есть аккаунт? Войти",
+  "signup.accountSection": "Аккаунт (облако)",
+  "signup.accountNote": "Аккаунт хранится в облаке — можно войти с любого устройства",
+
+  // ── LOGIN MODAL ──
+  "login.header": "Вход",
+  "login.subtitle": "Войдите по email и паролю",
+  "login.close": "Закрыть",
+  "login.email": "Email",
+  "login.password": "Пароль",
+  "login.submit": "Войти",
+  "login.errInvalid": "Неверный email или пароль",
+  "login.errGeneric": "Ошибка входа — попробуйте ещё раз",
+  "login.noAccount": "Нет аккаунта? Зарегистрируйтесь",
+  "login.footerNote": "Аккаунт сохраняется на сервере — доступен на любом устройстве",
 
   // ── TYPING DNA ──
   "dna.tests": "Тесты",

@@ -1,16 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { ThemeColors, TestResult } from "../../types";
 import {
-  FiActivity, FiBarChart2, FiClock, FiEdit3, FiEye, FiTarget, FiTrendingUp, FiUsers, FiZap,
+  FiActivity, FiBarChart2, FiClock, FiDollarSign, FiEdit3, FiEye, FiPlus, FiTarget, FiTrendingUp, FiUsers, FiZap,
 } from "react-icons/fi";
 import {
   readVisits, visitsPerDay, countToday, countThisWeek, uniqueVisitors, readTypingLog,
 } from "../../hooks/useVisitTracker";
-import { StatCard, Card, SectionHeader, Spinner, EmptyState } from "./adminUi";
+import { StatCard, Card, SectionHeader, Spinner, EmptyState, PrimaryBtn, TextInput } from "./adminUi";
 import { LineChart, BarChart, type ChartPoint } from "./charts";
 import type { AdminStats } from "./types";
 
@@ -22,6 +22,35 @@ interface Props {
 }
 
 export default function DashboardSection({ t, serverAdmin, history, xp }: Props) {
+  // ── O'zimga coin berish (faqat admin/egasi ko'radi) ────────────────
+  const [myCoins, setMyCoins] = useState(0);
+  const [coinAmount, setCoinAmount] = useState("");
+  const [coinMsg, setCoinMsg] = useState("");
+
+  useEffect(() => {
+    const read = () => {
+      const raw = localStorage.getItem("typeuz_coins");
+      setMyCoins(raw ? parseInt(raw, 10) || 0 : 0);
+    };
+    read();
+    const onSync = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail;
+      if (typeof detail === "number" && Number.isFinite(detail)) setMyCoins(detail);
+    };
+    window.addEventListener("typeuz-coins-sync", onSync);
+    return () => window.removeEventListener("typeuz-coins-sync", onSync);
+  }, []);
+
+  const addMyCoins = (amount: number) => {
+    if (!amount || amount <= 0) return;
+    const total = myCoins + amount;
+    localStorage.setItem("typeuz_coins", String(total));
+    window.dispatchEvent(new CustomEvent("typeuz-coins-sync", { detail: total }));
+    setMyCoins(total);
+    setCoinMsg(`✓ ${amount} coin qo'shildi — hozirgi balans: ${total}`);
+    setTimeout(() => setCoinMsg(""), 2500);
+  };
+
   // ── Lokal (legacy) statistika — har doim mavjud ─────────────────────
   const local = useMemo(() => {
     const raw = readVisits();
@@ -75,6 +104,60 @@ export default function DashboardSection({ t, serverAdmin, history, xp }: Props)
 
   return (
     <div className="space-y-4">
+      {/* ══ O'ZIMGA COIN BERISH — faqat admin panelga kirgan egasi ko'radi ══ */}
+      <Card t={t} className="p-5" style={{
+        background: `linear-gradient(135deg, #f59e0b11, #f59e0b05)`,
+        border: "1px solid #f59e0b33",
+      }}>
+        <SectionHeader
+          t={t}
+          icon={FiDollarSign}
+          title="O'zimga coin berish"
+          subtitle="Faqat siz (admin) ko'rasiz — balans shu brauzerdagi hamyonga qo'shiladi"
+        />
+        <div className="mt-3 flex items-center gap-4 flex-wrap">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-3xl font-bold" style={{ color: "#fbbf24" }}>{myCoins.toLocaleString()}</span>
+            <span className="text-xs text-gray-500">🪙 coin</span>
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            {[100, 500, 1000, 5000].map((n) => (
+              <button
+                key={n}
+                onClick={() => addMyCoins(n)}
+                className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-105"
+                style={{ background: "#22c55e1a", color: "#4ade80", border: "1px solid #22c55e44" }}
+              >
+                <FiPlus size={10} className="inline mr-0.5" />{n}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <TextInput
+              t={t}
+              value={coinAmount}
+              onChange={setCoinAmount}
+              type="number"
+              placeholder="Boshqa miqdor"
+              className="w-28"
+              accent
+            />
+            <PrimaryBtn
+              t={t}
+              onClick={() => addMyCoins(Math.round(Number(coinAmount) || 0))}
+              disabled={!(Math.round(Number(coinAmount) || 0) > 0)}
+            >
+              <FiPlus size={12} /> Qo'shish
+            </PrimaryBtn>
+          </div>
+        </div>
+        {coinMsg && (
+          <div className="mt-3 px-3 py-2 rounded-xl text-xs text-green-400 bg-green-500/10 border border-green-500/30 animate-pop-in">
+            {coinMsg}
+          </div>
+        )}
+      </Card>
+
       {/* ══ SERVER ANALYTICS (faqat Convex rejimda — hooklar xavfsiz mount bo'ladi) ══ */}
       {serverAdmin && <ServerAnalytics t={t} />}
 

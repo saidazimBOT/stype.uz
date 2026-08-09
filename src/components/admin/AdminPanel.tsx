@@ -3,7 +3,7 @@
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../../../convex/_generated/api";
 import {
-  FiAward, FiBarChart2, FiBell, FiCopy, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
+  FiAward, FiBarChart2, FiBell, FiCopy, FiDatabase, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
   FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUser, FiUserPlus, FiUsers, FiZap,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
@@ -11,10 +11,12 @@ import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { getConvexClient } from "../../lib/battle";
 import { useAdminProfile, errMsg } from "./useAdminProfile";
 import type { ThemeColors, TestResult } from "../../types";
+import { isSupabaseConfigured } from "../../lib/supabase";
 import GscDashboard from "./GscDashboard";
 import DashboardSection from "./DashboardSection";
 import UsersSection from "./UsersSection";
 import RegisteredUsersSection from "./RegisteredUsersSection";
+import SupabaseUsersSection from "./SupabaseUsersSection";
 import TextsSection from "./TextsSection";
 import EconomySection from "./EconomySection";
 import AchievementsSection from "./AchievementsSection";
@@ -42,7 +44,7 @@ interface AdminPanelProps {
 
 // ── TABS ────────────────────────────────────────────────────────────────
 type TabId =
-  | "dashboard" | "users" | "registered" | "texts" | "economy" | "achievements" | "reports"
+  | "dashboard" | "users" | "registered" | "supabase" | "texts" | "economy" | "achievements" | "reports"
   | "announcements" | "logs" | "settings" | "visitors" | "gsc";
 
 interface TabDef {
@@ -50,6 +52,8 @@ interface TabDef {
   label: string;
   icon: IconType;
   server?: boolean;
+  /** Faqat Supabase sozlangan bo'lsa ko'rinadi */
+  supabase?: boolean;
 }
 
 const ALL_TABS: TabDef[] = [
@@ -57,6 +61,8 @@ const ALL_TABS: TabDef[] = [
   { id: "users", label: "Users", icon: FiUsers, server: true },
   // Ro'yxatdan o'tganlar — har ikkala rejimda ko'rinadi (statik rejimda yo'l-yo'riq ko'rsatadi)
   { id: "registered", label: "Ro'yxatdan o'tganlar", icon: FiUserPlus },
+  // Supabase haqiqiy foydalanuvchilar bazasi (faqat kalit sozlangan bo'lsa)
+  { id: "supabase", label: "Supabase foydalanuvchilari", icon: FiDatabase, supabase: true },
   { id: "texts", label: "Texts", icon: FiEdit3, server: true },
   { id: "economy", label: "Coins & XP", icon: FiDollarSign, server: true },
   { id: "achievements", label: "Achievements", icon: FiAward, server: true },
@@ -550,7 +556,9 @@ function AdminShell({
 }) {
   const [tab, setTab] = useState<TabId>("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
-  const tabs = ALL_TABS.filter((tb) => !tb.server || serverAdmin);
+  const tabs = ALL_TABS.filter(
+    (tb) => (!tb.server || serverAdmin) && (!tb.supabase || isSupabaseConfigured())
+  );
   const active = tabs.some((tb) => tb.id === tab) ? tab : "dashboard";
 
   // Avvalgi panel kabi: har 30 soniyada avtomatik yangilash
@@ -567,6 +575,8 @@ function AdminShell({
         return <UsersSection t={t} myRole={myRole} />;
       case "registered":
         return <RegisteredUsersSection t={t} serverMode={serverAdmin} />;
+      case "supabase":
+        return <SupabaseUsersSection t={t} />;
       case "texts":
         return <TextsSection t={t} />;
       case "economy":
