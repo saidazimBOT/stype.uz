@@ -7,7 +7,7 @@ import type { ThemeColors } from "../../../types";
 import { charsEqual } from "../../../utils/typingChars";
 
 // WPM hisobida minimal o'tgan vaqt (ms) — boshlanishda absurd qiymat chiqmasligi uchun
-const MIN_WPM_ELAPSED_MS = 3000;
+const MIN_WPM_ELAPSED_MS = 1000;
 
 interface TypingArenaProps {
   t: ThemeColors;
@@ -82,7 +82,8 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
         else break;
       }
 
-      // Boshlanishida absurd WPM chiqmasligi uchun minimal vaqt asos qilib olinadi
+      // Boshlanishida absurd WPM chiqmasligi uchun minimal vaqt asos qilib olinadi;
+      // qolgan hollarda haqiqiy o'tgan vaqt ishlatiladi (haqiqiy tezlik)
       const elapsedMin = Math.max(Date.now() - startTimeRef.current, MIN_WPM_ELAPSED_MS) / 60000;
       const rawWpm = Math.round(nextTyped.length / 5 / elapsedMin);
       const wpmV = Math.min(300, Math.max(0, rawWpm));
