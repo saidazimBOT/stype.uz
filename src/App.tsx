@@ -43,7 +43,6 @@ import AIExercises from "./components/features/AIExercises";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
-import TelegramPromo from "./components/features/TelegramPromo";
 import LingohubPromo from "./components/features/LingohubPromo";
 import LingohubLogo from "./components/features/LingohubLogo";
 import AccountSyncBridge from "./components/features/AccountSyncBridge";
@@ -52,7 +51,6 @@ import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
 import CoinIcon from "./components/CoinIcon";
-import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
@@ -72,6 +70,10 @@ import type { IconType } from "react-icons";
 // Bot yaratilgach shu linkni t.me/<username> ga o'zgartiring!
 // (BotFather → /newbot → username — masalan: t.me/stypeuz_bot)
 const TELEGRAM_BOT_URL = "https://t.me/stypeuz_bot";
+
+// WPM hisobida minimal o'tgan vaqt (ms) — boshlanishda 1-2 harf bilan
+// absurd tezlik chiqib ketmasligi uchun shu qiymat asos qilib olinadi.
+const MIN_WPM_ELAPSED_MS = 3000;
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
 // Bu React mount bo'lishidan OLDIN ishlaydi, shuning uchun useLocalStorage
@@ -102,7 +104,6 @@ export default function App() {
   const [bgImage, setBgImage] = useLocalStorage("typeuz_bgimage", "");
   const [bgDim, setBgDim] = useLocalStorage("typeuz_bgdim", 0.55);
   const [showSettings, setShowSettings] = useState(false);
-  const [showPromo, setShowPromo] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
   const [showLingohub, setShowLingohub] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
@@ -188,9 +189,6 @@ export default function App() {
 
   // UI tarjimalari — tanlangan tilga qarab (en/uz/ru)
   const T = getT(lang);
-
-  // Telegram Premium aksiyasi uchun eng yaxshi WPM
-  const bestWpm = history.length ? Math.max(...history.map((h) => h.wpm)) : 0;
 
   // Admin: saytga tashrifni kuzatish
   useVisitTracker(lang, theme);
@@ -334,14 +332,15 @@ export default function App() {
   // WPM = (to'g'ri yozilgan belgilar / 5) / o'tgan vaqt (daqiqada).
   // Timer har 500ms da qayta hisoblaydi: pauza qilsangiz WPM tushadi,
   // tez yozsangiz ko'tariladi — haqiqiy bosish tezligi ko'rinadi.
+  // DIQQAT: hisob-kitobda minimal vaqt 3 soniya deb olinadi. Aks holda
+  // birinchi harf bosilganda (elapsed ≈ 0) WPM 300 gacha sakrab chiqardi.
   useEffect(() => {
     if (!started || finished || !startTimeRef.current) return;
     const update = () => {
       const elapsed = Date.now() - startTimeRef.current!;
-      const elapsedMin = elapsed / 60000;
-      if (elapsedMin <= 0) return;
-      // Boshlanishning dastlabki millisoniyalarida absurd qiymat chiqmasligi
-      // uchun 300 WPM (app bo'ylab umumiy chegara) bilan cheklaymiz.
+      // Boshlanishida absurd qiymat chiqmasligi uchun minimal vaqt
+      // o'tgan deb hisoblaymiz; 300 WPM (umumiy chegara) bilan cheklaymiz.
+      const elapsedMin = Math.max(elapsed, MIN_WPM_ELAPSED_MS) / 60000;
       const rawWpm = Math.min(300, Math.round((typed.length / 5) / elapsedMin));
       setWpm(Math.max(0, rawWpm));
     };
@@ -448,8 +447,10 @@ export default function App() {
   useEffect(() => {
     if (finished && started && typed.length > 0) {
       const elapsedMs = Date.now() - startTimeRef.current!;
-      const e = elapsedMs / 60000;
-      const fw = Math.round((typed.length / 5) / e);
+      // Yakuniy WPM da ham minimal vaqt asos qilib olinadi — juda qisqa
+      // matnda (1-2 harf) absurd tezlik chiqib ketmasligi uchun.
+      const e = Math.max(elapsedMs, MIN_WPM_ELAPSED_MS) / 60000;
+      const fw = Math.min(300, Math.round((typed.length / 5) / e));
       // HAQIQIY natija — faqat foydalanuvchi klaviaturada yozganlariga asoslanadi:
       // correct = to'g'ri yozilgan belgilar, total = jami bosilgan belgilar (xatolar bilan),
       // time = aniq o'tgan vaqt (soniyalarda), userId = tizimga kirgan foydalanuvchi ID si
@@ -684,26 +685,11 @@ export default function App() {
               </button>
             </>
           )}
-          {/* 200 WPM → Telegram Premium aksiyasi (sovg'a qutisi belgisi bilan) */}
-          <button
-            onClick={() => {
-              setShowPromo((s) => !s);
-              setShowSettings(false);
-              setShowOwner(false);
-              setShowLingohub(false);
-            }}
-            className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title={T("navbar.promoTitle")}
-          >
-            <GiftIcon size={16} />
-            <span>{T("navbar.promoBadge")}</span>
-          </button>
           {/* Kirish (Supabase sozlangan bo'lsa) */}
           {cloudEnabled && !isSignedUp && (
             <button
               onClick={() => {
                 setShowLogin(true);
-                setShowPromo(false);
                 setShowSettings(false);
                 setShowOwner(false);
                 setShowLingohub(false);
@@ -720,7 +706,6 @@ export default function App() {
           <button
             onClick={() => {
               setShowSignUp(true);
-              setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
               setShowLingohub(false);
@@ -775,7 +760,6 @@ export default function App() {
           <button
             onClick={() => {
               setShowLingohub((s) => !s);
-              setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
             }}
@@ -789,7 +773,6 @@ export default function App() {
           <button
             onClick={() => {
               setShowOwner((s) => !s);
-              setShowPromo(false);
               setShowSettings(false);
               setShowLingohub(false);
             }}
@@ -807,7 +790,6 @@ export default function App() {
           <button
             onClick={() => {
               setShowSettings((s) => !s);
-              setShowPromo(false);
               setShowOwner(false);
               setShowLingohub(false);
             }}
@@ -830,7 +812,6 @@ export default function App() {
               key={item.id}
               onClick={() => {
                 setShowOwner(false);
-                setShowPromo(false);
                 setShowLingohub(false);
                 setView(view === item.id ? "type" : item.id);
               }}
@@ -852,9 +833,6 @@ export default function App() {
           {/* Lingohub.uz reklama paneli */}
           {showLingohub ? (
             <LingohubPromo t={t} onClose={() => setShowLingohub(false)} />
-          ) : /* Telegram Premium promo */
-          showPromo ? (
-            <TelegramPromo t={t} lang={lang} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
           ) : /* Sayt egasi */
           showOwner ? (
             <OwnerView t={t} lang={lang} onClose={() => setShowOwner(false)} />
@@ -1213,7 +1191,6 @@ export default function App() {
             onClick={() => {
               setView("shop");
               setShowSettings(false);
-              setShowPromo(false);
               setShowOwner(false);
               setShowLingohub(false);
             }}

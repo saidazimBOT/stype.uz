@@ -6,6 +6,9 @@ import { api } from "../../../../convex/_generated/api";
 import type { ThemeColors } from "../../../types";
 import { charsEqual } from "../../../utils/typingChars";
 
+// WPM hisobida minimal o'tgan vaqt (ms) — boshlanishda absurd qiymat chiqmasligi uchun
+const MIN_WPM_ELAPSED_MS = 3000;
+
 interface TypingArenaProps {
   t: ThemeColors;
   text: string;
@@ -79,8 +82,9 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
         else break;
       }
 
-      const elapsedMin = (Date.now() - startTimeRef.current) / 60000;
-      const rawWpm = elapsedMin > 0 ? Math.round(nextTyped.length / 5 / elapsedMin) : 0;
+      // Boshlanishida absurd WPM chiqmasligi uchun minimal vaqt asos qilib olinadi
+      const elapsedMin = Math.max(Date.now() - startTimeRef.current, MIN_WPM_ELAPSED_MS) / 60000;
+      const rawWpm = Math.round(nextTyped.length / 5 / elapsedMin);
       const wpmV = Math.min(300, Math.max(0, rawWpm));
       setWpm(wpmV);
       setAccuracy(Math.round((correct / nextTyped.length) * 100));

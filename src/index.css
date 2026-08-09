@@ -122,27 +122,6 @@ main.overflow-y-auto {
 }
 .row-in { animation: rowIn 0.35s ease-out both; }
 
-/* ── Telegram Premium promo animations ──────────────────────────────── */
-@keyframes promoShine {
-  0% { background-position: -150% 0; }
-  100% { background-position: 250% 0; }
-}
-@keyframes promoGlow {
-  0%, 100% { box-shadow: 0 0 6px #f59e0b44; }
-  50% { box-shadow: 0 0 18px #f59e0b88; }
-}
-.promo-badge {
-  background: linear-gradient(90deg, #f59e0b33, #fbbf24aa, #f59e0b33);
-  background-size: 200%;
-  border: 1px solid #f59e0b66;
-  color: #fde68a;
-  animation: promoShine 2.5s linear infinite, promoGlow 2s ease-in-out infinite;
-}
-.promo-badge:hover {
-  border-color: #f59e0b;
-  color: #fff;
-}
-
 /* ── Lingohub.uz reklama tugmasi (ad-badge) ─────────────────────────── */
 @keyframes adShine {
   0% { background-position: -150% 0; }
@@ -534,7 +513,7 @@ input:focus, textarea:focus {
 }
 @media (prefers-reduced-motion: reduce) {
   .caret-bar, .err-char, .animate-pop-in, .aurora-layer .aurora, .live-ping, .bar-fill, .row-in,
-  .promo-badge, .trophy-bounce, .sparkle-float, .progress-shine, .confetti-piece,
+  .trophy-bounce, .sparkle-float, .progress-shine, .confetti-piece,
   .coin-badge, .coin-emoji, .coin-ring, .coin-amount, .coin-particle, .trail-coin,
   .ad-badge { animation: none; }
 }
