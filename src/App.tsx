@@ -373,32 +373,33 @@ export default function App() {
       spawnP(ok);
       recordEvent({ type: "keydown", key: k, correct: ok, time: Date.now() - (startTimeRef.current || Date.now()) });
 
+      // Xato belgi ham yoziladi — test to'xtamaydi, xato harf qizil ko'rinadi
+      setTyped((tt) => tt + k);
       if (ok) {
-        setTyped((tt) => tt + k);
-        setCursor((c) => {
-          const newCursor = c + 1;
-          cursorRef.current = newCursor;
-          setCombo((cc) => {
-            const nc = cc + 1;
-            setMaxCombo((m) => Math.max(m, nc));
-            if (nc === 10) updateProgress("combo", 1);
-            if (nc === 20) updateProgress("combo", 1);
-            return nc;
-          });
-          if (newCursor === text.length) {
-            setFinished(true);
-            if (soundEnabled) playWin();
-            if (lang && !usedLangs.includes(lang)) {
-              setUsedLangs((prev) => [...prev, lang]);
-              if (usedLangs.length + 1 >= 3) updateProgress("langs", 3);
-            }
-          }
-          return newCursor;
+        setCombo((cc) => {
+          const nc = cc + 1;
+          setMaxCombo((m) => Math.max(m, nc));
+          if (nc === 10) updateProgress("combo", 1);
+          if (nc === 20) updateProgress("combo", 1);
+          return nc;
         });
       } else {
         setErrors((er) => er + 1);
         setCombo(0);
       }
+      setCursor((c) => {
+        const newCursor = c + 1;
+        cursorRef.current = newCursor;
+        if (newCursor === text.length) {
+          setFinished(true);
+          if (soundEnabled) playWin();
+          if (lang && !usedLangs.includes(lang)) {
+            setUsedLangs((prev) => [...prev, lang]);
+            if (usedLangs.length + 1 >= 3) updateProgress("langs", 3);
+          }
+        }
+        return newCursor;
+      });
 
       const nt = totalKs + 1;
       const ne = ok ? errors : errors + 1;
