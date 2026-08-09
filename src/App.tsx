@@ -136,8 +136,6 @@ export default function App() {
   const [cursor, setCursor] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
-  // Joriy so'zda xato qilinganmi? (xato to'xtatilgan rejimda so'zni qizil ko'rsatish uchun)
-  const [wordErr, setWordErr] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [favorites, setFavorites] = useLocalStorage<string[]>("typeuz_favorites", []);
   const [usedLangs, setUsedLangs] = useLocalStorage<string[]>("typeuz_usedlangs", []);
@@ -250,7 +248,6 @@ export default function App() {
       setTimeLeft(duration === "∞" ? null : (duration as number));
       setCombo(0);
       setMaxCombo(0);
-      setWordErr(false);
       setParticles([]);
       replayStartedRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
@@ -317,7 +314,6 @@ export default function App() {
     cursorRef.current = 0;
     setCombo(0);
     setMaxCombo(0);
-    setWordErr(false);
     setErrors(0);
     setTotalKs(0);
     setWpm(0);
@@ -388,9 +384,9 @@ export default function App() {
       spawnP(ok);
       recordEvent({ type: "keydown", key: k, correct: ok, time: Date.now() - (startTimeRef.current || Date.now()) });
 
+      // Xato belgi ham yoziladi — test to'xtamaydi, xato harf qizil ko'rinadi
+      setTyped((tt) => tt + k);
       if (ok) {
-        // To'g'ri harf — yoziladi va cursor keyingi harfga o'tadi
-        setTyped((tt) => tt + k);
         setCombo((cc) => {
           const nc = cc + 1;
           setMaxCombo((m) => Math.max(m, nc));
@@ -398,30 +394,23 @@ export default function App() {
           if (nc === 20) updateProgress("combo", 1);
           return nc;
         });
-        setCursor((c) => {
-          const newCursor = c + 1;
-          cursorRef.current = newCursor;
-          // So'z tugagan (bo'sh joy yozildi yoki matn oxiri) — xato belgini tozalaymiz
-          if (text[newCursor - 1] === " " || newCursor === text.length) {
-            setWordErr(false);
-          }
-          if (newCursor === text.length) {
-            setFinished(true);
-            if (soundEnabled) playWin();
-            if (lang && !usedLangs.includes(lang)) {
-              setUsedLangs((prev) => [...prev, lang]);
-              if (usedLangs.length + 1 >= 3) updateProgress("langs", 3);
-            }
-          }
-          return newCursor;
-        });
       } else {
-        // Xato harf — yozilmaydi va cursor to'xtaydi (WPM oshib ketmasligi uchun).
-        // Xato hisobga olinadi va joriy so'z qizil rangda ko'rsatiladi.
         setErrors((er) => er + 1);
         setCombo(0);
-        setWordErr(true);
       }
+      setCursor((c) => {
+        const newCursor = c + 1;
+        cursorRef.current = newCursor;
+        if (newCursor === text.length) {
+          setFinished(true);
+          if (soundEnabled) playWin();
+          if (lang && !usedLangs.includes(lang)) {
+            setUsedLangs((prev) => [...prev, lang]);
+            if (usedLangs.length + 1 >= 3) updateProgress("langs", 3);
+          }
+        }
+        return newCursor;
+      });
 
       const nt = totalKs + 1;
       const ne = ok ? errors : errors + 1;
@@ -490,18 +479,25 @@ export default function App() {
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── COMPUTED ────────────────────────────────────────────────────────
-  // Joriy so'zda xato bo'lsa — butun so'z qizil ko'rinadi (Monkeytype uslubi)
+  // Joriy so'zda xato bo'lsa — so'zning yozilmagan harflari ham qizil ko'rinadi (Monkeytype uslubi)
   const curStart = text.lastIndexOf(" ", cursor) + 1;
   const nextSpace = text.indexOf(" ", cursor);
   const curEnd = nextSpace === -1 ? text.length : nextSpace;
+  let wordHasError = false;
+  for (let w = curStart; w < Math.min(curEnd, typed.length); w++) {
+    if (!charsEqual(typed[w], text[w])) {
+      wordHasError = true;
+      break;
+    }
+  }
 
   const rendered = text.split("").map((ch, i) => {
     let cls = "relative text-gray-600";
     if (i < cursor) cls = "relative text-white";
     if (i < typed.length && !charsEqual(typed[i], text[i])) {
       cls = "relative text-red-400 bg-red-900/30 rounded err-char";
-    } else if (wordErr && i >= curStart && i < curEnd) {
-      cls = "relative text-red-400/80";
+    } else if (wordHasError && i >= cursor && i < curEnd) {
+      cls = "relative text-red-400/70";
     }
     return (
       <span key={i} className={cls}>
