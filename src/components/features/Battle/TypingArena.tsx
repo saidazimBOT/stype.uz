@@ -79,8 +79,10 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
         else break;
       }
 
-      const elapsedMin = (Date.now() - startTimeRef.current) / 60000;
-      const rawWpm = elapsedMin > 0 ? Math.round(nextTyped.length / 5 / elapsedMin) : 0;
+      // Boshlanishda absurd WPM chiqmasligi uchun minimal 1 soniya asos qilib olinadi
+      // (1 ta harf bilan elapsed ≈ 0 bo'lib, WPM 300 gacha sakrab chiqardi)
+      const elapsedMin = Math.max(Date.now() - startTimeRef.current, 1000) / 60000;
+      const rawWpm = Math.round(nextTyped.length / 5 / elapsedMin);
       const wpmV = Math.min(300, Math.max(0, rawWpm));
       setWpm(wpmV);
       setAccuracy(Math.round((correct / nextTyped.length) * 100));

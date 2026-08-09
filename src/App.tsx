@@ -334,12 +334,14 @@ export default function App() {
   // WPM = (to'g'ri yozilgan belgilar / 5) / o'tgan vaqt (daqiqada).
   // Timer har 500ms da qayta hisoblaydi: pauza qilsangiz WPM tushadi,
   // tez yozsangiz ko'tariladi — haqiqiy bosish tezligi ko'rinadi.
+  // DIQQAT: test boshlanishidan keyingi 1 soniya ichida WPM hisoblanmaydi —
+  // aks holda 1 ta harf bilan (elapsed ≈ 0) 300 WPM gacha sakrab chiqardi.
   useEffect(() => {
     if (!started || finished || !startTimeRef.current) return;
     const update = () => {
       const elapsed = Date.now() - startTimeRef.current!;
+      if (elapsed < 1000) return;
       const elapsedMin = elapsed / 60000;
-      if (elapsedMin <= 0) return;
       // Boshlanishning dastlabki millisoniyalarida absurd qiymat chiqmasligi
       // uchun 300 WPM (app bo'ylab umumiy chegara) bilan cheklaymiz.
       const rawWpm = Math.min(300, Math.round((typed.length / 5) / elapsedMin));
