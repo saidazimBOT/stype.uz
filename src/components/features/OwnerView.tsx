@@ -9,17 +9,18 @@ import {
   FaAward, FaCertificate, FaCss3Alt, FaHtml5, FaJs, FaKeyboard, FaMedal, FaPython, FaReact, FaRocket, FaTelegram, FaTrophy,
 } from "react-icons/fa6";
 import type { IconType } from "react-icons";
+import { getT } from "../../data/i18n";
 import type { ThemeColors } from "../../types";
 
 interface OwnerViewProps {
   t: ThemeColors;
+  lang: string;
   onClose: () => void;
 }
 
 // ── Portfolio ma'lumotlari ─────────────────────────────────────────────
 const ME = {
   name: "Saidazim",
-  role: "Dasturchi",
   mentor: "Sunnatbek Yusupov",
   photo: "/saidazim-stypeuz-developer.webp",
   born: "2011-yil",
@@ -34,36 +35,39 @@ const ME = {
 const GROUP = {
   name: "NF-2957",
   members: [
-    { name: "Yusuf", role: "Jamoa sardori", emoji: "👑" },
-    { name: "Akbar", role: "Dizayner", emoji: "🎨" },
-    { name: "Shaxriyor", role: "Backend", emoji: "⚙️" },
-    { name: "Zafar", role: "Geymer", emoji: "🎮" },
-    { name: "Saidazim", role: "Frontend · Yaratuvchi", emoji: "👨‍💻" },
-    { name: "Mirzohid", role: "Analitik", emoji: "📊" },
+    { name: "Yusuf", role: "owner.role1", emoji: "👑" },
+    { name: "Akbar", role: "owner.role2", emoji: "🎨" },
+    { name: "Shaxriyor", role: "owner.role3", emoji: "⚙️" },
+    { name: "Zafar", role: "owner.role4", emoji: "🎮" },
+    { name: "Saidazim", role: "owner.role5", emoji: "👨‍💻" },
+    { name: "Mirzohid", role: "owner.role6", emoji: "📊" },
   ],
   mentor: "Sunnatbek Yusupov",
 };
 
 // ── Lightbox galereyasi (guruh + ustoz rasmlari) ──────────────────────
-const GALLERY: { src: string; alt: string; caption: string; width: number; height: number }[] = [
+const GALLERY: { src: string; altKey: string; captionKey: string; varName: string; width: number; height: number }[] = [
   {
     src: "/saidazim-stypeuz-developer.webp",
-    alt: "Saidazim — STypeUz dasturchisi",
-    caption: "Saidazim — STypeUz platformasini yaratgan dasturchi",
+    altKey: "owner.photoAlt",
+    captionKey: "owner.captionPhoto",
+    varName: "Saidazim",
     width: 600,
     height: 901,
   },
   {
     src: "/stypeuz-team-nf2957.webp",
-    alt: "NF-2957 dasturlash guruhi — STypeUz jamoasi",
-    caption: "NF-2957 — dasturlash guruhining jamoa surati, STypeUz",
+    altKey: "owner.teamAlt",
+    captionKey: "owner.captionTeam",
+    varName: "NF-2957",
     width: 800,
     height: 1067,
   },
   {
     src: "/mentor-sunnatbek-yusupov.webp",
-    alt: "Sunnatbek Yusupov — STypeUz ustozim",
-    caption: "Sunnatbek Yusupov — mening ustozim, STypeUz",
+    altKey: "owner.mentorAlt",
+    captionKey: "owner.captionMentor",
+    varName: "Sunnatbek Yusupov",
     width: 480,
     height: 640,
   },
@@ -76,24 +80,25 @@ const SKILLS: { icon: IconType; name: string; level: number; color: string }[] =
   { icon: FaCss3Alt, name: "CSS", level: 80, color: "#2965f1" },
   { icon: FaJs, name: "JavaScript", level: 75, color: "#f0db4f" },
   { icon: FaReact, name: "React / Next.js", level: 70, color: "#61dafb" },
-  { icon: FaKeyboard, name: "Tez yozish (Typing)", level: 92, color: "#22d3ee" },
+  { icon: FaKeyboard, name: "typing", level: 92, color: "#22d3ee" },
 ];
 
 // Loyihalar
-const PROJECTS: { name: string; desc: string; tech: string; tag: string }[] = [
-  { name: "STypeUz", desc: "Yozish tezligini oshirish platformasi — 20+ til, 25+ tema, reytinglar, o'yinlar, multiplayer poyga.", tech: "Next.js · TS · Tailwind", tag: "Asosiy loyiha" },
-  { name: "Yangi loyihalar...", desc: "Kelajakdagi loyihalarim shu yerda ko'rinadi. Kod yozishda davom etaman!", tech: "Python · JS · React", tag: "Tez kunda" },
+const PROJECTS: { nameKey: string | null; descKey: string; tech: string; tagKey: string }[] = [
+  { nameKey: null, descKey: "owner.project1Desc", tech: "Next.js · TS · Tailwind", tagKey: "owner.projectMain" },
+  { nameKey: "owner.project2Name", descKey: "owner.project2Desc", tech: "Python · JS · React", tagKey: "owner.projectSoon" },
 ];
 
 // Yutuqlar (achievements)
-const ACHIEVEMENTS: { icon: IconType; color: string; title: string; desc: string }[] = [
-  { icon: FaTrophy, color: "#f59e0b", title: "Eng yaxshi natija", desc: "92 WPM · 98% aniqlik" },
-  { icon: FaMedal, color: "#22d3ee", title: "STypeUz yaratuvchisi", desc: "Yozish tezligi platformasi" },
-  { icon: FaCertificate, color: "#818cf8", title: "Kodlash kursi", desc: "NF-2957 · Frontend yo'nalishi" },
-  { icon: FaRocket, color: "#f472b6", title: "Ko'nikmalar to'plami", desc: "Python, JS, React, Next.js" },
+const ACHIEVEMENTS: { icon: IconType; color: string; titleKey: string; descKey: string }[] = [
+  { icon: FaTrophy, color: "#f59e0b", titleKey: "owner.badgeBest", descKey: "owner.badgeBestDesc" },
+  { icon: FaMedal, color: "#22d3ee", titleKey: "owner.badgeCreator", descKey: "owner.badgeCreatorDesc" },
+  { icon: FaCertificate, color: "#818cf8", titleKey: "owner.badgeCourse", descKey: "owner.badgeCourseDesc" },
+  { icon: FaRocket, color: "#f472b6", titleKey: "owner.badgeSkills", descKey: "owner.badgeSkillsDesc" },
 ];
 
-export default function OwnerView({ t, onClose }: OwnerViewProps) {
+export default function OwnerView({ t, lang, onClose }: OwnerViewProps) {
+  const T = getT(lang);
   // Lightbox: rasm ustiga bosilganda kattalashtirib ko'rsatish (galereya navigatsiya bilan)
   const [lightbox, setLightbox] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -130,13 +135,13 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <FiUser style={{ color: t.accent }} />
-          Portfolio
+          {T("owner.title")}
         </h2>
         <button
           onClick={onClose}
           className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400 transition-all"
         >
-          ← Orqaga
+          {T("owner.back")}
         </button>
       </div>
 
@@ -161,7 +166,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             onClick={() => openLightbox(0)}
             role="button"
             tabIndex={0}
-            aria-label="Portfolio rasmini kattalashtirish"
+            aria-label={T("owner.ariaZoomPhoto")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -171,8 +176,8 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
           >
             <img
               src={ME.photo}
-              alt={`${ME.name} — STypeUz dasturchisi`}
-              title={`${ME.name} — STypeUz platformasini yaratgan dasturchi`}
+              alt={T(GALLERY[0].altKey, { name: GALLERY[0].varName })}
+              title={T(GALLERY[0].captionKey, { name: GALLERY[0].varName })}
               width={600}
               height={901}
               loading="lazy"
@@ -187,14 +192,14 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
                 style={{ background: t.accent + "cc", color: "#041018" }}
               >
                 <FiZoomIn size={12} />
-                Kattalashtirish
+                {T("owner.zoom")}
               </span>
             </div>
             <div
               className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap"
               style={{ background: "#041018cc", border: `1px solid ${t.accent}66`, color: t.accent }}
             >
-              {ME.role} 👨‍💻
+              {T("owner.dev")} 👨‍💻
             </div>
           </div>
 
@@ -205,20 +210,20 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}55` }}
             >
               <FiStar size={11} />
-              STypeUz · Yaratuvchi
+              {T("owner.creatorBadge")}
             </div>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-white">{ME.name}</h3>
             <p className="text-sm mt-1 font-medium" style={{ color: t.accent }}>
-              {ME.role} / Website Creator
+              {T("owner.role")}
             </p>
 
             {/* Info chips — rasm yonida */}
             <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
               {[
                 { icon: FiCalendar, label: "27-may 2011" },
-                { icon: FiStar, label: "15 yosh" },
-                { icon: FiCode, label: "Dasturchi" },
-                { icon: FiBookOpen, label: `Ustoz: ${ME.mentor}` },
+                { icon: FiStar, label: T("owner.chipAge") },
+                { icon: FiCode, label: T("owner.dev") },
+                { icon: FiBookOpen, label: T("owner.chipMentor", { name: ME.mentor }) },
               ].map((c) => (
                 <span
                   key={c.label}
@@ -232,10 +237,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             </div>
 
             <p className="text-sm text-gray-400 leading-relaxed mt-4">
-              {ME.tagline} Hozirda{" "}
-              <strong className="text-white">STypeUz</strong> — yozish tezligini oshirish
-              platformasini yaratdim. Kelajakda yana ko'plab foydali loyihalar yaratishni
-              rejalashtiryapman.
+              {T("owner.tagline")} <strong className="text-white">STypeUz</strong> — {T("owner.heroDesc")}
             </p>
           </div>
         </div>
@@ -245,7 +247,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
       <div className="mt-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
           <FiBookOpen style={{ color: t.accent }} />
-          Ustozim
+          {T("owner.myMentor")}
         </div>
         <div
           className="flex items-center gap-4 p-4 rounded-2xl border border-white/10 animate-row"
@@ -257,7 +259,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             onClick={() => openLightbox(2)}
             role="button"
             tabIndex={0}
-            aria-label="Ustoz rasmini kattalashtirish"
+            aria-label={T("owner.ariaZoomMentor")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -267,8 +269,8 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
           >
             <img
               src="/mentor-sunnatbek-yusupov.webp"
-              alt={`${ME.mentor} — STypeUz ustozim`}
-              title={`${ME.mentor} — STypeUz ustozim`}
+              alt={T(GALLERY[2].altKey, { name: GALLERY[2].varName })}
+              title={T(GALLERY[2].captionKey, { name: GALLERY[2].varName })}
               width={480}
               height={640}
               loading="lazy"
@@ -283,7 +285,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
                 style={{ background: t.accent + "cc", color: "#041018" }}
               >
                 <FiZoomIn size={12} />
-                Kattalashtirish
+                {T("owner.zoom")}
               </span>
             </div>
           </div>
@@ -293,10 +295,10 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}55` }}
             >
               <FiBookOpen size={11} />
-              Ustozim 👨‍🏫
+              {T("owner.myMentor")} 👨‍🏫
             </div>
             <div className="text-lg font-bold text-white truncate">{ME.mentor}</div>
-            <div className="text-xs text-gray-400 mt-0.5">Mening ustozim</div>
+            <div className="text-xs text-gray-400 mt-0.5">{T("owner.mentorLabel")}</div>
           </div>
         </div>
       </div>
@@ -305,7 +307,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
       <div className="mt-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
           <FiUsers style={{ color: t.accent }} />
-          Guruhim
+          {T("owner.myTeam")}
         </div>
         <div
           className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border border-white/10 animate-row"
@@ -317,7 +319,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             onClick={() => openLightbox(1)}
             role="button"
             tabIndex={0}
-            aria-label="Guruh rasmini kattalashtirish"
+            aria-label={T("owner.ariaZoomTeam")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -327,8 +329,8 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
           >
             <img
               src="/stypeuz-team-nf2957.webp"
-              alt={`${GROUP.name} — STypeUz jamoasi`}
-              title={`${GROUP.name} — STypeUz dasturlash guruhining jamoa surati`}
+              alt={T(GALLERY[1].altKey, { name: GALLERY[1].varName })}
+              title={T(GALLERY[1].captionKey, { name: GALLERY[1].varName })}
               width={800}
               height={1067}
               loading="lazy"
@@ -343,7 +345,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
                 style={{ background: t.accent + "cc", color: "#041018" }}
               >
                 <FiZoomIn size={12} />
-                Kattalashtirish
+                {T("owner.zoom")}
               </span>
             </div>
           </div>
@@ -353,7 +355,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}55` }}
             >
               <FiUsers size={11} />
-              Guruhim 👨‍🎓
+              {T("owner.myTeam")} 👨‍🎓
             </div>
             <div className="text-lg font-bold text-white">{GROUP.name}</div>
             <div className="grid grid-cols-3 gap-1.5 mt-2.5">
@@ -365,12 +367,12 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
                 >
                   <div className="text-base leading-none">{m.emoji}</div>
                   <div className="text-[10px] font-semibold text-white mt-1 truncate">{m.name}</div>
-                  <div className="text-[8px] text-gray-500 truncate">{m.role}</div>
+                  <div className="text-[8px] text-gray-500 truncate">{T(m.role)}</div>
                 </div>
               ))}
             </div>
             <div className="text-[11px] text-gray-400 mt-2">
-              Ustoz: <span className="text-white font-medium">{GROUP.mentor}</span>
+              {T("owner.mentor")} <span className="text-white font-medium">{GROUP.mentor}</span>
             </div>
           </div>
         </div>
@@ -380,12 +382,11 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
       <div className="mt-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
           <FaAward style={{ color: t.accent }} />
-          Yutuqlarim
+          {T("owner.myAchievements")}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {ACHIEVEMENTS.map((a) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">              {ACHIEVEMENTS.map((a) => (
             <div
-              key={a.title}
+              key={a.titleKey}
               className="flex items-center gap-3 p-3.5 rounded-xl border border-white/10 animate-row"
               style={{ background: "#ffffff06" }}
             >
@@ -396,8 +397,8 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
                 <a.icon size={20} />
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-white truncate">{a.title}</div>
-                <div className="text-[11px] text-gray-500 truncate">{a.desc}</div>
+                <div className="text-sm font-semibold text-white truncate">{T(a.titleKey)}</div>
+                <div className="text-[11px] text-gray-500 truncate">{T(a.descKey)}</div>
               </div>
             </div>
           ))}
@@ -408,7 +409,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
       <div className="mt-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
           <FiZap style={{ color: t.accent }} />
-          Ko'nikmalar
+          {T("owner.skills")}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {SKILLS.map((s) => (
@@ -420,7 +421,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               <div className="flex items-center justify-between mb-2">
                 <span className="flex items-center gap-2 text-sm text-gray-200">
                   <s.icon size={16} style={{ color: s.color }} />
-                  {s.name}
+                  {s.name === "typing" ? T("owner.skillTyping") : s.name}
                 </span>
                 <span className="text-xs font-bold" style={{ color: t.accent }}>
                   {s.level}%
@@ -441,25 +442,25 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
       <div className="mt-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
           <FaTrophy style={{ color: t.accent }} />
-          Loyihalarim
+          {T("owner.myProjects")}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {PROJECTS.map((p) => (
             <div
-              key={p.name}
+              key={p.nameKey ?? "project-1"}
               className="p-4 rounded-xl border border-white/10 animate-row"
               style={{ background: "#ffffff06" }}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <div className="font-semibold text-white">{p.name}</div>
+                <div className="font-semibold text-white">{p.nameKey ? T(p.nameKey) : "STypeUz"}</div>
                 <span
                   className="text-[9px] px-2 py-0.5 rounded-full font-bold"
                   style={{ background: t.accent + "22", color: t.accent }}
                 >
-                  {p.tag}
+                  {T(p.tagKey)}
                 </span>
               </div>
-              <p className="text-[11px] text-gray-500 leading-relaxed">{p.desc}</p>
+              <p className="text-[11px] text-gray-500 leading-relaxed">{T(p.descKey)}</p>
               <div className="text-[10px] mt-2" style={{ color: t.accent }}>
                 {p.tech}
               </div>
@@ -474,7 +475,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
         style={{ background: "#ffffff05", border: "1px solid #229ed933" }}
       >
         <div className="text-sm text-gray-400 mb-3">
-          Savol, taklif yoki hamkorlik? Telegram orqali yozing 👇
+          {T("owner.contactHint")}
         </div>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <a
@@ -493,14 +494,14 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
             style={{ background: "#ffffff0d", border: "1px solid #ffffff1f", color: "#e5e7eb" }}
           >
             <FiMail size={15} />
-            Email
+            {T("owner.email")}
           </a>
         </div>
       </div>
 
       {/* Footer */}
       <div className="mt-8 text-center text-xs text-gray-600 flex items-center justify-center gap-1.5 flex-wrap">
-        Made with <FiHeart size={12} className="text-red-400" /> by {ME.name} · STypeUz
+        {T("owner.footer", { name: ME.name })}
       </div>
 
       {/* Lightbox — kattalashtirilgan rasm (galereya navigatsiya bilan) */}
@@ -508,7 +509,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Rasm galereyasi"
+          aria-label={T("owner.galleryAria")}
           className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-sm animate-fade-in"
           onClick={closeLightbox}
         >
@@ -518,7 +519,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               closeLightbox();
             }}
             className="absolute top-4 right-4 p-2.5 rounded-full text-white bg-white/10 hover:bg-white/25 transition-all hover:scale-110"
-            aria-label="Yopish"
+            aria-label={T("owner.lightboxClose")}
           >
             <FiX size={22} />
           </button>
@@ -530,7 +531,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               prevImage();
             }}
             className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white bg-white/10 hover:bg-white/25 transition-all hover:scale-110"
-            aria-label="Oldingi rasm"
+            aria-label={T("owner.prevImage")}
           >
             <FiChevronLeft size={24} />
           </button>
@@ -542,7 +543,7 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
               nextImage();
             }}
             className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white bg-white/10 hover:bg-white/25 transition-all hover:scale-110"
-            aria-label="Keyingi rasm"
+            aria-label={T("owner.nextImage")}
           >
             <FiChevronRight size={24} />
           </button>
@@ -554,15 +555,15 @@ export default function OwnerView({ t, onClose }: OwnerViewProps) {
           >
             <img
               src={GALLERY[lightbox].src}
-              alt={GALLERY[lightbox].alt}
-              title={GALLERY[lightbox].caption}
+              alt={T(GALLERY[lightbox].altKey, { name: GALLERY[lightbox].varName })}
+              title={T(GALLERY[lightbox].captionKey, { name: GALLERY[lightbox].varName })}
               width={GALLERY[lightbox].width}
               height={GALLERY[lightbox].height}
               className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl"
               draggable={false}
             />
             <div className="text-center text-xs text-gray-400 mt-3">
-              {GALLERY[lightbox].caption} · {lightbox + 1}/{GALLERY.length} · Yopish uchun bosing yoki Esc
+              {T(GALLERY[lightbox].captionKey, { name: GALLERY[lightbox].varName })} · {T("owner.galleryHint", { i: lightbox + 1, total: GALLERY.length })}
             </div>
           </div>
         </div>

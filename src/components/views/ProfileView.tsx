@@ -8,10 +8,12 @@ import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { getAvatarInfo, type HeroEquip } from "../../data/shop";
 import { fullName, type UserProfile } from "../../hooks/useProfile";
 import ProfileAvatar from "../features/ProfileAvatar";
+import { getT } from "../../data/i18n";
 import type { ThemeColors, TestResult } from "../../types";
 
 interface ProfileViewProps {
   t: ThemeColors;
+  lang: string;
   onClose: () => void;
   history: TestResult[];
   activeAvatar?: string;
@@ -38,7 +40,8 @@ const BADGES_DB: { icon: IconType; name: string; desc: string; check: (h: TestRe
   { icon: FiGlobe, name: "Polyglot", desc: "3 languages", check: (h: TestResult[]) => new Set(h.map((t) => t.lang)).size >= 3 },
 ];
 
-export default function ProfileView({ t, onClose, history, activeAvatar = "avatar_default", profile, heroEquip, onEditProfile }: ProfileViewProps) {
+export default function ProfileView({ t, lang, onClose, history, activeAvatar = "avatar_default", profile, heroEquip, onEditProfile }: ProfileViewProps) {
+  const T = getT(lang);
   const [xp] = useLocalStorage("typeuz_xp", 0);
 
   const name = fullName(profile) || "Typist #888";
@@ -99,8 +102,8 @@ export default function ProfileView({ t, onClose, history, activeAvatar = "avata
               <button
                 onClick={onEditProfile}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-all"
-                title="Profilni tahrirlash"
-                aria-label="Profilni tahrirlash"
+                title={T("profile.editTitle")}
+                aria-label={T("profile.editTitle")}
               >
                 <FiEdit3 size={14} />
               </button>

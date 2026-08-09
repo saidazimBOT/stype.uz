@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TEXTS, LANG_LABELS, LANG_FLAGS } from "./data/texts";
+import { getT } from "./data/i18n";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
 import { createAudioController } from "./utils/audio";
 import { charsEqual } from "./utils/typingChars";
@@ -172,6 +173,9 @@ export default function App() {
 
   // Theme
   const t: ThemeColors = THEMES[theme] || THEMES.default;
+
+  // UI tarjimalari — tanlangan tilga qarab (en/uz/ru)
+  const T = getT(lang);
 
   // Telegram Premium aksiyasi uchun eng yaxshi WPM
   const bestWpm = history.length ? Math.max(...history.map((h) => h.wpm)) : 0;
@@ -499,25 +503,25 @@ export default function App() {
 
   // ── NAVIGATION ──────────────────────────────────────────────────────
   const navItems: { id: string; icon: IconType; label: string }[] = [
-    { id: "type", icon: FiType, label: "Type" },
-    { id: "leaderboard", icon: FaTrophy, label: "Leaderboard" },
-    { id: "countryrank", icon: FiMap, label: "Countries" },
-    { id: "profile", icon: FiUser, label: "Profile" },
-    { id: "history", icon: FiList, label: "History" },
-    { id: "dashboard", icon: FiTrendingUp, label: "Progress" },
-    { id: "missions", icon: FiTarget, label: "Missions" },
-    { id: "daily", icon: FiZap, label: "Daily" },
-    { id: "seasonal", icon: FaMedal, label: "Events" },
-    { id: "dna", icon: FaDna, label: "DNA" },
-    { id: "multiplyer", icon: FiSend, label: "Battle" },
-    { id: "friends", icon: FiUsers, label: "Friends" },
-    { id: "chat", icon: FiMessageCircle, label: "Chat" },
-    { id: "ai", icon: FiCpu, label: "AI" },
-    { id: "custom", icon: FiBookOpen, label: "Texts" },
-    { id: "replay", icon: FiVideo, label: "Replay" },
-    { id: "games", icon: FiGrid, label: "Games" },
-    { id: "shop", icon: FiShoppingBag, label: "Shop" },
-    { id: "about", icon: FiInfo, label: "About" },
+    { id: "type", icon: FiType, label: T("nav.type") },
+    { id: "leaderboard", icon: FaTrophy, label: T("nav.leaderboard") },
+    { id: "countryrank", icon: FiMap, label: T("nav.countries") },
+    { id: "profile", icon: FiUser, label: T("nav.profile") },
+    { id: "history", icon: FiList, label: T("nav.history") },
+    { id: "dashboard", icon: FiTrendingUp, label: T("nav.dashboard") },
+    { id: "missions", icon: FiTarget, label: T("nav.missions") },
+    { id: "daily", icon: FiZap, label: T("nav.daily") },
+    { id: "seasonal", icon: FaMedal, label: T("nav.seasonal") },
+    { id: "dna", icon: FaDna, label: T("nav.dna") },
+    { id: "multiplyer", icon: FiSend, label: T("nav.battle") },
+    { id: "friends", icon: FiUsers, label: T("nav.friends") },
+    { id: "chat", icon: FiMessageCircle, label: T("nav.chat") },
+    { id: "ai", icon: FiCpu, label: T("nav.ai") },
+    { id: "custom", icon: FiBookOpen, label: T("nav.custom") },
+    { id: "replay", icon: FiVideo, label: T("nav.replay") },
+    { id: "games", icon: FiGrid, label: T("nav.games") },
+    { id: "shop", icon: FiShoppingBag, label: T("nav.shop") },
+    { id: "about", icon: FiInfo, label: T("nav.about") },
   ];
 
   // ── RENDER ──────────────────────────────────────────────────────────
@@ -591,7 +595,7 @@ export default function App() {
                     color: duration === d ? t.accent : "#6b7280",
                   }}
                 >
-                  {d === "∞" ? "Free" : `${d}s`}
+                  {d === "∞" ? T("type.free") : `${d}s`}
                 </button>
               ))}
             </div>
@@ -622,14 +626,14 @@ export default function App() {
               <button
                 onClick={() => setShowKeyboard((s) => !s)}
                 className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all hidden sm:block"
-                title="Keyboard Visualizer"
+                title={T("type.keyboard")}
               >
                 <FaKeyboard size={16} />
               </button>
               <button
                 onClick={() => newText()}
                 className="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-all"
-                title="New text"
+                title={T("type.newText")}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -646,10 +650,10 @@ export default function App() {
               setShowLingohub(false);
             }}
             className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title="200 WPM → 1 oylik Telegram Premium sovg'asi!"
+            title={T("navbar.promoTitle")}
           >
             <GiftIcon size={16} />
-            <span>Sovg'a bor</span>
+            <span>{T("navbar.promoBadge")}</span>
           </button>
           {/* Sign up / Profil */}
           <button
@@ -661,7 +665,7 @@ export default function App() {
               setShowLingohub(false);
             }}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title={isSignedUp ? "Profilni tahrirlash" : "Sign up — profil yaratish"}
+            title={isSignedUp ? T("navbar.editProfileTitle") : T("navbar.signupTitle")}
             style={{
               background: isSignedUp ? "#ffffff0d" : t.accent + "22",
               color: isSignedUp ? "#9ca3af" : t.accent,
@@ -672,13 +676,13 @@ export default function App() {
               <>
                 <ProfileAvatar profile={profile} size={18} heroEquip={coinsStore.heroEquip} />
                 <span className="hidden sm:inline max-w-[70px] truncate">
-                  {fullName(profile)?.split(" ")[0] || "Profil"}
+                  {fullName(profile)?.split(" ")[0] || T("nav.profile")}
                 </span>
               </>
             ) : (
               <>
                 <FiUser size={13} />
-                <span className="hidden sm:inline">Sign up</span>
+                <span className="hidden sm:inline">{T("navbar.signup")}</span>
               </>
             )}
           </button>
@@ -688,7 +692,7 @@ export default function App() {
             target="_blank"
             rel="noopener noreferrer"
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
-            title="Telegram kanalimizga qo'shiling"
+            title={T("navbar.telegramTitle")}
             style={{ background: "#229ed926", color: "#5fb8e8", border: "1px solid #229ed955" }}
           >
             <FaTelegram size={13} />
@@ -700,7 +704,7 @@ export default function App() {
             target="_blank"
             rel="noopener noreferrer"
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
-            title="Telegram botimiz — yangiliklarga obuna bo'ling"
+            title={T("navbar.botTitle")}
             style={{ background: "#229ed926", color: "#5fb8e8", border: "1px solid #229ed955" }}
           >
             <FaRobot size={13} />
@@ -729,7 +733,7 @@ export default function App() {
               setShowLingohub(false);
             }}
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title="Sayt egasi haqida"
+            title={T("navbar.ownerTitle")}
             style={{
               background: showOwner ? t.accent + "33" : "#ffffff0d",
               color: showOwner ? t.accent : "#9ca3af",
@@ -737,7 +741,7 @@ export default function App() {
             }}
           >
             <FiUser size={13} />
-            <span className="hidden sm:inline">Egasi</span>
+            <span className="hidden sm:inline">{T("navbar.owner")}</span>
           </button>
           <button
             onClick={() => {
@@ -789,10 +793,10 @@ export default function App() {
             <LingohubPromo t={t} onClose={() => setShowLingohub(false)} />
           ) : /* Telegram Premium promo */
           showPromo ? (
-            <TelegramPromo t={t} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
+            <TelegramPromo t={t} lang={lang} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
           ) : /* Sayt egasi */
           showOwner ? (
-            <OwnerView t={t} onClose={() => setShowOwner(false)} />
+            <OwnerView t={t} lang={lang} onClose={() => setShowOwner(false)} />
           ) : /* Settings Modal */
           showSettings ? (
             <SettingsModal
@@ -824,6 +828,7 @@ export default function App() {
           ) : view === "profile" ? (
             <ProfileView
               t={t}
+              lang={lang}
               onClose={() => setView("type")}
               history={history}
               activeAvatar={coinsStore.activeAvatar}
@@ -866,6 +871,7 @@ export default function App() {
           ) : view === "shop" ? (
             <ShopView
               t={t}
+              lang={lang}
               coins={coinsStore.coins}
               purchased={coinsStore.purchased}
               activeEffects={coinsStore.activeEffects}
@@ -884,6 +890,7 @@ export default function App() {
           ) : view === "dna" ? (
             <TypingDNA
               t={t}
+              lang={lang}
               onClose={() => setView("type")}
               history={history}
               recordings={recordings}
@@ -898,18 +905,18 @@ export default function App() {
               {/* Stats */}
               <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
                 <div className="text-center">
-                  <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">WPM</div>
+                  <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.wpm")}</div>
                   <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: t.accent }}>
                     {wpm}
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">Accuracy</div>
+                  <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.accuracy")}</div>
                   <div className="text-2xl sm:text-3xl md:text-5xl font-bold text-white">{accuracy}%</div>
                 </div>
                 {duration !== "∞" && (
                   <div className="text-center">
-                    <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">Time</div>
+                    <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.time")}</div>
                     <div
                       className="text-2xl sm:text-3xl md:text-5xl font-bold"
                       style={{ color: timeLeft !== null && timeLeft <= 5 ? "#ef4444" : "#e5e7eb" }}
@@ -920,7 +927,7 @@ export default function App() {
                 )}
                 {combo >= 5 && (
                   <div className="text-center">
-                    <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">Combo</div>
+                    <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.combo")}</div>
                     <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: "#f59e0b" }}>
                       ×{combo}
                     </div>
@@ -960,7 +967,7 @@ export default function App() {
               {/* Start typing hint */}
               {!started && !finished && (
                 <p className="text-xs text-gray-600 uppercase tracking-widest animate-pulse">
-                  Start typing · Tab for new text
+                  {T("type.startHint")}
                 </p>
               )}
 
@@ -971,7 +978,7 @@ export default function App() {
                     {typed.length === 0 ? (
                       <>
                         <FiActivity size={26} />
-                        Vaqt tugadi!
+                        {T("type.timeUp")}
                       </>
                     ) : (
                       <>
@@ -982,22 +989,22 @@ export default function App() {
                         ) : (
                           <FiActivity size={26} />
                         )}
-                        {accuracy >= 95 ? "Excellent!" : accuracy >= 80 ? "Good job!" : "Keep practicing!"}
+                        {accuracy >= 95 ? T("type.excellent") : accuracy >= 80 ? T("type.goodJob") : T("type.keepPracticing")}
                       </>
                     )}
                   </div>
                   <div className="flex gap-4 sm:gap-6 text-sm text-gray-400 flex-wrap justify-center">
                     <span>
-                      Combo:{" "}
+                      {T("type.combo")}:{" "}
                       <strong style={{ color: t.accent }}>×{maxCombo}</strong>
                     </span>
                     <span>
-                      Errors: <strong className="text-red-400">{errors}</strong>
+                      {T("type.errors")} <strong className="text-red-400">{errors}</strong>
                     </span>
                     {typed.length > 0 && (
                       <>
                         <span>
-                          XP: <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
+                          {T("type.xp")} <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
                         </span>
                         <span>
                           <CoinIcon size={14} /> +{Math.round(wpm * 1) + (accuracy >= 95 ? 5 : 0)}
@@ -1010,7 +1017,7 @@ export default function App() {
                     className="px-6 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95"
                     style={{ background: t.accent, color: "#000" }}
                   >
-                    Try Again
+                    {T("type.tryAgain")}
                   </button>
                 </div>
               )}
@@ -1037,6 +1044,7 @@ export default function App() {
       {!isSignedUp && (
         <SignUpModal
           t={t}
+          lang={lang}
           required
           onSave={(p) => {
             saveProfile(p);
@@ -1047,6 +1055,7 @@ export default function App() {
       {isSignedUp && showSignUp && (
         <SignUpModal
           t={t}
+          lang={lang}
           initial={profile ?? undefined}
           required={false}
           onSave={(p) => {
@@ -1075,7 +1084,7 @@ export default function App() {
               setShowOwner(false);
               setShowLingohub(false);
             }}
-            title={`${av.name} · Open Coin Shop`}
+            title={`${av.name} · ${T("navbar.coinShop")}`}
           >
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
@@ -1110,7 +1119,7 @@ export default function App() {
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <span className="hidden sm:block">Admin</span>
+          <span className="hidden sm:block">{T("navbar.admin")}</span>
         </button>
         {(() => {
           const av = getAvatarInfo(coinsStore.activeAvatar);

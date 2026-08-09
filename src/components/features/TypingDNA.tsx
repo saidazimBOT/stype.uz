@@ -7,9 +7,11 @@ import {
 import { FaDna } from "react-icons/fa6";
 import type { DailyState, ReplayRecording, TestResult, ThemeColors } from "../../types";
 import { buildDnaProfile } from "../../data/typingDna";
+import { getT } from "../../data/i18n";
 
 interface TypingDNAProps {
   t: ThemeColors;
+  lang: string;
   onClose: () => void;
   history: TestResult[];
   recordings: ReplayRecording[];
@@ -76,7 +78,8 @@ function TraitBar({ label, value, color, hint }: { label: string; value: number;
   );
 }
 
-export default function TypingDNA({ t, onClose, history, recordings, daily, usedLangs }: TypingDNAProps) {
+export default function TypingDNA({ t, lang, onClose, history, recordings, daily, usedLangs }: TypingDNAProps) {
+  const T = getT(lang);
   const dna = useMemo(
     () => buildDnaProfile(history, recordings, daily, usedLangs),
     [history, recordings, daily, usedLangs]
@@ -84,12 +87,12 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
 
   const statCards = dna.ready
     ? [
-        { label: "Testlar", value: String(dna.stats.tests), icon: FiActivity, color: t.accent },
-        { label: "O'rtacha WPM", value: String(dna.stats.avgWpm), icon: FiZap, color: "#a78bfa" },
-        { label: "Eng yaxshi WPM", value: String(dna.stats.bestWpm), icon: FiAward, color: "#f59e0b" },
-        { label: "Aniqlik", value: dna.stats.avgAcc + "%", icon: FiCrosshair, color: "#22c55e" },
-        { label: "Streak", value: String(dna.stats.streak), icon: FiCalendar, color: "#38bdf8" },
-        { label: "Faol kunlar", value: String(dna.stats.totalLogins), icon: FiSun, color: "#f472b6" },
+        { label: T("dna.tests"), value: String(dna.stats.tests), icon: FiActivity, color: t.accent },
+        { label: T("dna.avgWpm"), value: String(dna.stats.avgWpm), icon: FiZap, color: "#a78bfa" },
+        { label: T("dna.bestWpm"), value: String(dna.stats.bestWpm), icon: FiAward, color: "#f59e0b" },
+        { label: T("dna.accuracy"), value: dna.stats.avgAcc + "%", icon: FiCrosshair, color: "#22c55e" },
+        { label: T("dna.streak"), value: String(dna.stats.streak), icon: FiCalendar, color: "#38bdf8" },
+        { label: T("dna.activeDays"), value: String(dna.stats.totalLogins), icon: FiSun, color: "#f472b6" },
       ]
     : [];
 
@@ -102,7 +105,7 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
           Typing DNA
         </h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400 transition-all">
-          ← Orqaga
+          {T("owner.back")}
         </button>
       </div>
 
@@ -118,18 +121,16 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
           >
             <FaDna size={30} />
           </div>
-          <div className="text-lg font-bold text-white mb-2">DNK hali shakllanmagan 🧬</div>
+          <div className="text-lg font-bold text-white mb-2">{T("dna.emptyTitle")}</div>
           <p className="text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
-            Yozish DNK'ingiz — tezlik, aniqlik, ritm va xato xaritangizdan tashkil topgan shaxsiy
-            profilingiz. Bir nechta test topshiring, shunda o'zingizning noyob DNK chizig'ingiz
-            paydo bo'ladi.
+            {T("dna.emptyDesc")}
           </p>
           <button
             onClick={onClose}
             className="mt-6 px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
             style={{ background: t.accent, color: "#000" }}
           >
-            Test yozishga qaytish
+            {T("dna.backToTest")}
           </button>
         </div>
       ) : (
@@ -192,7 +193,7 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
           {/* ── Xususiyatlar ── */}
           <div className="text-xs text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
             <FiActivity style={{ color: t.accent }} />
-            Uslub xususiyatlari
+            {T("dna.styleTraits")}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
             {dna.traits.map((tr) => (
@@ -206,36 +207,36 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
             <div className="p-5 rounded-2xl animate-fade-in" style={{ background: t.surface, border: `1px solid ${t.accent}1a` }}>
               <div className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-4">
                 <FiClock style={{ color: t.accent }} />
-                Yozish ritmi
+                {T("dna.rhythm")}
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-2.5 rounded-xl" style={{ background: "#ffffff06" }}>
                   <div className="text-lg font-bold" style={{ color: t.accent }}>
                     {dna.rhythm.avgInterval ? `${dna.rhythm.avgInterval}ms` : "—"}
                   </div>
-                  <div className="text-[9px] text-gray-500 mt-0.5">O'rtacha oralik</div>
+                  <div className="text-[9px] text-gray-500 mt-0.5">{T("dna.avgInterval")}</div>
                 </div>
                 <div className="p-2.5 rounded-xl" style={{ background: "#ffffff06" }}>
                   <div className="text-lg font-bold" style={{ color: "#a78bfa" }}>
                     {dna.rhythm.burstWpm ? `${dna.rhythm.burstWpm}` : "—"}
                   </div>
-                  <div className="text-[9px] text-gray-500 mt-0.5">Burst WPM</div>
+                  <div className="text-[9px] text-gray-500 mt-0.5">{T("dna.burstWpm")}</div>
                 </div>
                 <div className="p-2.5 rounded-xl" style={{ background: "#ffffff06" }}>
                   <div className="text-lg font-bold" style={{ color: "#f59e0b" }}>
                     {dna.rhythm.cv ? `${dna.rhythm.cv}%` : "—"}
                   </div>
-                  <div className="text-[9px] text-gray-500 mt-0.5">O'zgaruvchanlik</div>
+                  <div className="text-[9px] text-gray-500 mt-0.5">{T("dna.variability")}</div>
                 </div>
               </div>
               <p className="text-[10px] text-gray-600 mt-3 leading-relaxed">
                 {dna.rhythm.cv <= 25 && dna.rhythm.cv > 0
-                  ? "Ritmingiz metronomdek barqaror — tugmalar orasidagi vaqt bir tekis."
+                  ? T("dna.rhythmMetronome")
                   : dna.rhythm.cv > 40
-                    ? "Ritm portlovchi — ba'zan juda tez urinasiz, ba'zan pauza qilasiz."
+                    ? T("dna.rhythmBursty")
                     : dna.rhythm.avgInterval
-                      ? "Ritm o'rtacha darajada barqaror."
-                      : "Ritm tahlili uchun replay yozuvlari kerak (test tugatilganda avtomatik saqlanadi)."}
+                      ? T("dna.rhythmAverage")
+                      : T("dna.rhythmNoData")}
               </p>
             </div>
 
@@ -243,7 +244,7 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
             <div className="p-5 rounded-2xl animate-fade-in" style={{ background: t.surface, border: `1px solid ${t.accent}1a` }}>
               <div className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-4">
                 <FiCrosshair style={{ color: t.accent }} />
-                Xato xaritasi
+                {T("dna.errorMap")}
                 <span
                   className="text-[10px] px-2 py-0.5 rounded-full ml-auto"
                   style={{ background: "#ef44441f", color: "#ef4444", border: "1px solid #ef444433" }}
@@ -255,8 +256,8 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
               {dna.errorKeys.length === 0 ? (
                 <div className="text-center py-6 text-sm text-gray-600">
                   {recordings.length
-                    ? "Xatolar juda kam yoki yo'q — ajoyib! 🎯"
-                    : "Xato tahlili uchun replay yozuvlari kerak."}
+                    ? T("dna.noErrors")
+                    : T("dna.noErrorData")}
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -285,9 +286,9 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
           {/* ── Afzalliklar ── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-6">
             {[
-              { icon: FiZap, label: "Afzal rejim", value: dna.prefDuration, color: t.accent },
-              { icon: FiGlobe, label: "Afzal til", value: dna.prefLang, color: "#38bdf8" },
-              { icon: FiSun, label: "Eng faol vaqt", value: dna.activeHour >= 0 ? `${String(dna.activeHour).padStart(2, "0")}:00` : "—", color: "#f59e0b" },
+              { icon: FiZap, label: T("dna.prefMode"), value: dna.prefDuration, color: t.accent },
+              { icon: FiGlobe, label: T("dna.prefLang"), value: dna.prefLang, color: "#38bdf8" },
+              { icon: FiSun, label: T("dna.activeTime"), value: dna.activeHour >= 0 ? `${String(dna.activeHour).padStart(2, "0")}:00` : "—", color: "#f59e0b" },
             ].map((c) => (
               <div key={c.label} className="p-3.5 rounded-xl flex items-center gap-3 animate-row" style={{ background: "#ffffff06", border: "1px solid #ffffff10" }}>
                 <span className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: c.color + "1f", color: c.color }}>
@@ -308,7 +309,7 @@ export default function TypingDNA({ t, onClose, history, recordings, daily, used
           >
             <div className="flex items-center gap-2 font-bold text-white mb-2">
               <FaDna style={{ color: t.accent }} />
-              DNK tahlili
+              {T("dna.analysis")}
             </div>
             <p className="text-gray-400">{dna.summary}</p>
           </div>

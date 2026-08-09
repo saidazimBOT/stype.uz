@@ -6,6 +6,7 @@ import { FaCrown, FaGem, FaFire, FaBolt, FaRocket } from "react-icons/fa6";
 import { GiSparkles, GiCrystalBall, GiSwordsPower } from "react-icons/gi";
 import CoinIcon from "../CoinIcon";
 import HeroAvatar from "../features/HeroAvatar";
+import { getT } from "../../data/i18n";
 import type { ThemeColors } from "../../types";
 import type { ShopItem, EffectItem, ShopCategory, HeroEquip, HeroSlot, HeroShopItem } from "../../data/shop";
 import {
@@ -16,6 +17,7 @@ import {
 
 interface ShopViewProps {
   t: ThemeColors;
+  lang: string;
   coins: number;
   purchased: string[];
   activeEffects: string[];
@@ -53,6 +55,7 @@ const CATEGORIES: { id: ShopCategory; label: string; icon: typeof FiShoppingBag 
 
 export default function ShopView({
   t,
+  lang,
   coins,
   purchased,
   activeEffects,
@@ -66,6 +69,7 @@ export default function ShopView({
   onToggleEffect,
   currentTheme,
 }: ShopViewProps) {
+  const T = getT(lang);
   const [activeTab, setActiveTab] = useState<ShopCategory>("themes");
   const [purchasedAnim, setPurchasedAnim] = useState<string | null>(null);
   const [coinAnim, setCoinAnim] = useState(false);
@@ -133,11 +137,11 @@ export default function ShopView({
           </span>
           {owned ? (
             <span className="text-[11px] font-bold flex items-center gap-1" style={{ color: item.color || t.accent }}>
-              <FiCheck size={12} /> {isActive ? "Active" : "Owned"}
+              <FiCheck size={12} /> {isActive ? T("shop.active") : T("shop.owned")}
             </span>
           ) : (
             <span className="text-[11px] font-bold flex items-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
-              {item.price === 0 ? "Free" : <><CoinIcon size={13} /> {item.price}</>}
+              {item.price === 0 ? T("shop.free") : <><CoinIcon size={13} /> {item.price}</>}
             </span>
           )}
         </div>
@@ -202,11 +206,11 @@ export default function ShopView({
         <div className="mt-1">
           {owned ? (
             <span className="text-[11px] font-bold" style={{ color: item.color || t.accent }}>
-              {isActive ? "Equipped ✓" : "Owned"}
+              {isActive ? T("shop.equippedMark") : T("shop.owned")}
             </span>
           ) : (
             <span className="text-[11px] font-bold flex items-center justify-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
-              {item.price === 0 ? "Free" : <><CoinIcon size={13} /> {item.price}</>}
+              {item.price === 0 ? T("shop.free") : <><CoinIcon size={13} /> {item.price}</>}
             </span>
           )}
         </div>
@@ -268,11 +272,11 @@ export default function ShopView({
         <div className="mt-1">
           {owned ? (
             <span className="text-[11px] font-bold" style={{ color: item.color || t.accent }}>
-              {isEquipped ? "Kiyilgan ✓" : isNone ? "Default" : "Sotib olingan"}
+              {isEquipped ? T("shop.equippedMark") : isNone ? T("shop.default") : T("shop.purchased")}
             </span>
           ) : (
             <span className="text-[11px] font-bold flex items-center justify-center gap-1" style={{ color: canAfford ? "#f59e0b" : "#6b7280" }}>
-              {item.price === 0 ? "Free" : <><CoinIcon size={13} /> {item.price}</>}
+              {item.price === 0 ? T("shop.free") : <><CoinIcon size={13} /> {item.price}</>}
             </span>
           )}
         </div>
@@ -443,9 +447,9 @@ export default function ShopView({
               <div className="mb-2 flex justify-center">
                 <HeroAvatar equip={heroEquip} color={t.accent} size={120} />
               </div>
-              <div className="text-sm font-bold text-white">Your Hero</div>
+              <div className="text-sm font-bold text-white">{T("shop.yourHero")}</div>
               <div className="text-xs text-gray-500 mt-0.5">
-                Kepka, ko'zoynak va kiyim — hammasi birga kiyingan holda ko'rinadi
+                {T("shop.heroPreview")}
               </div>
               <div className="mt-3 flex justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
                 {(["hat", "glasses", "outfit"] as HeroSlot[]).map((slot) => {

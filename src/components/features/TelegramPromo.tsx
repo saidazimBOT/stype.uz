@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { FiCheckCircle, FiGift, FiSend, FiShield, FiTrendingUp, FiZap } from "react-icons/fi";
 import GiftIcon from "../GiftIcon";
+import { getT } from "../../data/i18n";
 import type { ThemeColors } from "../../types";
 
 // Telegram: sovg'a olish yoki savollar uchun
@@ -12,11 +13,13 @@ const TARGET_WPM = 200;
 
 interface TelegramPromoProps {
   t: ThemeColors;
+  lang: string;
   bestWpm: number;
   onClose: () => void;
 }
 
-export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProps) {
+export default function TelegramPromo({ t, lang, bestWpm, onClose }: TelegramPromoProps) {
+  const T = getT(lang);
   const achieved = bestWpm >= TARGET_WPM;
   const progress = Math.min(100, Math.round((bestWpm / TARGET_WPM) * 100));
   const need = Math.max(0, TARGET_WPM - bestWpm);
@@ -41,10 +44,10 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <FiGift style={{ color: "#f59e0b" }} />
-          Telegram Premium Sovg'asi
+          {T("promo.title")}
         </h2>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
-          ← Orqaga
+          {T("promo.back")}
         </button>
       </div>
 
@@ -87,12 +90,11 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
             animation: "shine 3s linear infinite",
           }}
         >
-          {TARGET_WPM} WPM — 1 oylik Telegram Premium!
+          {T("promo.heroTitle", { target: TARGET_WPM })}
         </h3>
         <p className="text-sm text-gray-400 max-w-md mx-auto">
-          <strong className="text-amber-400">{TARGET_WPM} WPM</strong> ga erishgan har bir foydalanuvchiga{" "}
-          <strong className="text-white">1 oylik Telegram Premium</strong> sovg'a qilinadi. 🎁
-          Natijangizni <strong className="text-amber-400">skrin qilib</strong> Telegram orqali yuboring!
+          {T("promo.heroDesc", { target: TARGET_WPM })}{" "}
+          {T("promo.skrinHint")}
         </p>
 
         {/* Progress */}
@@ -100,7 +102,7 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
           <div className="flex items-center justify-between text-xs mb-2">
             <span className="text-gray-400 flex items-center gap-1">
               <FiTrendingUp style={{ color: t.accent }} />
-              Sizning eng yaxshi natijangiz
+              {T("promo.yourBest")}
             </span>
             <span className="font-bold" style={{ color: achieved ? "#22c55e" : "#f59e0b" }}>
               {bestWpm} WPM
@@ -120,11 +122,12 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
           <div className="text-[11px] text-gray-500 mt-2">
             {achieved ? (
               <span className="text-green-400 flex items-center justify-center gap-1">
-                <FiZap /> Maqsadga erishdingiz!
+                <FiZap /> {T("promo.reached")}
               </span>
             ) : (
               <>
-                Mukofot uchun yana <strong className="text-amber-400">{need} WPM</strong> kerak
+                <strong className="text-amber-400">{need} WPM</strong>{" "}
+                {T("promo.needMore", { need })}
               </>
             )}
           </div>
@@ -152,11 +155,9 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
             />
           ))}
           <div className="text-5xl mb-3">🎉</div>
-          <h4 className="text-xl font-bold text-white mb-1">Tabriklaymiz!</h4>
+          <h4 className="text-xl font-bold text-white mb-1">{T("promo.congrats")}</h4>
           <p className="text-sm text-gray-400 mb-4">
-            Siz <strong className="text-green-400">{bestWpm} WPM</strong> natija bilan mukofotni qo'lga
-            kiritdingiz! Natijangizni <strong className="text-white">skrin qilib</strong> Telegram orqali
-            yuboring — <strong className="text-white">1 oylik Telegram Premium</strong> sovg'angizni yuboramiz!
+            {T("promo.achievedDesc", { wpm: bestWpm })}
           </p>
           <a
             href={PROMO_TG_URL}
@@ -175,11 +176,9 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
           style={{ background: "#ffffff08", border: "1px solid #f59e0b33" }}
         >
           <div className="text-4xl mb-3">🎯</div>
-          <h4 className="text-lg font-bold text-white mb-1">Hali ozgina qoldi!</h4>
+          <h4 className="text-lg font-bold text-white mb-1">{T("promo.almost")}</h4>
           <p className="text-sm text-gray-400 mb-4">
-            Tez-tez mashq qiling va <strong className="text-amber-400">{TARGET_WPM} WPM</strong> ga erishing.
-            Natijaga erishganingizdan so'ng natijangizni <strong className="text-amber-400">skrin qilib</strong>{" "}
-            Telegram orqali yuboring!
+            {T("promo.almostDesc", { target: TARGET_WPM })}
           </p>
           <a
             href={PROMO_TG_URL}
@@ -189,7 +188,7 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
             style={{ background: "#229ed918", border: "1px solid #229ed955", color: "#5fb8e8" }}
           >
             <FiSend />
-            Savollar uchun: {PROMO_TG}
+            {T("promo.questions", { tg: PROMO_TG })}
           </a>
         </div>
       )}
@@ -198,15 +197,10 @@ export default function TelegramPromo({ t, bestWpm, onClose }: TelegramPromoProp
       <div className="mt-6 rounded-2xl p-5" style={{ background: "#ffffff05", border: "1px solid #ffffff14" }}>
         <div className="flex items-center gap-2 font-medium text-sm mb-3" style={{ color: t.accent }}>
           <FiShield />
-          Ishonchlilik kafolati
+          {T("promo.trust")}
         </div>
         <ul className="space-y-2 text-xs text-gray-400">
-          {[
-            "Natijangiz ekranda ko'rinadi va admin tomonidan tekshiriladi (ekran ko'rinishi / video orqali).",
-            "Sovg'a faqat haqiqiy natijalar uchun beriladi — aldash aniqlansa, mukofot bekor qilinadi.",
-            "Har bir foydalanuvchiga oyiga bitta sovg'a beriladi.",
-            "Sovg'ani olish uchun natijangizni skrin qilib Telegram orqali yuboring.",
-          ].map((rule) => (
+          {[T("promo.rule1"), T("promo.rule2"), T("promo.rule3"), T("promo.rule4")].map((rule) => (
             <li key={rule} className="flex items-start gap-2">
               <FiCheckCircle className="mt-0.5 flex-shrink-0" style={{ color: "#22c55e" }} />
               {rule}

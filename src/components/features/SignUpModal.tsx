@@ -4,11 +4,13 @@ import { useRef, useState } from "react";
 import { FiCamera, FiCheck, FiImage, FiSmile, FiUser, FiX } from "react-icons/fi";
 import type { ThemeColors } from "../../types";
 import { AVATAR_SHOP, getAvatarInfo } from "../../data/shop";
+import { getT } from "../../data/i18n";
 import type { IconType } from "react-icons";
 import ProfileAvatar from "./ProfileAvatar";
 
 interface SignUpModalProps {
   t: ThemeColors;
+  lang: string;
   initial?: {
     firstName?: string;
     lastName?: string;
@@ -32,7 +34,8 @@ interface SignUpModalProps {
  * Sign up oynasi — ism, familiya va profil rasmi so'raydi.
  * Rasmni qurilmadan yuklash (galereya) yoki tayyor avatar tanlash mumkin.
  */
-export default function SignUpModal({ t, initial, onSave, onClose, required = true }: SignUpModalProps) {
+export default function SignUpModal({ t, lang, initial, onSave, onClose, required = true }: SignUpModalProps) {
+  const T = getT(lang);
   const [firstName, setFirstName] = useState(initial?.firstName || "");
   const [lastName, setLastName] = useState(initial?.lastName || "");
   const [photo, setPhoto] = useState(initial?.photo || "");
@@ -47,11 +50,11 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
   const handleFile = (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Faqat rasm fayl tanlang (JPG/PNG/WebP)");
+      setError(T("signup.errPhotoType"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("Rasm 5 MB dan katta bo'lmasligi kerak");
+      setError(T("signup.errPhotoSize"));
       return;
     }
     const reader = new FileReader();
@@ -72,19 +75,19 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
           setPhoto(dataUrl);
           setError(null);
         } catch {
-          setError("Rasmni qayta ishlashda xatolik");
+          setError(T("signup.errProcess"));
         }
       };
-      img.onerror = () => setError("Rasmni o'qib bo'lmadi");
+      img.onerror = () => setError(T("signup.errRead"));
       img.src = String(reader.result);
     };
-    reader.onerror = () => setError("Faylni o'qib bo'lmadi");
+    reader.onerror = () => setError(T("signup.errFile"));
     reader.readAsDataURL(file);
   };
 
   const save = () => {
     if (!firstNameValid) {
-      setError("Ism kamida 2 harfdan iborat bo'lishi kerak");
+      setError(T("signup.errName"));
       return;
     }
     onSave({
@@ -117,7 +120,7 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
             <button
               onClick={onClose}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/10 transition-all"
-              aria-label="Yopish"
+              aria-label={T("signup.close")}
             >
               <FiX size={18} className="text-gray-400" />
             </button>
@@ -128,9 +131,9 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
           >
             <FiUser size={30} />
           </div>
-          <h2 className="text-xl font-bold text-white">Sign up</h2>
+          <h2 className="text-xl font-bold text-white">{T("signup.header")}</h2>
           <p className="text-xs text-gray-500 mt-1">
-            Shaxsiy profilingizni yarating — ism, familiya va rasm
+            {T("signup.subtitle")}
           </p>
         </div>
 
@@ -140,12 +143,12 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                Ism *
+                {T("signup.firstName")}
               </label>
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="masalan: Aziz"
+                placeholder={T("signup.fnPlaceholder")}
                 maxLength={30}
                 autoFocus={!initial}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
@@ -160,12 +163,12 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
             </div>
             <div>
               <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                Familiya
+                {T("signup.lastName")}
               </label>
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="masalan: Karimov"
+                placeholder={T("signup.lnPlaceholder")}
                 maxLength={30}
                 className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
                 style={{ background: "#ffffff0d", border: "1px solid #ffffff14", color: "#fff" }}
@@ -176,7 +179,7 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
           {/* Rasm / Avatar tabs */}
           <div>
             <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-              Profil rasmi
+              {T("signup.profilePhoto")}
             </label>
             <div className="flex gap-2 mb-3">
               <button
@@ -188,7 +191,7 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
                   border: `1px solid ${tab === "photo" ? t.accent + "55" : "#ffffff14"}`,
                 }}
               >
-                <FiCamera size={13} /> Rasm yuklash
+                <FiCamera size={13} /> {T("signup.uploadPhoto")}
               </button>
               <button
                 onClick={() => setTab("avatar")}
@@ -199,7 +202,7 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
                   border: `1px solid ${tab === "avatar" ? t.accent + "55" : "#ffffff14"}`,
                 }}
               >
-                <FiSmile size={13} /> Avatar tanlash
+                <FiSmile size={13} /> {T("signup.chooseAvatar")}
               </button>
             </div>
 
@@ -209,7 +212,7 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
                 {tab === "photo" && photo ? (
                   <img
                     src={photo}
-                    alt="Profil rasmi"
+                    alt={T("signup.photoAlt")}
                     width={72}
                     height={72}
                     className="rounded-full object-cover"
@@ -229,11 +232,11 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
                   style={{ background: `${t.accent}22`, border: `1px solid ${t.accent}55`, color: t.accent }}
                 >
                   <FiImage size={14} />
-                  {photo ? "Rasmni almashtirish" : "Rasm tanlash"}
+                  {photo ? T("signup.changePhoto") : T("signup.selectPhoto")}
                 </button>
               ) : (
                 <div className="flex-1 text-xs text-gray-500">
-                  Tayyor avatar — rasm yuklamasangiz ham profil rasmi bo'ladi
+                  {T("signup.avatarHint")}
                 </div>
               )}
               <input
@@ -293,10 +296,10 @@ export default function SignUpModal({ t, initial, onSave, onClose, required = tr
             style={{ background: t.accent, color: "#000" }}
           >
             <FiCheck size={15} />
-            {initial ? "Saqlash" : "Ro'yxatdan o'tish"}
+            {initial ? T("signup.save") : T("signup.register")}
           </button>
           <p className="text-center text-[10px] text-gray-600">
-            Profil brauzeringizda saqlanadi · rasmingiz faqat sizga ko'rinadi
+            {T("signup.footerNote")}
           </p>
         </div>
       </div>
