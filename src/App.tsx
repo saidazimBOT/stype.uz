@@ -138,6 +138,8 @@ export default function App() {
   const [cursor, setCursor] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
+  // Test tugagach natijalar ekranida ko'rsatiladigan aniq vaqt (soniyalarda)
+  const [resultTime, setResultTime] = useState(0);
   // Xato kiritilganda qizil ko'rsatiladigan harf holati (faqat o'sha harf)
   const [wordErr, setWordErr] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -464,6 +466,10 @@ export default function App() {
         date: new Date().toLocaleTimeString(),
         recordingId: Date.now(),
       };
+      // Natijalar ekranida ANIQ yakuniy qiymatlar ko'rinishi uchun
+      // (jonli hisoblagich oxirgi marta 500ms avval yangilangan bo'lishi mumkin)
+      setWpm(fw);
+      setResultTime(result.time);
       setHistory((h) => [result, ...h.slice(0, 49)]);
 
       // Admin panel uchun: kim type qilganini qayd qilamiz (to'liq haqiqiy ko'rsatkichlar bilan)
@@ -1026,10 +1032,11 @@ export default function App() {
                 </p>
               )}
 
-              {/* Finished state */}
+              {/* Finished state — natijalar ekrani */}
               {finished && (
-                <div className="flex flex-col items-center gap-4 animate-fade-in">
-                  <div className="flex items-center gap-2 text-2xl font-bold" style={{ color: t.accent }}>
+                <div className="flex flex-col items-center gap-6 animate-fade-in w-full">
+                  {/* Baholash xabari */}
+                  <div className="flex items-center gap-2 text-2xl font-bold animate-pop-in" style={{ color: t.accent }}>
                     {typed.length === 0 ? (
                       <>
                         <FiActivity size={26} />
@@ -1048,11 +1055,49 @@ export default function App() {
                       </>
                     )}
                   </div>
-                  <div className="flex gap-4 sm:gap-6 text-sm text-gray-400 flex-wrap justify-center">
-                    <span>
-                      {T("type.combo")}:{" "}
-                      <strong style={{ color: t.accent }}>×{maxCombo}</strong>
-                    </span>
+
+                  {/* Katta natija bloklari — WPM | ACCURACY | COMBO (screenshotdagi uslub) */}
+                  {typed.length > 0 && (
+                    <div className="flex items-start justify-center gap-8 sm:gap-14 md:gap-20">
+                      <div className="text-center animate-pop-in">
+                        <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.wpm")}</div>
+                        <div
+                          className="text-5xl sm:text-6xl md:text-7xl font-bold leading-none"
+                          style={{ color: t.accent, fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
+                        >
+                          {wpm}
+                        </div>
+                      </div>
+                      <div className="text-center animate-pop-in" style={{ animationDelay: "70ms" }}>
+                        <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.accuracy")}</div>
+                        <div
+                          className="text-5xl sm:text-6xl md:text-7xl font-bold leading-none text-white"
+                          style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
+                        >
+                          {accuracy}%
+                        </div>
+                      </div>
+                      {maxCombo > 0 && (
+                        <div className="text-center animate-pop-in" style={{ animationDelay: "140ms" }}>
+                          <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.combo")}</div>
+                          <div
+                            className="text-5xl sm:text-6xl md:text-7xl font-bold leading-none"
+                            style={{ color: "#f59e0b", fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
+                          >
+                            ×{maxCombo}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Batafsil ko'rsatkichlar */}
+                  <div className="flex gap-4 sm:gap-6 text-sm text-gray-400 flex-wrap justify-center animate-row">
+                    {typed.length > 0 && (
+                      <span>
+                        {T("type.time")}: <strong className="text-gray-300">{resultTime}s</strong>
+                      </span>
+                    )}
                     <span>
                       {T("type.errors")} <strong className="text-red-400">{errors}</strong>
                     </span>
@@ -1075,9 +1120,10 @@ export default function App() {
                       </>
                     )}
                   </div>
+
                   <button
                     onClick={() => newText()}
-                    className="px-6 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95"
+                    className="px-6 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 animate-pop-in"
                     style={{ background: t.accent, color: "#000" }}
                   >
                     {T("type.tryAgain")}
