@@ -479,25 +479,12 @@ export default function App() {
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── COMPUTED ────────────────────────────────────────────────────────
-  // Joriy so'zda xato bo'lsa — so'zning yozilmagan harflari ham qizil ko'rinadi (Monkeytype uslubi)
-  const curStart = text.lastIndexOf(" ", cursor) + 1;
-  const nextSpace = text.indexOf(" ", cursor);
-  const curEnd = nextSpace === -1 ? text.length : nextSpace;
-  let wordHasError = false;
-  for (let w = curStart; w < Math.min(curEnd, typed.length); w++) {
-    if (!charsEqual(typed[w], text[w])) {
-      wordHasError = true;
-      break;
-    }
-  }
-
+  // Faqat XATO YOZILGAN harflar qizil ko'rinadi — butun so'z emas
   const rendered = text.split("").map((ch, i) => {
     let cls = "relative text-gray-600";
     if (i < cursor) cls = "relative text-white";
     if (i < typed.length && !charsEqual(typed[i], text[i])) {
       cls = "relative text-red-400 bg-red-900/30 rounded err-char";
-    } else if (wordHasError && i >= cursor && i < curEnd) {
-      cls = "relative text-red-400/70";
     }
     return (
       <span key={i} className={cls}>
