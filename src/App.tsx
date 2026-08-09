@@ -136,6 +136,8 @@ export default function App() {
   const [cursor, setCursor] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
+  // Xato kiritilganda qizil ko'rsatiladigan harf holati (faqat o'sha harf)
+  const [wordErr, setWordErr] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [favorites, setFavorites] = useLocalStorage<string[]>("typeuz_favorites", []);
   const [usedLangs, setUsedLangs] = useLocalStorage<string[]>("typeuz_usedlangs", []);
@@ -248,6 +250,7 @@ export default function App() {
       setTimeLeft(duration === "∞" ? null : (duration as number));
       setCombo(0);
       setMaxCombo(0);
+      setWordErr(false);
       setParticles([]);
       replayStartedRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
@@ -314,6 +317,7 @@ export default function App() {
     cursorRef.current = 0;
     setCombo(0);
     setMaxCombo(0);
+    setWordErr(false);
     setErrors(0);
     setTotalKs(0);
     setWpm(0);
@@ -384,9 +388,9 @@ export default function App() {
       spawnP(ok);
       recordEvent({ type: "keydown", key: k, correct: ok, time: Date.now() - (startTimeRef.current || Date.now()) });
 
-      // Xato belgi ham yoziladi — test to'xtamaydi, xato harf qizil ko'rinadi
-      setTyped((tt) => tt + k);
       if (ok) {
+        // To'g'ri harf — yoziladi va cursor keyingi harfga o'tadi
+        setTyped((tt) => tt + k);
         setCombo((cc) => {
           const nc = cc + 1;
           setMaxCombo((m) => Math.max(m, nc));
@@ -394,23 +398,27 @@ export default function App() {
           if (nc === 20) updateProgress("combo", 1);
           return nc;
         });
+        // Xato o'tdi — qizil belgini tozalaymiz
+        setWordErr(false);
+        setCursor((c) => {
+          const newCursor = c + 1;
+          cursorRef.current = newCursor;
+          if (newCursor === text.length) {
+            setFinished(true);
+            if (soundEnabled) playWin();
+            if (lang && !usedLangs.includes(lang)) {
+              setUsedLangs((prev) => [...prev, lang]);
+              if (usedLangs.length + 1 >= 3) updateProgress("langs", 3);
+            }
+          }
+          return newCursor;
+        });
       } else {
+        // Xato harf — YOZILMAYDI va cursor to'xtaydi, o'sha harf qizil bo'lib turadi
         setErrors((er) => er + 1);
         setCombo(0);
+        setWordErr(true);
       }
-      setCursor((c) => {
-        const newCursor = c + 1;
-        cursorRef.current = newCursor;
-        if (newCursor === text.length) {
-          setFinished(true);
-          if (soundEnabled) playWin();
-          if (lang && !usedLangs.includes(lang)) {
-            setUsedLangs((prev) => [...prev, lang]);
-            if (usedLangs.length + 1 >= 3) updateProgress("langs", 3);
-          }
-        }
-        return newCursor;
-      });
 
       const nt = totalKs + 1;
       const ne = ok ? errors : errors + 1;
@@ -479,11 +487,13 @@ export default function App() {
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── COMPUTED ────────────────────────────────────────────────────────
-  // Faqat XATO YOZILGAN harflar qizil ko'rinadi — butun so'z emas
+  // Faqat xato joyidagi BIRTA harf qizil ko'rinadi (butun so'z emas)
   const rendered = text.split("").map((ch, i) => {
     let cls = "relative text-gray-600";
     if (i < cursor) cls = "relative text-white";
     if (i < typed.length && !charsEqual(typed[i], text[i])) {
+      cls = "relative text-red-400 bg-red-900/30 rounded err-char";
+    } else if (wordErr && i === cursor) {
       cls = "relative text-red-400 bg-red-900/30 rounded err-char";
     }
     return (
