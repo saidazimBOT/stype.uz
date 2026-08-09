@@ -43,6 +43,7 @@ import AIExercises from "./components/features/AIExercises";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
+import TelegramPromo from "./components/features/TelegramPromo";
 import LingohubPromo from "./components/features/LingohubPromo";
 import LingohubLogo from "./components/features/LingohubLogo";
 import AccountSyncBridge from "./components/features/AccountSyncBridge";
@@ -51,6 +52,7 @@ import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import AppLogo from "./components/AppLogo";
 import CoinIcon from "./components/CoinIcon";
+import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
@@ -100,6 +102,7 @@ export default function App() {
   const [bgImage, setBgImage] = useLocalStorage("typeuz_bgimage", "");
   const [bgDim, setBgDim] = useLocalStorage("typeuz_bgdim", 0.55);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPromo, setShowPromo] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
   const [showLingohub, setShowLingohub] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
@@ -185,6 +188,9 @@ export default function App() {
 
   // UI tarjimalari — tanlangan tilga qarab (en/uz/ru)
   const T = getT(lang);
+
+  // Telegram Premium aksiyasi uchun eng yaxshi WPM
+  const bestWpm = history.length ? Math.max(...history.map((h) => h.wpm)) : 0;
 
   // Admin: saytga tashrifni kuzatish
   useVisitTracker(lang, theme);
@@ -678,11 +684,26 @@ export default function App() {
               </button>
             </>
           )}
+          {/* 200 WPM → Telegram Premium aksiyasi (sovg'a qutisi belgisi bilan) */}
+          <button
+            onClick={() => {
+              setShowPromo((s) => !s);
+              setShowSettings(false);
+              setShowOwner(false);
+              setShowLingohub(false);
+            }}
+            className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title={T("navbar.promoTitle")}
+          >
+            <GiftIcon size={16} />
+            <span>{T("navbar.promoBadge")}</span>
+          </button>
           {/* Kirish (Supabase sozlangan bo'lsa) */}
           {cloudEnabled && !isSignedUp && (
             <button
               onClick={() => {
                 setShowLogin(true);
+                setShowPromo(false);
                 setShowSettings(false);
                 setShowOwner(false);
                 setShowLingohub(false);
@@ -699,6 +720,7 @@ export default function App() {
           <button
             onClick={() => {
               setShowSignUp(true);
+              setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
               setShowLingohub(false);
@@ -753,6 +775,7 @@ export default function App() {
           <button
             onClick={() => {
               setShowLingohub((s) => !s);
+              setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
             }}
@@ -766,6 +789,7 @@ export default function App() {
           <button
             onClick={() => {
               setShowOwner((s) => !s);
+              setShowPromo(false);
               setShowSettings(false);
               setShowLingohub(false);
             }}
@@ -783,6 +807,7 @@ export default function App() {
           <button
             onClick={() => {
               setShowSettings((s) => !s);
+              setShowPromo(false);
               setShowOwner(false);
               setShowLingohub(false);
             }}
@@ -805,6 +830,7 @@ export default function App() {
               key={item.id}
               onClick={() => {
                 setShowOwner(false);
+                setShowPromo(false);
                 setShowLingohub(false);
                 setView(view === item.id ? "type" : item.id);
               }}
@@ -826,6 +852,9 @@ export default function App() {
           {/* Lingohub.uz reklama paneli */}
           {showLingohub ? (
             <LingohubPromo t={t} onClose={() => setShowLingohub(false)} />
+          ) : /* Telegram Premium promo */
+          showPromo ? (
+            <TelegramPromo t={t} lang={lang} bestWpm={bestWpm} onClose={() => setShowPromo(false)} />
           ) : /* Sayt egasi */
           showOwner ? (
             <OwnerView t={t} lang={lang} onClose={() => setShowOwner(false)} />
@@ -1184,6 +1213,7 @@ export default function App() {
             onClick={() => {
               setView("shop");
               setShowSettings(false);
+              setShowPromo(false);
               setShowOwner(false);
               setShowLingohub(false);
             }}

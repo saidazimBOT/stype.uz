@@ -40,6 +40,8 @@ const en: Dict = {
   "navbar.ownerTitle": "About the site owner",
   "navbar.telegramTitle": "Join our Telegram channel",
   "navbar.botTitle": "Our Telegram bot — subscribe for news",
+  "navbar.promoBadge": "There's a gift",
+  "navbar.promoTitle": "200 WPM → 1 month Telegram Premium gift!",
   "navbar.admin": "Admin",
   "navbar.coinShop": "Open Coin Shop",
   "navbar.login": "Log in",
@@ -77,6 +79,26 @@ const en: Dict = {
 
   // ── PROFILE ──
   "profile.editTitle": "Edit profile",
+
+  // ── TELEGRAM PROMO ──
+  "promo.title": "Telegram Premium Gift",
+  "promo.back": "← Back",
+  "promo.heroTitle": "{target} WPM — 1 month Telegram Premium!",
+  "promo.heroDesc": "Everyone who reaches {target} WPM gets a 1 month Telegram Premium gift. 🎁",
+  "promo.skrinHint": "Screenshot your result and send it via Telegram!",
+  "promo.yourBest": "Your best result",
+  "promo.reached": "Goal reached!",
+  "promo.needMore": "more needed for the reward",
+  "promo.congrats": "Congratulations!",
+  "promo.achievedDesc": "You earned the reward with {wpm} WPM! Screenshot your result and send it via Telegram — we'll send you 1 month Telegram Premium!",
+  "promo.almost": "Almost there!",
+  "promo.almostDesc": "Practice often and reach {target} WPM. Once you do, screenshot your result and send it via Telegram!",
+  "promo.questions": "Questions: {tg}",
+  "promo.trust": "Trust guarantee",
+  "promo.rule1": "Your result is shown on screen and verified by the admin (via screenshot or video).",
+  "promo.rule2": "The gift is only given for real results — if cheating is detected, the reward is cancelled.",
+  "promo.rule3": "Each user receives one gift per month.",
+  "promo.rule4": "To get the gift, screenshot your result and send it via Telegram.",
 
   // ── OWNER / PORTFOLIO ──
   "owner.title": "Portfolio",
@@ -241,6 +263,8 @@ const uz: Dict = {
   "navbar.ownerTitle": "Sayt egasi haqida",
   "navbar.telegramTitle": "Telegram kanalimizga qo'shiling",
   "navbar.botTitle": "Telegram botimiz — yangiliklarga obuna bo'ling",
+  "navbar.promoBadge": "Sovg'a bor",
+  "navbar.promoTitle": "200 WPM → 1 oylik Telegram Premium sovg'asi!",
   "navbar.admin": "Admin",
   "navbar.coinShop": "Do'konni ochish",
   "navbar.login": "Kirish",
@@ -278,6 +302,26 @@ const uz: Dict = {
 
   // ── PROFILE ──
   "profile.editTitle": "Profilni tahrirlash",
+
+  // ── TELEGRAM PROMO ──
+  "promo.title": "Telegram Premium Sovg'asi",
+  "promo.back": "← Orqaga",
+  "promo.heroTitle": "{target} WPM — 1 oylik Telegram Premium!",
+  "promo.heroDesc": "{target} WPM ga erishgan har bir foydalanuvchiga 1 oylik Telegram Premium sovg'a qilinadi. 🎁",
+  "promo.skrinHint": "Natijangizni skrin qilib Telegram orqali yuboring!",
+  "promo.yourBest": "Sizning eng yaxshi natijangiz",
+  "promo.reached": "Maqsadga erishdingiz!",
+  "promo.needMore": "yana kerak — mukofot uchun",
+  "promo.congrats": "Tabriklaymiz!",
+  "promo.achievedDesc": "Siz {wpm} WPM natija bilan mukofotni qo'lga kiritdingiz! Natijangizni skrin qilib Telegram orqali yuboring — 1 oylik Telegram Premium sovg'angizni yuboramiz!",
+  "promo.almost": "Hali ozgina qoldi!",
+  "promo.almostDesc": "Tez-tez mashq qiling va {target} WPM ga erishing. Natijaga erishganingizdan so'ng natijangizni skrin qilib Telegram orqali yuboring!",
+  "promo.questions": "Savollar uchun: {tg}",
+  "promo.trust": "Ishonchlilik kafolati",
+  "promo.rule1": "Natijangiz ekranda ko'rinadi va admin tomonidan tekshiriladi (ekran ko'rinishi / video orqali).",
+  "promo.rule2": "Sovg'a faqat haqiqiy natijalar uchun beriladi — aldash aniqlansa, mukofot bekor qilinadi.",
+  "promo.rule3": "Har bir foydalanuvchiga oyiga bitta sovg'a beriladi.",
+  "promo.rule4": "Sovg'ani olish uchun natijangizni skrin qilib Telegram orqali yuboring.",
 
   // ── OWNER / PORTFOLIO ──
   "owner.title": "Portfolio",
@@ -443,6 +487,8 @@ const ru: Dict = {
   "navbar.ownerTitle": "О владельце сайта",
   "navbar.telegramTitle": "Присоединяйтесь к нашему Telegram-каналу",
   "navbar.botTitle": "Наш Telegram-бот — подпишитесь на новости",
+  "navbar.promoBadge": "Есть подарок",
+  "navbar.promoTitle": "200 WPM → 1 месяц Telegram Premium в подарок!",
   "navbar.admin": "Админ",
   "navbar.coinShop": "Открыть магазин",
   "navbar.login": "Войти",
@@ -480,6 +526,26 @@ const ru: Dict = {
 
   // ── PROFILE ──
   "profile.editTitle": "Редактировать профиль",
+
+  // ── TELEGRAM PROMO ──
+  "promo.title": "Подарок Telegram Premium",
+  "promo.back": "← Назад",
+  "promo.heroTitle": "{target} WPM — 1 месяц Telegram Premium!",
+  "promo.heroDesc": "Каждый, кто достигнет {target} WPM, получит 1 месяц Telegram Premium в подарок. 🎁",
+  "promo.skrinHint": "Сделайте скриншот результата и отправьте его в Telegram!",
+  "promo.yourBest": "Ваш лучший результат",
+  "promo.reached": "Цель достигнута!",
+  "promo.needMore": "ещё нужно до награды",
+  "promo.congrats": "Поздравляем!",
+  "promo.achievedDesc": "Вы заработали награду с результатом {wpm} WPM! Сделайте скриншот результата и отправьте его в Telegram — мы отправим вам 1 месяц Telegram Premium!",
+  "promo.almost": "Ещё немного!",
+  "promo.almostDesc": "Практикуйтесь чаще и достигните {target} WPM. Как только достигнете — сделайте скриншот результата и отправьте его в Telegram!",
+  "promo.questions": "Вопросы: {tg}",
+  "promo.trust": "Гарантия доверия",
+  "promo.rule1": "Ваш результат виден на экране и проверяется админом (через скриншот или видео).",
+  "promo.rule2": "Подарок выдаётся только за реальные результаты — при обмане награда отменяется.",
+  "promo.rule3": "Каждый пользователь получает один подарок в месяц.",
+  "promo.rule4": "Чтобы получить подарок, сделайте скриншот результата и отправьте его в Telegram.",
 
   // ── OWNER / PORTFOLIO ──
   "owner.title": "Портфолио",
