@@ -20,6 +20,7 @@ create table if not exists public.profiles (
   email text,
   avatar_id text not null default 'avatar_default',
   photo text,
+  coins integer not null default 0,   -- saytdagi tangalar (admin sovg'a qilishi mumkin)
   role text not null default 'user' check (role in ('user', 'admin', 'owner')),
   status text not null default 'active' check (status in ('active', 'blocked')),
   created_at timestamptz not null default now(),   -- ro'yxatdan o'tgan sana
@@ -122,7 +123,35 @@ create policy "Users can update own safe fields"
     and status = 'active'              -- blocked foydalanuvchi o'zini tiklay olmaydi
   );
 
--- ── 4. EGANI (OWNER) NI ADMIN QILISH ──────────────────────────────────
+-- ── 4. TANGALAR (admin boshqalarga coin berishi) ──────────────────────
+-- Eski bazalar uchun ustunni ham qo'shamiz (agar mavjud bo'lmasa)
+alter table public.profiles add column if not exists coins integer not null default 0;
+
+-- Admin boshqa foydalanuvchiga coin berish uchun xavfsiz RPC.
+-- security definer + ichki is_admin() tekshiruvi: bu funksiyani FAQAT
+-- admin/owner rolidagi foydalanuvchi chaqira oladi. Oddiy foydalanuvchi
+-- o'ziga yoki boshqalarga coin qo'sha olmaydi.
+create or replace function public.admin_add_coins(target_id uuid, amount integer)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if amount <= 0 or amount > 1000000 then
+    raise exception 'Noto''g''ri miqdor';
+  end if;
+  if not public.is_admin() then
+    raise exception 'Ruxsat yo''q';
+  end if;
+  update public.profiles set coins = coins + amount, updated_at = now() where id = target_id;
+end;
+$$;
+
+revoke all on function public.admin_add_coins(uuid, integer) from public;
+grant execute on function public.admin_add_coins(uuid, integer) to authenticated;
+
+-- ── 5. EGANI (OWNER) NI ADMIN QILISH ──────────────────────────────────
 -- Supabase Auth'da o'z hisobingizni ochgandan so'ng quyidagi so'rovni ishga
 -- tushiring (email'ni o'zingiznikiga almashtiring):
 --

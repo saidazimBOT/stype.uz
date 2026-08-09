@@ -18,6 +18,7 @@ export interface SupabaseProfileRow {
   last_name: string | null;
   email: string | null;
   avatar_id: string | null;
+  coins?: number;
   role: "user" | "admin" | "owner";
   status: "active" | "blocked";
   created_at: string;
@@ -120,6 +121,34 @@ export async function getMyProfile(): Promise<SupabaseProfileRow | null> {
 
 export function isAdminRole(role?: string | null): boolean {
   return role === "admin" || role === "owner";
+}
+
+/**
+ * Admin boshqa foydalanuvchiga coin beradi.
+ * XAVFSIZLIK: bu Supabase RPC (`admin_add_coins`) security definer funksiya —
+ * ichida is_admin() tekshiriladi, ya'ni faqat admin/owner chaqira oladi.
+ */
+export async function adminAddCoins(targetId: string, amount: number) {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { error } = await supabase.rpc("admin_add_coins", {
+    target_id: targetId,
+    amount: Math.floor(amount),
+  });
+  if (error) throw error;
+}
+
+/**
+ * Joriy foydalanuvchi o'z tangalarini serverga yuboradi (push-up).
+ * RLS: faqat o'z qatorini yangilay oladi (coins — xavfsiz maydon).
+ */
+export async function setMyCoins(coins: number) {
+  if (!supabase) return;
+  const user = await getSupabaseUser();
+  if (!user) return;
+  await supabase
+    .from("profiles")
+    .update({ coins, updated_at: new Date().toISOString() })
+    .eq("id", user.id);
 }
 
 /**

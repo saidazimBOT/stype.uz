@@ -6,12 +6,12 @@ import {
   FiAlertTriangle, FiDatabase, FiLogIn, FiRefreshCw, FiShield, FiUsers,
 } from "react-icons/fi";
 import {
-  AvatarDot, Badge, Card, EmptyState, Field, GhostBtn, PrimaryBtn, RoleBadge, SearchInput,
+  AvatarDot, Badge, Card, EmptyState, Field, GhostBtn, Modal, PrimaryBtn, RoleBadge, SearchInput,
   SectionHeader, Spinner, TextInput, fmtDateTime, timeAgo,
 } from "./adminUi";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import {
-  fetchAdminUsers, getMyProfile, isAdminRole, signInWithEmail, signOutSupabase,
+  adminAddCoins, fetchAdminUsers, getMyProfile, isAdminRole, signInWithEmail, signOutSupabase,
   type SupabaseProfileRow,
 } from "../../lib/supabaseService";
 
@@ -46,6 +46,8 @@ function SectionBody({ t }: { t: ThemeColors }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [signInBusy, setSignInBusy] = useState(false);
+  // ── Boshqalarga coin berish ──
+  const [givingTo, setGivingTo] = useState<SupabaseProfileRow | null>(null);
 
   // Sessiya va rol tekshirish (RLS orqali admin ekanligi)
   const checkAccess = useCallback(async () => {
@@ -249,6 +251,7 @@ function SectionBody({ t }: { t: ThemeColors }) {
                   <th className="py-2.5 px-3">Holat</th>
                   <th className="py-2.5 px-3">Ro'yxatdan o'tgan</th>
                   <th className="py-2.5 px-3">Oxirgi kirish</th>
+                  <th className="py-2.5 px-3">Tanga</th>
                 </tr>
               </thead>
               <tbody>
@@ -289,6 +292,22 @@ function SectionBody({ t }: { t: ThemeColors }) {
                       <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap" title={lastLogin ? fmtDateTime(lastLogin) : undefined}>
                         {lastLogin ? timeAgo(lastLogin) : "—"}
                       </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 text-gray-300 font-medium">
+                            <span style={{ color: "#f59e0b" }}>🪙</span>
+                            {(u.coins ?? 0).toLocaleString()}
+                          </span>
+                          <button
+                            onClick={() => setGivingTo(u)}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold transition-all hover:scale-105 active:scale-95"
+                            style={{ background: "#f59e0b22", color: "#fbbf24", border: "1px solid #f59e0b44" }}
+                            title={`${displayName(u)} ga coin berish`}
+                          >
+                            + Coin
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -312,7 +331,135 @@ function SectionBody({ t }: { t: ThemeColors }) {
           o'qiladi. Har 30 soniyada va "Yangilash" tugmasi bilan yangilanadi. Ma'lumotlar RLS orqali himoyalangan.
         </span>
       </div>
+
+      {/* ── Boshqa foydalanuvchiga coin berish ── */}
+      {givingTo && (
+        <GiveCoinsModal
+          t={t}
+          user={givingTo}
+          onClose={() => setGivingTo(null)}
+          onGiven={() => void loadUsers(debounced)}
+        />
+      )}
     </div>
+  );
+}
+
+// ── Coin berish oynasi (faqat admin — RPC ichida is_admin() tekshiriladi) ──
+function GiveCoinsModal({
+  t,
+  user,
+  onClose,
+  onGiven,
+}: {
+  t: ThemeColors;
+  user: SupabaseProfileRow;
+  onClose: () => void;
+  onGiven: () => void;
+}) {
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [balance, setBalance] = useState(user.coins ?? 0);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const submit = async () => {
+    const n = parseInt(amount, 10);
+    if (Number.isNaN(n) || n <= 0 || n > 1000000) {
+      setMsg({ ok: false, text: "To'g'ri miqdor kiriting (1 – 1 000 000)" });
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    try {
+      await adminAddCoins(user.id, n);
+      setBalance((b) => b + n);
+      setMsg({ ok: true, text: `${n.toLocaleString()} coin ${displayName(user)} ga qo'shildi!` });
+      onGiven();
+      // Muvaffaqiyatdan so'ng oynani yopamiz — ro'yxat yangilangan bo'ladi
+      window.setTimeout(onClose, 1200);
+    } catch (e) {
+      const m = (e as Error)?.message?.toLowerCase() || "";
+      setMsg({
+        ok: false,
+        text:
+          m.includes("ruxsat") || m.includes("permission") || m.includes("denied")
+            ? "Ruxsat yo'q — bu amal faqat admin/owner uchun (RLS himoyasi)."
+            : (e as Error)?.message || "Xatolik yuz berdi",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal t={t} title={`Coin berish — ${displayName(user)}`} onClose={onClose}>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl" style={{ background: "#ffffff06", border: "1px solid #ffffff0f" }}>
+          <span className="text-xs text-gray-500">Joriy balans</span>
+          <span className="text-sm font-bold text-white flex items-center gap-1.5">
+            <span style={{ color: "#f59e0b" }}>🪙</span>
+            {balance.toLocaleString()}
+          </span>
+        </div>
+
+        <div>
+          <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-2">Tezkor miqdor</div>
+          <div className="flex flex-wrap gap-2">
+            {[100, 500, 1000, 5000].map((v) => (
+              <button
+                key={v}
+                onClick={() => setAmount(String(v))}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-105 active:scale-95"
+                style={{
+                  background: amount === String(v) ? "#f59e0b33" : "#ffffff0d",
+                  color: amount === String(v) ? "#fbbf24" : "#9ca3af",
+                  border: `1px solid ${amount === String(v) ? "#f59e0b66" : "#ffffff14"}`,
+                }}
+              >
+                +{v.toLocaleString()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Field t={t} label="O'z miqdor">
+          <TextInput
+            t={t}
+            type="number"
+            value={amount}
+            onChange={setAmount}
+            placeholder="masalan: 250"
+            accent
+          />
+        </Field>
+
+        {msg && (
+          <div
+            className={`px-3 py-2.5 rounded-xl text-xs animate-pop-in ${
+              msg.ok ? "text-green-400" : "text-red-400"
+            }`}
+            style={{
+              background: msg.ok ? "#22c55e11" : "#ef444411",
+              border: `1px solid ${msg.ok ? "#22c55e33" : "#ef444433"}`,
+            }}
+          >
+            {msg.text}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-1">
+          <GhostBtn t={t} onClick={onClose} disabled={busy}>Bekor qilish</GhostBtn>
+          <PrimaryBtn
+            t={t}
+            onClick={() => void submit()}
+            disabled={busy || !!msg?.ok}
+          >
+            <span style={{ color: "#000" }}>🪙</span>
+            {busy ? "Qo'shilmoqda..." : "Coin berish"}
+          </PrimaryBtn>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
