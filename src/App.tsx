@@ -71,12 +71,6 @@ import type { IconType } from "react-icons";
 // (BotFather → /newbot → username — masalan: t.me/stypeuz_bot)
 const TELEGRAM_BOT_URL = "https://t.me/stypeuz_bot";
 
-// Jonli WPM uchun rolling oyna (ms) — oxirgi shu vaqtdagi bosishlar hisobga olinadi
-const WPM_ROLLING_MS = 5000;
-// WPM hisobida minimal vaqt (ms) — boshlanishda 1-2 harf bilan
-// absurd tezlik chiqib ketmasligi uchun shu qiymat asos qilib olinadi.
-const MIN_WPM_ELAPSED_MS = 1000;
-
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
 // Bu React mount bo'lishidan OLDIN ishlaydi, shuning uchun useLocalStorage
 // hook'i "light" ni o'qib ololmaydi.
@@ -184,8 +178,6 @@ export default function App() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const clickBufRef = useRef<AudioBuffer | null>(null);
   const startTimeRef = useRef<number | null>(null);
-  // To'g'ri bosilgan harflarning vaqtlari — jonli (rolling) WPM hisobi uchun
-  const keyTimesRef = useRef<number[]>([]);
   const replayStartedRef = useRef(false);
 
   // Theme
@@ -258,7 +250,6 @@ export default function App() {
       setMaxCombo(0);
       setWordErr(false);
       setParticles([]);
-      keyTimesRef.current = [];
       replayStartedRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
     },
@@ -330,31 +321,22 @@ export default function App() {
     setWpm(0);
     setAccuracy(100);
     setParticles([]);
-    keyTimesRef.current = [];
     startTimeRef.current = d === "∞" ? null : Date.now();
   };
 
   // ── WPM UPDATE (haqiqiy tezlik — har 500ms yangilanadi) ─────────────
-  // Jonli WPM — oxirgi 5 soniyadagi HAQIQIY bosish tezligi (rolling oyna):
-  // WPM = (oxirgi 5 soniyada yozilgan belgilar / 5) / 5 daqiqa.
-  // Tez yozsangiz darhol ko'tariladi, pauza qilsangiz asta-sekin tushadi.
-  // Test boshida (5 soniyagacha) haqiqiy o'tgan vaqt olinadi, lekin
-  // minimal 1 soniyadan kam emas — birinchi harfda 300 WPM chiqmasligi uchun.
+  // WPM = (to'g'ri yozilgan belgilar / 5) / o'tgan vaqt (daqiqada).
+  // Timer har 500ms da qayta hisoblaydi: pauza qilsangiz WPM tushadi,
+  // tez yozsangiz ko'tariladi — haqiqiy bosish tezligi ko'rinadi.
   useEffect(() => {
     if (!started || finished || !startTimeRef.current) return;
     const update = () => {
-      const now = Date.now();
-      // Rolling oyna: faqat oxirgi 5 soniyadagi bosishlar hisoblanadi
-      const recent = keyTimesRef.current.filter((t) => now - t <= WPM_ROLLING_MS);
-      keyTimesRef.current = recent;
-      if (recent.length === 0) return; // Pauza — oxirgi qiymat saqlanib qoladi (0 ga tushib ketmaydi)
-      // Test boshida haqiqiy o'tgan vaqtni olamiz, minimal 1 soniyadan kam bo'lmasin
-      const spanMs = Math.max(
-        Math.min(now - startTimeRef.current!, WPM_ROLLING_MS),
-        MIN_WPM_ELAPSED_MS
-      );
-      const words = recent.length / 5;
-      const rawWpm = Math.min(300, Math.round(words / (spanMs / 60000)));
+      const elapsed = Date.now() - startTimeRef.current!;
+      const elapsedMin = elapsed / 60000;
+      if (elapsedMin <= 0) return;
+      // Boshlanishning dastlabki millisoniyalarida absurd qiymat chiqmasligi
+      // uchun 300 WPM (app bo'ylab umumiy chegara) bilan cheklaymiz.
+      const rawWpm = Math.min(300, Math.round((typed.length / 5) / elapsedMin));
       setWpm(Math.max(0, rawWpm));
     };
     update();
@@ -402,7 +384,6 @@ export default function App() {
 
       if (ok) {
         // To'g'ri harf — yoziladi va cursor keyingi harfga o'tadi
-        keyTimesRef.current.push(Date.now());
         setTyped((tt) => tt + k);
         setCombo((cc) => {
           const nc = cc + 1;
@@ -461,10 +442,8 @@ export default function App() {
   useEffect(() => {
     if (finished && started && typed.length > 0) {
       const elapsedMs = Date.now() - startTimeRef.current!;
-      // Yakuniy WPM — butun test davomidagi haqiqiy o'rtacha tezlik:
-      // (to'g'ri belgilar / 5) / o'tgan vaqt (daqiqada).
-      const e = Math.max(elapsedMs, MIN_WPM_ELAPSED_MS) / 60000;
-      const fw = Math.min(300, Math.round((typed.length / 5) / e));
+      const e = elapsedMs / 60000;
+      const fw = Math.round((typed.length / 5) / e);
       // HAQIQIY natija — faqat foydalanuvchi klaviaturada yozganlariga asoslanadi:
       // correct = to'g'ri yozilgan belgilar, total = jami bosilgan belgilar (xatolar bilan),
       // time = aniq o'tgan vaqt (soniyalarda), userId = tizimga kirgan foydalanuvchi ID si
