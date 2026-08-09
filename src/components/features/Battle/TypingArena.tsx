@@ -82,7 +82,7 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
       const elapsedMin = (Date.now() - startTimeRef.current) / 60000;
       const rawWpm = elapsedMin > 0 ? Math.round(nextTyped.length / 5 / elapsedMin) : 0;
       const wpmV = Math.min(300, Math.max(0, rawWpm));
-      setWpm((prev) => (prev === 0 ? wpmV : Math.round(prev + (wpmV - prev) * 0.4)));
+      setWpm(wpmV);
       setAccuracy(Math.round((correct / nextTyped.length) * 100));
 
       const fin = nextTyped.length >= text.length;

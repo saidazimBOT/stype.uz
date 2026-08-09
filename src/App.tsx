@@ -326,29 +326,25 @@ export default function App() {
     startTimeRef.current = d === "∞" ? null : Date.now();
   };
 
-  // ── WPM UPDATE (smooth, real typing feel) ───────────────────────────
+  // ── WPM UPDATE (haqiqiy tezlik — har 500ms yangilanadi) ─────────────
+  // WPM = (to'g'ri yozilgan belgilar / 5) / o'tgan vaqt (daqiqada).
+  // Timer har 500ms da qayta hisoblaydi: pauza qilsangiz WPM tushadi,
+  // tez yozsangiz ko'tariladi — haqiqiy bosish tezligi ko'rinadi.
   useEffect(() => {
-    if (!started || !startTimeRef.current) return;
-    const elapsed = Date.now() - startTimeRef.current;
-
-    // Dastlabki 2 soniya WPM ko'rsatilmaydi (barqarorlashishi uchun)
-    if (elapsed < 2000) {
-      setWpm(0);
-      return;
-    }
-
-    const elapsedMin = elapsed / 60000;
-    if (elapsedMin > 0) {
-      const rawWpm = Math.round((typed.length / 5) / elapsedMin);
-      // Lerp smoothing: oldingi qiymatdan 40% ga yangilanadi
-      // Bu real tayping hissasini beradi (Monkeytype uslubi)
-      setWpm(prev => {
-        if (prev === 0) return rawWpm;
-        const diff = rawWpm - prev;
-        return Math.round(prev + diff * 0.4);
-      });
-    }
-  }, [typed, started]);
+    if (!started || finished || !startTimeRef.current) return;
+    const update = () => {
+      const elapsed = Date.now() - startTimeRef.current!;
+      const elapsedMin = elapsed / 60000;
+      if (elapsedMin <= 0) return;
+      // Boshlanishning dastlabki millisoniyalarida absurd qiymat chiqmasligi
+      // uchun 300 WPM (app bo'ylab umumiy chegara) bilan cheklaymiz.
+      const rawWpm = Math.min(300, Math.round((typed.length / 5) / elapsedMin));
+      setWpm(Math.max(0, rawWpm));
+    };
+    update();
+    const id = setInterval(update, 500);
+    return () => clearInterval(id);
+  }, [typed, started, finished]);
 
   // ── KEYBOARD HANDLING ───────────────────────────────────────────────
   // Yozish logikasi — fizik klaviatura va ekran klaviaturasi (visualizer)
