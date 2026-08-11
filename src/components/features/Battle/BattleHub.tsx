@@ -277,7 +277,22 @@ function ModeSelect({
 }) {
   const publicRooms = useQuery(api.rooms.publicRooms);
   const joinRoom = useMutation(api.rooms.joinRoom);
+  const quickMatch = useMutation(api.rooms.quickMatch);
   const [joinCode, setJoinCode] = useState("");
+  const [quickBusy, setQuickBusy] = useState<"1v1" | "team" | null>(null);
+
+  const startQuick = async (mode: "1v1" | "team") => {
+    setQuickBusy(mode);
+    try {
+      const { code } = await quickMatch({ mode });
+      onEnterCode(code);
+      setJoinCode("");
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Quick Match ishlamadi");
+    } finally {
+      setQuickBusy(null);
+    }
+  };
 
   const tryJoin = async () => {
     const code = joinCode.trim().toUpperCase();
@@ -296,6 +311,71 @@ function ModeSelect({
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
+      {/* Quick Match — tasodifiy real raqib bilan avto-juftlashish */}
+      <div
+        className="md:col-span-2 p-5 rounded-2xl relative overflow-hidden"
+        style={{
+          background: t.surface,
+          border: `1px solid ${t.accent}66`,
+          boxShadow: `0 0 30px ${t.accent}22`,
+        }}
+      >
+        <div
+          className="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-3xl pointer-events-none"
+          style={{ background: t.accent + "1a" }}
+        />
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-1 relative">
+          <div className="font-bold text-white flex items-center gap-2">
+            <span
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: t.accent + "22", color: t.accent }}
+            >
+              <FiZap size={18} />
+            </span>
+            Quick Match
+          </div>
+          <span
+            className="text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5"
+            style={{ background: "#22c55e1a", border: "1px solid #22c55e44", color: "#4ade80" }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Jonli — real o'yinchilar
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 mb-4 ml-11 relative">
+          Kod kerak emas — tasodifiy real raqib bilan darhol jang!
+        </p>
+        <div className="grid sm:grid-cols-2 gap-3 relative">
+          <button
+            onClick={() => startQuick("1v1")}
+            disabled={quickBusy !== null}
+            className="px-4 py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: t.accent + "1a", border: `1px solid ${t.accent}55`, color: t.accent }}
+          >
+            {quickBusy === "1v1" ? (
+              <span className="animate-pulse">Qidirilmoqda...</span>
+            ) : (
+              <>
+                <FiZap size={15} /> Quick 1v1
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => startQuick("team")}
+            disabled={quickBusy !== null}
+            className="px-4 py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: "#a78bfa1a", border: "1px solid #a78bfa55", color: "#a78bfa" }}
+          >
+            {quickBusy === "team" ? (
+              <span className="animate-pulse">Qidirilmoqda...</span>
+            ) : (
+              <>
+                <FiUsers size={15} /> Quick Team
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* 1v1 */}
       <button
         onClick={() => onPick("1v1")}
@@ -562,6 +642,12 @@ function RoomScreen({
 }) {
   const room = useQuery(api.rooms.getRoom, { code });
   const myToken = useQuery(api.users.myToken);
+
+  // Xona bir marta ochilgan bo'lsa — keyin yo'qolsa, "yopildi" degan xabar chiqadi
+  const sawRoomRef = useRef(false);
+  useEffect(() => {
+    if (room) sawRoomRef.current = true;
+  }, [room]);
   const startRoom = useMutation(api.rooms.startRoom);
   const syncClock = useMutation(api.rooms.syncClock);
   const leaveRoom = useMutation(api.rooms.leaveRoom);
@@ -578,16 +664,21 @@ function RoomScreen({
     };
   }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Soatni sinxronlash: countdown → racing va muddat tugashini tekshirish
+  // Soatni sinxronlash: lobby → countdown → racing va muddat tugashini tekshirish.
+  // Quick Match xonalarida lobby'da ham ishlaydi (raqib topilgach avto-start).
   useEffect(() => {
     if (!room || !myToken) return;
-    if (room.status === "countdown" || room.status === "racing") {
+    if (
+      room.status === "countdown" ||
+      room.status === "racing" ||
+      (room.quickMatch && room.status === "lobby")
+    ) {
       const iv = setInterval(() => {
         syncClock({ code }).catch(() => {});
       }, 1000);
       return () => clearInterval(iv);
     }
-  }, [room?.status, code, myToken, syncClock]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [room?.status, room?.quickMatch, code, myToken, syncClock]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLeave = () => {
     leaveRoom({ code })
@@ -598,7 +689,11 @@ function RoomScreen({
   if (!room) {
     return (
       <div className="text-center py-16">
-        <div className="text-gray-500 animate-pulse mb-4">Xona yuklanmoqda...</div>
+        <div className="text-gray-500 animate-pulse mb-4">
+          {sawRoomRef.current
+            ? "Xona yopildi yoki muddati tugadi — qayta urinib ko'ring"
+            : "Xona yuklanmoqda..."}
+        </div>
         <button onClick={onLeave} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Ortga
         </button>
@@ -738,7 +833,19 @@ function LobbyView({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">
-              {isTeam ? "Team Battle" : "1v1 Battle"} · {room.visibility === "public" ? "Ochiq" : "Yopiq"}
+              {isTeam ? "Team Battle" : "1v1 Battle"} ·{" "}
+              {room.quickMatch ? (
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}44` }}
+                >
+                  ⚡ Quick Match
+                </span>
+              ) : room.visibility === "public" ? (
+                "Ochiq"
+              ) : (
+                "Yopiq"
+              )}
             </div>
             <div className="text-white font-bold">
               Xona kodi: <CodeChip code={room.code} t={t} />
@@ -796,7 +903,7 @@ function LobbyView({
               </div>
             );
           })}
-          {room.players.find((p) => p.tokenIdentifier === myToken) && (
+          {room.players.find((p) => p.tokenIdentifier === myToken) && !room.quickMatch && (
             <div className="sm:col-span-2 flex justify-center">
               <button
                 onClick={() => onSwitchTeam(room.players.find((p) => p.tokenIdentifier === myToken)?.team === "A" ? "B" : "A")}
@@ -832,7 +939,13 @@ function LobbyView({
             ))}
             {room.players.length === 1 && (
               <div className="text-xs text-gray-600 animate-pulse py-2">
-                Raqib kutilmoqda — kodni yuboring: {room.code}
+                {room.quickMatch ? (
+                  <>
+                    ⚡ <span style={{ color: t.accent }}>Raqib qidirilmoqda</span> — kod: {room.code}
+                  </>
+                ) : (
+                  <>Raqib kutilmoqda — kodni yuboring: {room.code}</>
+                )}
               </div>
             )}
           </div>
@@ -844,7 +957,18 @@ function LobbyView({
         className="p-5 rounded-2xl text-center"
         style={{ background: t.surface, border: `1px solid ${t.accent}33` }}
       >
-        {isHost ? (
+        {room.quickMatch ? (
+          <div
+            className="text-sm animate-pulse flex items-center justify-center gap-2"
+            style={{ color: t.accent }}
+          >
+            {enoughPlayers ? (
+              <>🏁 Jang avtomatik boshlanmoqda...</>
+            ) : (
+              <>⚡ Raqib qidirilmoqda...</>
+            )}
+          </div>
+        ) : isHost ? (
           <>
             <button
               onClick={onStart}

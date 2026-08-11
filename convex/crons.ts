@@ -16,4 +16,11 @@ crons.interval(
   internal.chat.cleanupOldMessages
 );
 
+// Tashlab ketilgan quick-match xonalarni tozalash — har soatda ishlaydi
+crons.interval(
+  "stale-quick-match-rooms-cleanup",
+  { hours: 1 },
+  internal.rooms.cleanupStaleRooms
+);
+
 export default crons;

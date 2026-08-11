@@ -34,6 +34,9 @@ export default defineSchema({
     code: v.string(),
     mode: v.union(v.literal("1v1"), v.literal("team")),
     visibility: v.union(v.literal("public"), v.literal("private")),
+    // Quick Match xonasi — tasodifiy raqib bilan avto-juftlashish uchun.
+    // Optional: eski xonalarda bu maydon yo'q bo'lishi mumkin.
+    quickMatch: v.optional(v.boolean()),
     status: v.union(
       v.literal("lobby"),
       v.literal("countdown"),

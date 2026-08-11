@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query, type MutationCtx } from "./_generated/server";
+import { mutation, query, internalMutation, type MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { getRandomRaceText } from "./raceTexts";
 
@@ -8,6 +8,8 @@ const MAX_1V1_PLAYERS = 2;
 const MAX_TEAM_PLAYERS = 8;
 const COUNTDOWN_MS = 3000;
 const RACE_TIMEOUT_S = 180; // 3 daqiqadan keyin avto-yakun
+const QUICK_MATCH_STALE_MS = 90_000; // 90 soniyadan eski quick-match xona endi "ochiq" hisoblanmaydi
+const QUICK_MATCH_CLEANUP_MS = 10 * 60_000; // 10 daqiqadan eski, tashlab ketilgan quick-match xona o'chiriladi
 const MAX_CPS = 30; // ~360 WPM — undan tez "yozish" imkonsiz (anti-cheat)
 const MAX_REPORTED_WPM = 300;
 
@@ -79,6 +81,7 @@ export const createRoom = mutation({
       createdAt: Date.now(),
       rewardsGranted: false,
       maxPlayers: args.mode === "1v1" ? MAX_1V1_PLAYERS : MAX_TEAM_PLAYERS,
+      quickMatch: false,
     });
 
     return { code, roomId };
@@ -142,6 +145,108 @@ export const joinRoom = mutation({
     });
 
     return { code: room.code, team };
+  },
+});
+
+// ── Quick Match: tasodifiy real raqib bilan tezkor jang ───────────────
+// Mavjud ochiq quick-match xonasiga qo'shiladi, yo'q bo'lsa yangisini yaratadi.
+export const quickMatch = mutation({
+  args: {
+    mode: v.union(v.literal("1v1"), v.literal("team")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Avval kirish kerak");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .first();
+    if (!user?.username) throw new Error("Avval username o'rnating");
+
+    const now = Date.now();
+
+    // 1) Ochilib turgan quick-match xonasini qidirish (90 soniyadan eski emas)
+    const lobbyRooms = await ctx.db
+      .query("rooms")
+      .withIndex("by_status", (q) => q.eq("status", "lobby"))
+      .order("desc")
+      .take(30);
+
+    const open = lobbyRooms.find(
+      (r) =>
+        r.quickMatch &&
+        r.mode === args.mode &&
+        r.players.length < r.maxPlayers &&
+        !r.players.some((p) => p.tokenIdentifier === identity.tokenIdentifier) &&
+        now - r.createdAt < QUICK_MATCH_STALE_MS
+    );
+
+    if (open) {
+      // Jamoa balansini saqlash: kam o'yinchili jamoaga qo'shilish
+      let team: "A" | "B" | undefined;
+      if (args.mode === "1v1") {
+        team = open.players[0]?.team === "A" ? "B" : "A";
+      } else {
+        const countA = open.players.filter((p) => p.team === "A").length;
+        const countB = open.players.filter((p) => p.team === "B").length;
+        team = countA <= countB ? "A" : "B";
+      }
+
+      await ctx.db.patch(open._id, {
+        players: [
+          ...open.players,
+          {
+            tokenIdentifier: identity.tokenIdentifier,
+            username: user.username,
+            avatar: user.avatar,
+            color: PLAYER_COLORS[open.players.length % PLAYER_COLORS.length],
+            team: team ?? "A",
+            correct: 0,
+            typed: 0,
+            wpm: 0,
+            accuracy: 100,
+            finished: false,
+            connected: true,
+          },
+        ],
+      });
+      return { code: open.code, roomId: open._id };
+    }
+
+    // 2) Yangi quick-match xona yaratish
+    let code = genCode();
+    while (await getRoomByCode(ctx, code)) code = genCode();
+
+    const roomId = await ctx.db.insert("rooms", {
+      code,
+      mode: args.mode,
+      visibility: "private",
+      quickMatch: true,
+      status: "lobby",
+      text: "",
+      createdBy: identity.tokenIdentifier,
+      players: [
+        {
+          tokenIdentifier: identity.tokenIdentifier,
+          username: user.username,
+          avatar: user.avatar,
+          color: PLAYER_COLORS[0],
+          team: "A",
+          correct: 0,
+          typed: 0,
+          wpm: 0,
+          accuracy: 100,
+          finished: false,
+          connected: true,
+        },
+      ],
+      createdAt: now,
+      rewardsGranted: false,
+      maxPlayers: args.mode === "1v1" ? MAX_1V1_PLAYERS : MAX_TEAM_PLAYERS,
+    });
+
+    return { code, roomId };
   },
 });
 
@@ -219,6 +324,33 @@ export const syncClock = mutation({
     if (!room) return null;
 
     const now = Date.now();
+
+    // Quick Match: yetarli o'yinchi yig'ilgach jangni avtomatik boshlash
+    if (room.status === "lobby" && room.quickMatch) {
+      const enough =
+        room.mode === "1v1"
+          ? room.players.length >= 2
+          : room.players.some((p) => p.team === "A") && room.players.some((p) => p.team === "B");
+      if (enough) {
+        await ctx.db.patch(room._id, {
+          status: "countdown",
+          text: getRandomRaceText(),
+          countdownEndsAt: now + COUNTDOWN_MS,
+          players: room.players.map((p) => ({
+            ...p,
+            correct: 0,
+            typed: 0,
+            wpm: 0,
+            accuracy: 100,
+            finished: false,
+            finishTime: undefined,
+            typedPreview: undefined,
+            connected: true,
+          })),
+        });
+        return "countdown";
+      }
+    }
 
     if (room.status === "countdown" && room.countdownEndsAt && now >= room.countdownEndsAt) {
       await ctx.db.patch(room._id, { status: "racing", startedAt: now });
@@ -377,7 +509,7 @@ export const publicRooms = query({
       .order("desc")
       .take(30);
     return rooms
-      .filter((r) => r.visibility === "public" && r.players.length < r.maxPlayers)
+      .filter((r) => r.visibility === "public" && !r.quickMatch && r.players.length < r.maxPlayers)
       .map((r) => ({
         code: r.code,
         mode: r.mode,
@@ -385,6 +517,22 @@ export const publicRooms = query({
         maxPlayers: r.maxPlayers,
         host: r.players[0]?.username ?? "?",
       }));
+  },
+});
+
+// ── Tashlab ketilgan quick-match xonalarni tozalash (cron orqali) ────
+export const cleanupStaleRooms = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const cutoff = Date.now() - QUICK_MATCH_CLEANUP_MS;
+    const stale = await ctx.db
+      .query("rooms")
+      .withIndex("by_status", (q) => q.eq("status", "lobby"))
+      .filter((q) => q.lt(q.field("createdAt"), cutoff))
+      .take(50);
+    for (const r of stale) {
+      if (r.quickMatch) await ctx.db.delete(r._id);
+    }
   },
 });
 
