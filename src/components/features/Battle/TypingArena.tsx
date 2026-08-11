@@ -79,10 +79,12 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
         else break;
       }
 
+      // Standart formula: WPM = (to'g'ri belgilar / 5) / (o'tgan vaqt daqiqada).
+      // Faqat TO'G'RI belgilar (correct) hisobga olinadi — xato harflar kirmaydi.
       // Boshlanishda absurd WPM chiqmasligi uchun minimal 1 soniya asos qilib olinadi
-      // (1 ta harf bilan elapsed ≈ 0 bo'lib, WPM 300 gacha sakrab chiqardi)
+      // (1 ta harf bilan elapsed ≈ 0 bo'lib, WPM 300 gacha sakrab chiqardi).
       const elapsedMin = Math.max(Date.now() - startTimeRef.current, 1000) / 60000;
-      const rawWpm = Math.round(nextTyped.length / 5 / elapsedMin);
+      const rawWpm = Math.round((correct / 5) / elapsedMin);
       const wpmV = Math.min(300, Math.max(0, rawWpm));
       setWpm(wpmV);
       setAccuracy(Math.round((correct / nextTyped.length) * 100));

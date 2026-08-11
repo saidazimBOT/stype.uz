@@ -146,6 +146,8 @@ export default function App() {
   const [favorites, setFavorites] = useLocalStorage<string[]>("typeuz_favorites", []);
   const [usedLangs, setUsedLangs] = useLocalStorage<string[]>("typeuz_usedlangs", []);
   const cursorRef = useRef(0);
+  // Faqat TO'G'RI yozilgan belgilar soni (xato harflar kirmaydi) — WPM shu qiymatga asoslanadi
+  const correctCharsRef = useRef(0);
 
   // Foydalanuvchi profili (ism, familiya, rasm)
   const { profile, saveProfile, isSignedUp } = useProfile();
@@ -215,6 +217,7 @@ export default function App() {
       if (autoTheme) {
         const isDark = e.matches;
         const isCurrentLight = lightThemes.includes(theme);
+        
         if (isDark && isCurrentLight) {
           const darkMap: Record<string, string> = { light: "default", warm: "gold", sakura: "pink", mint: "green", sky: "blue", peachy: "sunset", vscode_light: "vscode_dark" };
           setTheme(darkMap[theme] || "default");
@@ -256,6 +259,7 @@ export default function App() {
       setMaxCombo(0);
       setWordErr(false);
       setParticles([]);
+      correctCharsRef.current = 0;
       replayStartedRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
     },
@@ -327,30 +331,34 @@ export default function App() {
     setWpm(0);
     setAccuracy(100);
     setParticles([]);
+    correctCharsRef.current = 0;
     startTimeRef.current = d === "∞" ? null : Date.now();
   };
 
-  // ── WPM UPDATE (haqiqiy tezlik — har 500ms yangilanadi) ─────────────
-  // WPM = (to'g'ri yozilgan belgilar / 5) / o'tgan vaqt (daqiqada).
-  // Timer har 500ms da qayta hisoblaydi: pauza qilsangiz WPM tushadi,
-  // tez yozsangiz ko'tariladi — haqiqiy bosish tezligi ko'rinadi.
-  // DIQQAT: test boshlanishidan keyingi 1 soniya ichida WPM hisoblanmaydi —
-  // aks holda 1 ta harf bilan (elapsed ≈ 0) 300 WPM gacha sakrab chiqardi.
+  // ── WPM UPDATE (standart formula — Monkeytype uslubi) ──────────────
+  // WPM = (to'g'ri yozilgan belgilar / 5) / (o'tgan vaqt daqiqada)
+  //   • numerator:  faqat TO'G'RI yozilgan belgilar (correctCharsRef) —
+  //     xato harflar WPM hisobiga KIRMAYDI.
+  //   • denominator: test boshlangan vaqt (startTimeRef) dan hozirgi vaqtgacha
+  //     bo'lgan farq — pauza qilinsa ham vaqt davom etadi, shuning uchun
+  //     o'rtacha WPM tabiiy pasayadi (standart xulq-atvor, orqaga sanash emas).
+  // Har 500ms da qayta hisoblanadi (real vaqtda) va har bir to'g'ri harfda
+  // yangilanadi. Dastlabki 1 soniya ichida hisoblanmaydi — aks holda 1 ta
+  // harf bilan (elapsed ≈ 0) absurd qiymat sakrab chiqardi.
   useEffect(() => {
     if (!started || finished || !startTimeRef.current) return;
     const update = () => {
-      const elapsed = Date.now() - startTimeRef.current!;
-      if (elapsed < 1000) return;
-      const elapsedMin = elapsed / 60000;
-      // Boshlanishning dastlabki millisoniyalarida absurd qiymat chiqmasligi
-      // uchun 300 WPM (app bo'ylab umumiy chegara) bilan cheklaymiz.
-      const rawWpm = Math.min(300, Math.round((typed.length / 5) / elapsedMin));
+      const elapsedMs = Date.now() - startTimeRef.current!;
+      if (elapsedMs < 1000) return;
+      const elapsedMin = elapsedMs / 60000;
+      // 300 WPM — app bo'ylab umumiy yuqori chegara
+      const rawWpm = Math.min(300, Math.round((correctCharsRef.current / 5) / elapsedMin));
       setWpm(Math.max(0, rawWpm));
     };
     update();
     const id = setInterval(update, 500);
     return () => clearInterval(id);
-  }, [typed, started, finished]);
+  }, [started, finished]);
 
   // ── KEYBOARD HANDLING ───────────────────────────────────────────────
   // Yozish logikasi — fizik klaviatura va ekran klaviaturasi (visualizer)
@@ -392,6 +400,7 @@ export default function App() {
 
       if (ok) {
         // To'g'ri harf — yoziladi va cursor keyingi harfga o'tadi
+        correctCharsRef.current += 1;
         setTyped((tt) => tt + k);
         setCombo((cc) => {
           const nc = cc + 1;
@@ -451,7 +460,10 @@ export default function App() {
     if (finished && started && typed.length > 0) {
       const elapsedMs = Date.now() - startTimeRef.current!;
       const e = elapsedMs / 60000;
-      const fw = Math.round((typed.length / 5) / e);
+      // Standart formula (jonli hisoblagich bilan bir xil): faqat to'g'ri
+      // belgilar / 5, o'tgan vaqt daqiqasiga bo'linadi. e > 0 bo'lmasa va
+      // 300 WPM chegarasi qo'llaniladi (elapsed ≈ 0 da absurd qiymat chiqmasligi).
+      const fw = e > 0 ? Math.min(300, Math.round((typed.length / 5) / e)) : 0;
       // HAQIQIY natija — faqat foydalanuvchi klaviaturada yozganlariga asoslanadi:
       // correct = to'g'ri yozilgan belgilar, total = jami bosilgan belgilar (xatolar bilan),
       // time = aniq o'tgan vaqt (soniyalarda), userId = tizimga kirgan foydalanuvchi ID si
