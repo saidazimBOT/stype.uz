@@ -108,6 +108,8 @@ interface KeyboardVisualizerProps {
   nextKey?: string;
   /** Ekran klaviaturasi bosilganda chaqiriladi — matnga yozish uchun. */
   onKeyPress?: (key: string) => void;
+  /** Maksimal kattalashtirish chegarasi (0-1) — kichik joylarda klaviatura juda katta bo'lmasligi uchun. */
+  maxScale?: number;
 }
 
 export default function KeyboardVisualizer({
@@ -118,6 +120,7 @@ export default function KeyboardVisualizer({
   fingerGuide = false,
   nextKey,
   onKeyPress,
+  maxScale = 1,
 }: KeyboardVisualizerProps) {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [heatmap, setHeatmap] = useState<Record<string, number>>({});
@@ -131,13 +134,13 @@ export default function KeyboardVisualizer({
     if (!el) return;
     const compute = () => {
       // Natural keyboard width ≈ 690px
-      setKbdScale(Math.min(1, el.clientWidth / 690));
+      setKbdScale(Math.min(maxScale, el.clientWidth / 690));
     };
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [maxScale]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

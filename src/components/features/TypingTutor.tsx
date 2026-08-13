@@ -82,12 +82,12 @@ function HandsGuide({ active, t }: { active: FingerId | undefined; t: ThemeColor
         title={f.name}
       >
         <div
-          className="w-[26px] rounded-t-xl rounded-b-sm transition-all duration-150"
+          className="w-[22px] rounded-t-xl rounded-b-sm transition-all duration-150"
           style={{
             height: HEIGHTS[fid],
             background: on ? f.color : "#ffffff0a",
             border: `1px solid ${on ? f.color : "#ffffff1a"}`,
-            boxShadow: on ? `0 0 18px ${f.color}aa` : "none",
+            boxShadow: on ? `0 0 14px ${f.color}aa` : "none",
             transform: fid === "thumb" ? `rotate(${thumbRotate}deg)` : "none",
             transformOrigin: "bottom center",
           }}
@@ -97,13 +97,13 @@ function HandsGuide({ active, t }: { active: FingerId | undefined; t: ThemeColor
   };
 
   const renderHand = (order: FingerId[], rotate: number) => (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex items-end gap-[3px] w-[150px]">
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-end gap-[2px] w-[120px]">
         {order.map((fid) => renderFinger(fid, rotate))}
       </div>
       {/* Kaft */}
       <div
-        className="w-[150px] h-12 rounded-b-2xl"
+        className="w-[120px] h-9 rounded-b-2xl"
         style={{
           background: "linear-gradient(180deg, #ffffff0f, #ffffff05)",
           border: "1px solid #ffffff14",
@@ -114,7 +114,7 @@ function HandsGuide({ active, t }: { active: FingerId | undefined; t: ThemeColor
   );
 
   return (
-    <div className="flex items-end justify-center gap-6 sm:gap-12">
+    <div className="flex items-end justify-center gap-4">
       {renderHand(leftOrder, 22)}
       {renderHand(rightOrder, -22)}
     </div>
@@ -272,7 +272,7 @@ export default function TypingTutor({ t, lang, soundEnabled = true, onClose }: T
 
       {/* Text + stats */}
       <div
-        className={`leading-relaxed tracking-wide text-center select-none text-2xl md:text-3xl ${
+        className={`leading-relaxed tracking-wide text-center select-none text-lg md:text-2xl ${
           finished ? "animate-fade-in" : ""
         }`}
         style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
@@ -282,7 +282,7 @@ export default function TypingTutor({ t, lang, soundEnabled = true, onClose }: T
       </div>
 
       {/* Progress bar */}
-      <div className="mt-5 w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+      <div className="mt-4 w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-150"
           style={{ width: `${progress}%`, background: t.accent }}
@@ -290,7 +290,7 @@ export default function TypingTutor({ t, lang, soundEnabled = true, onClose }: T
       </div>
 
       {/* Stats */}
-      <div className="mt-3 flex items-center justify-center gap-4 sm:gap-8 text-sm">
+      <div className="mt-2.5 flex items-center justify-center gap-4 sm:gap-8 text-sm">
         <span className="text-gray-400">
           {T("type.wpm")}:{" "}
           <strong className="font-mono" style={{ color: t.accent }}>
@@ -338,14 +338,17 @@ export default function TypingTutor({ t, lang, soundEnabled = true, onClose }: T
         </div>
       )}
 
-      {/* Hands + keyboard */}
-      <div className="mt-6 flex flex-col items-center gap-6">
-        <HandsGuide active={finger} t={t} />
-        <div className="w-full max-w-2xl">
+      {/* Hands + keyboard — yonma-yon, klaviatura kichraytirilgan holda */}
+      <div className="mt-6 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
+        <div className="flex-shrink-0">
+          <HandsGuide active={finger} t={t} />
+        </div>
+        <div className="w-full max-w-[460px] flex-1">
           <KeyboardVisualizer
             t={t}
             fingerGuide
             nextKey={curKey}
+            maxScale={0.66}
           />
         </div>
       </div>
