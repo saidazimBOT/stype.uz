@@ -26,7 +26,7 @@ const WIDE_KEYS: Record<string, string> = {
 };
 
 // ── FINGER GUIDE (touch typing method) ─────────────────────────────────
-type FingerId =
+export type FingerId =
   | "l_pinky"
   | "l_ring"
   | "l_middle"
@@ -37,7 +37,7 @@ type FingerId =
   | "r_ring"
   | "r_pinky";
 
-const FINGERS: Record<FingerId, { name: string; short: string; color: string }> = {
+export const FINGERS: Record<FingerId, { name: string; short: string; color: string }> = {
   l_pinky: { name: "Left Pinky", short: "L·Pinky", color: "#f87171" },
   l_ring: { name: "Left Ring", short: "L·Ring", color: "#fb923c" },
   l_middle: { name: "Left Middle", short: "L·Middle", color: "#facc15" },
@@ -85,7 +85,7 @@ const CYRILLIC_TO_QWERTY: Record<string, string> = {
 };
 
 // Resolve any typed char to its physical QWERTY key position
-function toPhysicalKey(ch: string): string {
+export function toPhysicalKey(ch: string): string {
   if (ch === "Space") return " ";
   const lower = ch.toLowerCase();
   // Tire turlari (—, –, −) klaviaturada yo'q — "-" tugmasi sifatida ko'rsatamiz
@@ -93,7 +93,7 @@ function toPhysicalKey(ch: string): string {
   return CYRILLIC_TO_QWERTY[lower] || lower;
 }
 
-function getFinger(ch: string): FingerId | undefined {
+export function getFinger(ch: string): FingerId | undefined {
   return FINGER_MAP[toPhysicalKey(ch)];
 }
 

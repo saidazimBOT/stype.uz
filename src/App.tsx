@@ -40,6 +40,7 @@ import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
 import AIExercises from "./components/features/AIExercises";
+import TypingTutor from "./components/features/TypingTutor";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
@@ -65,7 +66,7 @@ import {
   FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaDna, FaKeyboard, FaMedal, FaPalette, FaRobot, FaTelegram, FaTrophy } from "react-icons/fa6";
+import { FaDna, FaGraduationCap, FaKeyboard, FaMedal, FaPalette, FaRobot, FaTelegram, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 // ── TELEGRAM BOT ────────────────────────────────────────────────────────
@@ -558,6 +559,7 @@ export default function App() {
   // ── NAVIGATION ──────────────────────────────────────────────────────
   const navItems: { id: string; icon: IconType; label: string }[] = [
     { id: "type", icon: FiType, label: T("nav.type") },
+    { id: "tutor", icon: FaGraduationCap, label: T("nav.tutor") },
     { id: "leaderboard", icon: FaTrophy, label: T("nav.leaderboard") },
     { id: "countryrank", icon: FiMap, label: T("nav.countries") },
     { id: "profile", icon: FiUser, label: T("nav.profile") },
@@ -678,6 +680,26 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Yozishni o'rgatish — hamma ko'radigan joyda, xalaqit bermaydigan tugma */}
+          <button
+            onClick={() => {
+              setView("tutor");
+              setShowSettings(false);
+              setShowPromo(false);
+              setShowOwner(false);
+              setShowLingohub(false);
+            }}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            title={T("navbar.tutorTitle")}
+            style={{
+              background: view === "tutor" ? t.accent + "33" : t.accent + "1f",
+              color: t.accent,
+              border: `1px solid ${view === "tutor" ? t.accent + "66" : t.accent + "44"}`,
+            }}
+          >
+            <FaGraduationCap size={13} />
+            <span className="hidden sm:inline">{T("navbar.tutor")}</span>
+          </button>
           {view === "type" && (
             <>
               <button
@@ -896,6 +918,8 @@ export default function App() {
               setBgDim={setBgDim}
               onClose={() => setShowSettings(false)}
             />
+          ) : view === "tutor" ? (
+            <TypingTutor t={t} lang={lang} soundEnabled={soundEnabled} onClose={() => setView("type")} />
           ) : view === "leaderboard" ? (
             <LeaderboardView t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "countryrank" ? (

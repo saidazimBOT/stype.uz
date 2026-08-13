@@ -13,6 +13,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   // ── NAVIGATION ──
   "nav.type": "Type",
+  "nav.tutor": "Learn to type",
   "nav.leaderboard": "Leaderboard",
   "nav.countries": "Countries",
   "nav.profile": "Profile",
@@ -46,6 +47,29 @@ const en: Dict = {
   "navbar.coinShop": "Open Coin Shop",
   "navbar.login": "Log in",
   "navbar.loginTitle": "Log in to your account",
+  "navbar.tutor": "Learn to type",
+  "navbar.tutorTitle": "Learn to type — touch typing lessons with finger guide",
+
+  // ── TYPING TUTOR ──
+  "tutor.title": "Learn to type",
+  "tutor.subtitle": "Touch typing lessons — see which finger to use",
+  "tutor.back": "← Back",
+  "tutor.lesson": "Lesson",
+  "tutor.progress": "Progress",
+  "tutor.pressWith": "Press with",
+  "tutor.finger.l_pinky": "Left pinky",
+  "tutor.finger.l_ring": "Left ring",
+  "tutor.finger.l_middle": "Left middle",
+  "tutor.finger.l_index": "Left index",
+  "tutor.finger.thumb": "Thumb",
+  "tutor.finger.r_index": "Right index",
+  "tutor.finger.r_middle": "Right middle",
+  "tutor.finger.r_ring": "Right ring",
+  "tutor.finger.r_pinky": "Right pinky",
+  "tutor.startHint": "Start typing · Tab — new text",
+  "tutor.done": "Lesson complete!",
+  "tutor.repeat": "Repeat",
+  "tutor.next": "Next lesson",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -236,6 +260,7 @@ const en: Dict = {
 const uz: Dict = {
   // ── NAVIGATION ──
   "nav.type": "Yozish",
+  "nav.tutor": "Yozishni o'rgatish",
   "nav.leaderboard": "Reyting",
   "nav.countries": "Davlatlar",
   "nav.profile": "Profil",
@@ -269,6 +294,29 @@ const uz: Dict = {
   "navbar.coinShop": "Do'konni ochish",
   "navbar.login": "Kirish",
   "navbar.loginTitle": "Hisobingizga kirish",
+  "navbar.tutor": "Yozishni o'rgatish",
+  "navbar.tutorTitle": "Yozishni o'rgatish — barmoq qo'llanmasi bilan yozish darslari",
+
+  // ── TYPING TUTOR ──
+  "tutor.title": "Yozishni o'rgatish",
+  "tutor.subtitle": "Sensorli yozish darslari — qaysi barmoq ishlatishni ko'ring",
+  "tutor.back": "← Orqaga",
+  "tutor.lesson": "Dars",
+  "tutor.progress": "Jarayon",
+  "tutor.pressWith": "Bosing",
+  "tutor.finger.l_pinky": "Chap jimjiloq",
+  "tutor.finger.l_ring": "Chap nomsiz",
+  "tutor.finger.l_middle": "Chap o'rta",
+  "tutor.finger.l_index": "Chap ko'rsatkich",
+  "tutor.finger.thumb": "Bosh barmoq",
+  "tutor.finger.r_index": "O'ng ko'rsatkich",
+  "tutor.finger.r_middle": "O'ng o'rta",
+  "tutor.finger.r_ring": "O'ng nomsiz",
+  "tutor.finger.r_pinky": "O'ng jimjiloq",
+  "tutor.startHint": "Yozishni boshlang · Tab — yangi matn",
+  "tutor.done": "Dars tugadi!",
+  "tutor.repeat": "Qayta",
+  "tutor.next": "Keyingi dars",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -460,6 +508,7 @@ const uz: Dict = {
 const ru: Dict = {
   // ── NAVIGATION ──
   "nav.type": "Печать",
+  "nav.tutor": "Обучение печати",
   "nav.leaderboard": "Рейтинг",
   "nav.countries": "Страны",
   "nav.profile": "Профиль",
@@ -493,6 +542,29 @@ const ru: Dict = {
   "navbar.coinShop": "Открыть магазин",
   "navbar.login": "Войти",
   "navbar.loginTitle": "Вход в аккаунт",
+  "navbar.tutor": "Обучение печати",
+  "navbar.tutorTitle": "Обучение печати — уроки с подсказкой пальцев",
+
+  // ── TYPING TUTOR ──
+  "tutor.title": "Обучение печати",
+  "tutor.subtitle": "Уроки слепой печати — смотрите, каким пальцем нажимать",
+  "tutor.back": "← Назад",
+  "tutor.lesson": "Урок",
+  "tutor.progress": "Прогресс",
+  "tutor.pressWith": "Нажмите",
+  "tutor.finger.l_pinky": "Левый мизинец",
+  "tutor.finger.l_ring": "Левый безымянный",
+  "tutor.finger.l_middle": "Левый средний",
+  "tutor.finger.l_index": "Левый указательный",
+  "tutor.finger.thumb": "Большой палец",
+  "tutor.finger.r_index": "Правый указательный",
+  "tutor.finger.r_middle": "Правый средний",
+  "tutor.finger.r_ring": "Правый безымянный",
+  "tutor.finger.r_pinky": "Правый мизинец",
+  "tutor.startHint": "Начните печатать · Tab — новый текст",
+  "tutor.done": "Урок завершён!",
+  "tutor.repeat": "Повторить",
+  "tutor.next": "Следующий урок",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
