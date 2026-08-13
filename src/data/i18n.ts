@@ -70,6 +70,7 @@ const en: Dict = {
   "tutor.done": "Lesson complete!",
   "tutor.repeat": "Repeat",
   "tutor.next": "Next lesson",
+  "tutor.homeKeys": "Home/Starting Position Keys",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -317,6 +318,7 @@ const uz: Dict = {
   "tutor.done": "Dars tugadi!",
   "tutor.repeat": "Qayta",
   "tutor.next": "Keyingi dars",
+  "tutor.homeKeys": "Tayanch qator tugmalari",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",
@@ -565,6 +567,7 @@ const ru: Dict = {
   "tutor.done": "Урок завершён!",
   "tutor.repeat": "Повторить",
   "tutor.next": "Следующий урок",
+  "tutor.homeKeys": "Клавиши исходной позиции",
 
   // ── TYPE SCREEN ──
   "type.wpm": "WPM",

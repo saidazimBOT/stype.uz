@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ThemeColors } from "../../types";
 import { getT } from "../../data/i18n";
 import { createAudioController } from "../../utils/audio";
-import KeyboardVisualizer, { FINGERS, getFinger, type FingerId } from "./KeyboardVisualizer";
+import { FINGERS, getFinger } from "./KeyboardVisualizer";
+import HandsOnKeyboard from "./HandsOnKeyboard";
 import { FaGraduationCap } from "react-icons/fa6";
 import { FiArrowRight, FiCheck, FiRefreshCw } from "react-icons/fi";
 
@@ -60,65 +61,6 @@ interface TypingTutorProps {
   lang: string;
   soundEnabled?: boolean;
   onClose: () => void;
-}
-
-// ── HANDS DIAGRAM ───────────────────────────────────────────────────────
-// Ikkita qo'l — qaysi barmoq bilan bosishni ko'rsatadi (faol barmoq yonadi).
-function HandsGuide({ active, t }: { active: FingerId | undefined; t: ThemeColors }) {
-  const leftOrder: FingerId[] = ["l_pinky", "l_ring", "l_middle", "l_index", "thumb"];
-  const rightOrder: FingerId[] = ["thumb", "r_index", "r_middle", "r_ring", "r_pinky"];
-  const HEIGHTS: Record<FingerId, number> = {
-    l_pinky: 42, l_ring: 60, l_middle: 66, l_index: 56, thumb: 38,
-    r_pinky: 42, r_ring: 60, r_middle: 66, r_index: 56,
-  };
-
-  const renderFinger = (fid: FingerId, thumbRotate: number) => {
-    const f = FINGERS[fid];
-    const on = active === fid;
-    return (
-      <div
-        key={fid}
-        className="flex-1 flex justify-center"
-        title={f.name}
-      >
-        <div
-          className="w-[22px] rounded-t-xl rounded-b-sm transition-all duration-150"
-          style={{
-            height: HEIGHTS[fid],
-            background: on ? f.color : "#ffffff0a",
-            border: `1px solid ${on ? f.color : "#ffffff1a"}`,
-            boxShadow: on ? `0 0 14px ${f.color}aa` : "none",
-            transform: fid === "thumb" ? `rotate(${thumbRotate}deg)` : "none",
-            transformOrigin: "bottom center",
-          }}
-        />
-      </div>
-    );
-  };
-
-  const renderHand = (order: FingerId[], rotate: number) => (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="flex items-end gap-[2px] w-[120px]">
-        {order.map((fid) => renderFinger(fid, rotate))}
-      </div>
-      {/* Kaft */}
-      <div
-        className="w-[120px] h-9 rounded-b-2xl"
-        style={{
-          background: "linear-gradient(180deg, #ffffff0f, #ffffff05)",
-          border: "1px solid #ffffff14",
-          borderTop: "none",
-        }}
-      />
-    </div>
-  );
-
-  return (
-    <div className="flex items-end justify-center gap-4">
-      {renderHand(leftOrder, 22)}
-      {renderHand(rightOrder, -22)}
-    </div>
-  );
 }
 
 // ── TUTOR VIEW ──────────────────────────────────────────────────────────
@@ -338,19 +280,9 @@ export default function TypingTutor({ t, lang, soundEnabled = true, onClose }: T
         </div>
       )}
 
-      {/* Hands + keyboard — yonma-yon, klaviatura kichraytirilgan holda */}
-      <div className="mt-6 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8">
-        <div className="flex-shrink-0">
-          <HandsGuide active={finger} t={t} />
-        </div>
-        <div className="w-full max-w-[460px] flex-1">
-          <KeyboardVisualizer
-            t={t}
-            fingerGuide
-            nextKey={curKey}
-            maxScale={0.66}
-          />
-        </div>
+      {/* Qo'llar klaviatura ustida — tayanch qator ko'rinishi (rasmdagi kabi) */}
+      <div className="mt-6 w-full max-w-[560px] mx-auto">
+        <HandsOnKeyboard t={t} nextKey={curKey} legend={T("tutor.homeKeys")} />
       </div>
 
       {/* Hidden typing input */}
