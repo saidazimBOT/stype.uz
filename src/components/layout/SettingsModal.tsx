@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { FiGlobe, FiImage, FiMonitor, FiSettings, FiUpload, FiVolume2, FiX, FiZap } from "react-icons/fi";
+import { FiImage, FiMonitor, FiSettings, FiUpload, FiVolume2, FiX, FiZap } from "react-icons/fi";
 import { FaHandPointer, FaKeyboard, FaPalette } from "react-icons/fa6";
 import { THEME_LIST, THEME_GROUPS } from "../../data/themes";
 import { LANG_LABELS, LANG_FLAGS, LANG_GROUPS } from "../../data/texts";
@@ -72,7 +72,7 @@ export default function SettingsModal({
   const tabs: { id: string; label: ReactNode }[] = [
     { id: "themes", label: (<><FaPalette className="inline-block mr-1" /> Themes</>) },
     { id: "background", label: (<><FiImage className="inline-block mr-1" /> Background</>) },
-    { id: "language", label: (<><FiGlobe className="inline-block mr-1" /> Language</>) },
+    { id: "language", label: (<><span className="mr-1">{LANG_FLAGS[lang] || "🏳️"}</span> Language</>) },
     { id: "display", label: (<><FiMonitor className="inline-block mr-1" /> Display</>) },
   ];
 
