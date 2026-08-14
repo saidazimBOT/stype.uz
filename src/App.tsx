@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, type CSSProperties } from "react";
 import { TEXTS, LANG_LABELS, LANG_FLAGS } from "./data/texts";
 import { getT } from "./data/i18n";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
@@ -50,7 +50,6 @@ import AccountSyncBridge from "./components/features/AccountSyncBridge";
 import SupabaseCoinSync from "./components/features/SupabaseCoinSync";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
-import AppLogo from "./components/AppLogo";
 import CoinIcon from "./components/CoinIcon";
 import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
@@ -644,7 +643,11 @@ export default function App() {
             className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-xl md:text-2xl font-bold tracking-tight transition-all hover:scale-105 whitespace-nowrap"
             style={{ color: t.accent }}
           >
-            <AppLogo size={32} animate="glow" glowColor={t.accent} className="w-7 h-7 md:w-8 md:h-8" />
+            <FaKeyboard
+              size={24}
+              className="logo-glow w-6 h-6 md:w-7 md:h-7"
+              style={{ color: t.accent, "--logo-glow": t.accent } as CSSProperties}
+            />
             <span>STypeUz</span>
           </button>
           {view === "type" && (
