@@ -586,9 +586,10 @@ export default function App() {
   ];
 
   // ── VIEW GUARD ────────────────────────────────────────────────────
-  // O'chirilgan sahifalar (masalan "tutor") localStorage da qolgan bo'lsa — blank o'rniga "type" ochiladi
+  // O'chirilgan sahifalar (masalan "tutor") localStorage da qolgan bo'lsa — blank o'rniga "type" ochiladi.
+  // "admin" navItems'da yo'q (maxsus view) — guard uni "type"ga qaytarib yubormasligi uchun qo'shilgan.
   useEffect(() => {
-    const valid = new Set(navItems.map((n) => n.id));
+    const valid = new Set([...navItems.map((n) => n.id), "admin"]);
     if (!valid.has(view)) setView("type");
   }, [view]);
 
