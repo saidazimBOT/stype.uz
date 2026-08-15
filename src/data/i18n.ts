@@ -31,6 +31,22 @@ const en: Dict = {
   "nav.games": "Games",
   "nav.shop": "Shop",
   "nav.about": "About",
+  "nav.mashq": "Practice",
+
+  // ── MASHQ (PRACTICE) ──
+  "mashq.title": "Practice",
+  "mashq.subtitle": "For those who are just starting to type — simple letter drills",
+  "mashq.level1": "Simple letters",
+  "mashq.level1Desc": "Tap the same letter many times to feel the keys",
+  "mashq.level2": "Letter pairs",
+  "mashq.level2Desc": "Two letters together, like jjjfff gggttt aaabbb",
+  "mashq.level3": "Letter chains",
+  "mashq.level3Desc": "Long chains of letters",
+  "mashq.level4": "Short words",
+  "mashq.level4Desc": "Simple short words",
+  "mashq.start": "Start typing",
+  "mashq.hint": "Press a practice card to start typing it",
+  "mashq.back": "← Back",
 
   // ── NAVBAR ──
   "navbar.signup": "Sign up",
@@ -254,6 +270,22 @@ const uz: Dict = {
   "nav.games": "O'yinlar",
   "nav.shop": "Do'kon",
   "nav.about": "Haqida",
+  "nav.mashq": "Mashq",
+
+  // ── MASHQ (PRACTICE) ──
+  "mashq.title": "Mashq",
+  "mashq.subtitle": "Yozishni endi boshlayotganlar uchun — oddiy harflar bilan mashq",
+  "mashq.level1": "Oddiy harflar",
+  "mashq.level1Desc": "Bitta harfni ko'p marta bosib tugmalarni his eting",
+  "mashq.level2": "Harflar juftligi",
+  "mashq.level2Desc": "Ikki harf birga, masalan jjjfff gggttt aaabbb",
+  "mashq.level3": "Harflar zanjiri",
+  "mashq.level3Desc": "Uzun harflar zanjiri",
+  "mashq.level4": "Qisqa so'zlar",
+  "mashq.level4Desc": "Oddiy qisqa so'zlar",
+  "mashq.start": "Yozishni boshlash",
+  "mashq.hint": "Mashq kartasini bosing va yozishni boshlang",
+  "mashq.back": "← Orqaga",
 
   // ── NAVBAR ──
   "navbar.signup": "Ro'yxatdan o'tish",
@@ -478,6 +510,22 @@ const ru: Dict = {
   "nav.games": "Игры",
   "nav.shop": "Магазин",
   "nav.about": "О сайте",
+  "nav.mashq": "Практика",
+
+  // ── MASHQ (PRACTICE) ──
+  "mashq.title": "Практика",
+  "mashq.subtitle": "Для тех, кто только начинает печатать — простые упражнения с буквами",
+  "mashq.level1": "Простые буквы",
+  "mashq.level1Desc": "Много раз нажимайте одну букву, чтобы почувствовать клавиши",
+  "mashq.level2": "Пары букв",
+  "mashq.level2Desc": "Две буквы вместе, например jjjfff gggttt aaabbb",
+  "mashq.level3": "Цепочки букв",
+  "mashq.level3Desc": "Длинные цепочки букв",
+  "mashq.level4": "Короткие слова",
+  "mashq.level4Desc": "Простые короткие слова",
+  "mashq.start": "Начать печатать",
+  "mashq.hint": "Нажмите на карточку упражнения, чтобы начать печатать",
+  "mashq.back": "← Назад",
 
   // ── NAVBAR ──
   "navbar.signup": "Регистрация",

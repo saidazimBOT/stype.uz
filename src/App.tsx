@@ -40,6 +40,7 @@ import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
 import AIExercises from "./components/features/AIExercises";
+import MashqView from "./components/features/MashqView";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingChallenge from "./components/features/TypingChallenge";
 import TypingReplayView from "./components/features/TypingReplay";
@@ -61,7 +62,7 @@ import { TypingRecorderBridge } from "./components/features/SiteOverlays";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
-  FiActivity, FiAward, FiBookOpen, FiCpu, FiGrid, FiHeart, FiInfo, FiList,
+  FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGrid, FiHeart, FiInfo, FiList,
   FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
@@ -573,6 +574,7 @@ export default function App() {
     { id: "chat", icon: FiMessageCircle, label: T("nav.chat") },
     { id: "ai", icon: FiCpu, label: T("nav.ai") },
     { id: "custom", icon: FiBookOpen, label: T("nav.custom") },
+    { id: "mashq", icon: FiEdit3, label: T("nav.mashq") },
     { id: "replay", icon: FiVideo, label: T("nav.replay") },
     { id: "games", icon: FiGrid, label: T("nav.games") },
     { id: "shop", icon: FiShoppingBag, label: T("nav.shop") },
@@ -947,6 +949,8 @@ export default function App() {
             <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "custom" ? (
             <CustomTextImport t={t} onClose={() => setView("type")} onImportText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
+          ) : view === "mashq" ? (
+            <MashqView t={t} lang={lang} onClose={() => setView("type")} onSelectText={(txt) => { newText(txt); setView("type"); }} />
           ) : view === "replay" ? (
             <TypingReplayView t={t} onClose={() => setView("type")} recordings={recordings} />
           ) : view === "games" ? (
@@ -1051,9 +1055,24 @@ export default function App() {
 
               {/* Start typing hint */}
               {!started && !finished && (
-                <p className="text-xs text-gray-600 uppercase tracking-widest animate-pulse">
-                  {T("type.startHint")}
-                </p>
+                <div className="flex flex-col items-center gap-3">
+                  <p className="text-xs text-gray-600 uppercase tracking-widest animate-pulse">
+                    {T("type.startHint")}
+                  </p>
+                  {/* Yozishni bilmaganlar uchun — Mashq bo'limi */}
+                  <button
+                    onClick={() => setView("mashq")}
+                    className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      background: t.accent + "22",
+                      color: t.accent,
+                      border: `1px solid ${t.accent + "55"}`,
+                    }}
+                  >
+                    <FiEdit3 size={13} />
+                    {T("nav.mashq")}
+                  </button>
+                </div>
               )}
 
               {/* Finished state — natijalar ekrani */}
