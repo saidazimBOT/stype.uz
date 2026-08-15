@@ -11,8 +11,6 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useDailyReward } from "./components/features/DailyLogin";
 import { useProfile, fullName } from "./hooks/useProfile";
 import SignUpModal from "./components/features/SignUpModal";
-import LoginModal from "./components/features/LoginModal";
-import { isSupabaseConfigured } from "./lib/supabase";
 import ProfileAvatar from "./components/features/ProfileAvatar";
 import { useMissions } from "./components/features/WeeklyMissions";
 import { useReplay } from "./components/features/TypingReplay";
@@ -50,7 +48,6 @@ import TelegramPromo from "./components/features/TelegramPromo";
 import LingohubPromo from "./components/features/LingohubPromo";
 import LingohubLogo from "./components/features/LingohubLogo";
 import AccountSyncBridge from "./components/features/AccountSyncBridge";
-import SupabaseCoinSync from "./components/features/SupabaseCoinSync";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import CoinIcon from "./components/CoinIcon";
@@ -64,7 +61,7 @@ import { TypingRecorderBridge } from "./components/features/SiteOverlays";
 // SVG icons (stiker/emoji o'rniga)
 import {
   FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGift, FiGrid, FiHeart, FiInfo, FiList,
-  FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
+  FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
 import { FaDna, FaKeyboard, FaMedal, FaPalette, FaRobot, FaTelegram, FaTrophy } from "react-icons/fa6";
@@ -111,9 +108,6 @@ export default function App() {
   const [themePanel, setThemePanel] = useState(false);
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  // Supabase sozlangan bo'lsa — ro'yxatdan o'tish va kirish haqiqiy backend orqali ishlaydi
-  const cloudEnabled = isSupabaseConfigured();
 
   // Coin notification helper
   const showCoinNotif = useCallback((amount: number, source: CoinNotif["source"]) => {
@@ -600,7 +594,6 @@ export default function App() {
     {/* Convex sozlanmagan bo'lsa ko'prikni render qilmaymiz — hooks provider tashqarisida ishlamaydi */}
     {getConvexClient() && <TypingRecorderBridge />}
     <AccountSyncBridge />
-    <SupabaseCoinSync />
     <div
       suppressHydrationWarning
       className="min-h-screen h-dvh flex flex-col isolate"
@@ -731,24 +724,6 @@ export default function App() {
             <GiftIcon size={16} />
             <span>{T("navbar.promoBadge")}</span>
           </button>
-          {/* Kirish (Supabase sozlangan bo'lsa) */}
-          {cloudEnabled && !isSignedUp && (
-            <button
-              onClick={() => {
-                setShowLogin(true);
-                setShowPromo(false);
-                setShowSettings(false);
-                setShowOwner(false);
-                setShowLingohub(false);
-              }}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-              title={T("navbar.loginTitle")}
-              style={{ background: "#ffffff0d", color: "#9ca3af", border: "1px solid #ffffff14" }}
-            >
-              <FiLogIn size={13} />
-              <span className="hidden sm:inline">{T("navbar.login")}</span>
-            </button>
-          )}
           {/* Sign up / Profil */}
           <button
             onClick={() => {
@@ -1201,8 +1176,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Sign up modal — birinchi kirishda majburiy (login oynasi ochiq bo'lsa yashirinadi) */}
-      {!isSignedUp && !showLogin && (
+      {/* Sign up modal — birinchi kirishda majburiy */}
+      {!isSignedUp && (
         <SignUpModal
           t={t}
           lang={lang}
@@ -1210,10 +1185,6 @@ export default function App() {
           onSave={(p) => {
             saveProfile(p);
             setShowSignUp(false);
-          }}
-          onLoginRequest={() => {
-            setShowSignUp(false);
-            setShowLogin(true);
           }}
         />
       )}
@@ -1228,26 +1199,6 @@ export default function App() {
             setShowSignUp(false);
           }}
           onClose={() => setShowSignUp(false)}
-          onLoginRequest={() => {
-            setShowSignUp(false);
-            setShowLogin(true);
-          }}
-        />
-      )}
-      {/* Login modal — Supabase orqali (email + parol) */}
-      {showLogin && (
-        <LoginModal
-          t={t}
-          lang={lang}
-          onSuccess={(p) => {
-            saveProfile(p);
-            setShowLogin(false);
-          }}
-          onSignUpRequest={() => {
-            setShowLogin(false);
-            setShowSignUp(true);
-          }}
-          onClose={() => setShowLogin(false)}
         />
       )}
 

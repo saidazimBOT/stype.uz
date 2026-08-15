@@ -1,14 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FiCamera, FiCheck, FiImage, FiLock, FiMail, FiSmile, FiUser, FiX } from "react-icons/fi";
+import { FiCamera, FiCheck, FiImage, FiSmile, FiUser, FiX } from "react-icons/fi";
 import type { ThemeColors } from "../../types";
 import { AVATAR_SHOP, getAvatarInfo } from "../../data/shop";
 import { getT } from "../../data/i18n";
 import type { IconType } from "react-icons";
 import ProfileAvatar from "./ProfileAvatar";
-import { isSupabaseConfigured } from "../../lib/supabase";
-import { signUpWithEmail } from "../../lib/supabaseService";
 
 interface SignUpModalProps {
   t: ThemeColors;
@@ -28,8 +26,6 @@ interface SignUpModalProps {
     signedUpAt: number;
   }) => void;
   onClose?: () => void;
-  /** Kirish oynasiga o'tish (Supabase sozlangan bo'lsa) */
-  onLoginRequest?: () => void;
   /** Birinchi kirishda majburiy bo'lsa close tugmasi yashiriladi */
   required?: boolean;
 }
@@ -38,56 +34,17 @@ interface SignUpModalProps {
  * Sign up oynasi — ism, familiya va profil rasmi so'raydi.
  * Rasmni qurilmadan yuklash (galereya) yoki tayyor avatar tanlash mumkin.
  */
-export default function SignUpModal({ t, lang, initial, onSave, onClose, onLoginRequest, required = true }: SignUpModalProps) {
+export default function SignUpModal({ t, lang, initial, onSave, onClose, required = true }: SignUpModalProps) {
   const T = getT(lang);
-  const cloud = isSupabaseConfigured();
-  const registering = !initial;
   const [firstName, setFirstName] = useState(initial?.firstName || "");
   const [lastName, setLastName] = useState(initial?.lastName || "");
   const [photo, setPhoto] = useState(initial?.photo || "");
   const [avatarId, setAvatarId] = useState(initial?.avatarId || "avatar_default");
   const [tab, setTab] = useState<"photo" | "avatar">(initial?.photo ? "photo" : "avatar");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const firstNameValid = firstName.trim().length >= 2;
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const passwordValid = password.length >= 6;
-
-  // Supabase'da ro'yxatdan o'tish (register) — email + parol bilan
-  const registerCloud = async (): Promise<string | null> => {
-    if (!emailValid) return T("signup.errEmail");
-    if (!passwordValid) return T("signup.errPassword");
-    try {
-      const res = await signUpWithEmail(
-        email.trim(),
-        password,
-        {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          photo,
-          avatarId,
-          signedUpAt: initial?.signedUpAt ?? Date.now(),
-        }
-      );
-      // Email tasdiqlash yoqilgan bo'lsa session bo'lmaydi — foydalanuvchiga aytamiz
-      if (res.user && !res.session) {
-        setInfo(T("signup.confirmEmail"));
-      }
-      return null;
-    } catch (e) {
-      const msg = (e as Error)?.message?.toLowerCase() || "";
-      if (msg.includes("already")) return T("signup.errAuth");
-      if (msg.includes("network") || msg.includes("fetch") || msg.includes("failed")) {
-        return T("signup.errNetwork");
-      }
-      return `${T("signup.errAuth")}${(e as Error)?.message ? ` — ${(e as Error).message}` : ""}`;
-    }
-  };
 
   // Rasmni yuklash + kichiklashtirish (localStorage uchun) → data URL
   const handleFile = (file: File | undefined) => {
@@ -128,21 +85,10 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
     reader.readAsDataURL(file);
   };
 
-  const save = async () => {
+  const save = () => {
     if (!firstNameValid) {
       setError(T("signup.errName"));
       return;
-    }
-    // Ro'yxatdan o'tishda Supabase'ga ham yozamiz (email + parol bilan)
-    if (cloud && registering) {
-      setBusy(true);
-      setError(null);
-      const err = await registerCloud();
-      setBusy(false);
-      if (err) {
-        setError(err);
-        return;
-      }
     }
     onSave({
       firstName: firstName.trim(),
@@ -229,59 +175,6 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
               />
             </div>
           </div>
-
-          {/* Account (Supabase sozlangan bo'lsa — email + parol) */}
-          {cloud && registering && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest">
-                  {T("signup.accountSection")}
-                </span>
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                  {T("signup.email")} *
-                </label>
-                <div className="relative">
-                  <FiMail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={T("signup.emailPlaceholder")}
-                    autoComplete="email"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                    style={{
-                      background: "#ffffff0d",
-                      border: `1px solid ${emailValid || email === "" ? t.accent + "55" : "#f8717144"}`,
-                      color: "#fff",
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                  {T("signup.password")} *
-                </label>
-                <div className="relative">
-                  <FiLock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={T("signup.passwordPlaceholder")}
-                    autoComplete="new-password"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                    style={{
-                      background: "#ffffff0d",
-                      border: `1px solid ${passwordValid || password === "" ? t.accent + "55" : "#f8717144"}`,
-                      color: "#fff",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Rasm / Avatar tabs */}
           <div>
@@ -394,47 +287,20 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
           {error && (
             <div className="text-xs text-red-400 animate-pop-in px-1">{error}</div>
           )}
-          {/* Info (masalan: email tasdiqlash kerak) */}
-          {info && (
-            <div
-              className="text-xs animate-pop-in px-3 py-2.5 rounded-xl"
-              style={{ background: "#22c55e11", border: "1px solid #22c55e33", color: "#4ade80" }}
-            >
-              {info}
-            </div>
-          )}
 
           {/* Submit */}
           <button
-            onClick={() => void save()}
-            disabled={!firstNameValid || (cloud && registering ? !emailValid || !passwordValid || busy : false)}
+            onClick={save}
+            disabled={!firstNameValid}
             className="w-full px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
             style={{ background: t.accent, color: "#000" }}
           >
-            {busy ? (
-              <>
-                <span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                ...
-              </>
-            ) : (
-              <>
-                <FiCheck size={15} />
-                {initial ? T("signup.save") : T("signup.register")}
-              </>
-            )}
+            <FiCheck size={15} />
+            {initial ? T("signup.save") : T("signup.register")}
           </button>
           <p className="text-center text-[10px] text-gray-600">
-            {cloud && registering ? T("signup.accountNote") : T("signup.footerNote")}
+            {T("signup.footerNote")}
           </p>
-          {cloud && registering && onLoginRequest && (
-            <button
-              onClick={onLoginRequest}
-              className="w-full text-center text-xs font-medium transition-all hover:opacity-80"
-              style={{ color: t.accent }}
-            >
-              {T("signup.haveAccount")}
-            </button>
-          )}
         </div>
       </div>
     </div>
