@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { ThemeColors } from "../../../types";
 import { charsEqual } from "../../../utils/typingChars";
+import { nextLiveWpm } from "../../../utils/wpm";
 
 interface TypingArenaProps {
   t: ThemeColors;
@@ -27,6 +28,7 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
 
   const typedRef = useRef("");
   const startTimeRef = useRef<number | null>(null);
+  const wpmRef = useRef(0);
   const lastReportRef = useRef(0);
   const finishedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,13 +81,13 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
         else break;
       }
 
-      // Standart formula: WPM = (to'g'ri belgilar / 5) / (o'tgan vaqt daqiqada).
+      // Standart formula: Net WPM = (to'g'ri belgilar / 5) / (o'tgan vaqt daqiqada).
       // Faqat TO'G'RI belgilar (correct) hisobga olinadi — xato harflar kirmaydi.
-      // Boshlanishda absurd WPM chiqmasligi uchun minimal 1 soniya asos qilib olinadi
-      // (1 ta harf bilan elapsed ≈ 0 bo'lib, WPM 300 gacha sakrab chiqardi).
-      const elapsedMin = Math.max(Date.now() - startTimeRef.current, 1000) / 60000;
-      const rawWpm = Math.round((correct / 5) / elapsedMin);
-      const wpmV = Math.min(300, Math.max(0, rawWpm));
+      // Ko'rsatkich FAQAT YUQORIGA boradi (teskari sanamaydi): pauza yoki sekin
+      // yozishda WPM pasayib ketmaydi. Dastlabki 1 soniya vaqt sifatida olinadi
+      // (calcNetWpm ichida) — absurd qiymat sakrab chiqmasligi uchun.
+      const wpmV = nextLiveWpm(wpmRef.current, correct, Date.now() - startTimeRef.current!);
+      wpmRef.current = wpmV;
       setWpm(wpmV);
       setAccuracy(Math.round((correct / nextTyped.length) * 100));
 
@@ -108,6 +110,7 @@ export default function TypingArena({ t, text, code, running }: TypingArenaProps
     typedRef.current = "";
     setTyped("");
     startTimeRef.current = null;
+    wpmRef.current = 0;
     finishedRef.current = false;
     setFinished(false);
     setWpm(0);

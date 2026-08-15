@@ -6,6 +6,7 @@ import { getT } from "./data/i18n";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
 import { createAudioController } from "./utils/audio";
 import { charsEqual } from "./utils/typingChars";
+import { nextLiveWpm } from "./utils/wpm";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useDailyReward } from "./components/features/DailyLogin";
 import { useProfile, fullName } from "./hooks/useProfile";
@@ -337,24 +338,22 @@ export default function App() {
   };
 
   // ── WPM UPDATE (standart formula — Monkeytype uslubi) ──────────────
-  // WPM = (to'g'ri yozilgan belgilar / 5) / (o'tgan vaqt daqiqada)
+  // Net WPM = (to'g'ri yozilgan belgilar / 5) / (o'tgan haqiqiy vaqt daqiqada)
   //   • numerator:  faqat TO'G'RI yozilgan belgilar (correctCharsRef) —
-  //     xato harflar WPM hisobiga KIRMAYDI.
-  //   • denominator: test boshlangan vaqt (startTimeRef) dan hozirgi vaqtgacha
-  //     bo'lgan farq — pauza qilinsa ham vaqt davom etadi, shuning uchun
-  //     o'rtacha WPM tabiiy pasayadi (standart xulq-atvor, orqaga sanash emas).
-  // Har 500ms da qayta hisoblanadi (real vaqtda) va har bir to'g'ri harfda
-  // yangilanadi. Dastlabki 1 soniya ichida hisoblanmaydi — aks holda 1 ta
-  // harf bilan (elapsed ≈ 0) absurd qiymat sakrab chiqardi.
+  //     xato harflar WPM hisobiga KIRMAYDI (aniqlik talabi).
+  //   • denominator: HAQIQIY o'tgan soniyalar (startTimeRef dan hozirgi vaqtgacha)
+  //     — taymer teskari sanashidan EMAS, shuning uchun 30s taymer orqaga
+  //     sanasa ham WPM orqaga ketmaydi.
+  //   • Ko'rsatkich FAQAT YUQORIGA boradi (nextLiveWpm): har bir to'g'ri
+  //     klavishada va har 500ms da hisoblanadi, lekin avvalgi qiymatdan katta
+  //     bo'lsagina yangilanadi. Pauza yoki sekin yozishda WPM pasayib ketmaydi.
+  //   • Dastlabki 1 soniya vaqt sifatida qo'llaniladi (calcNetWpm ichida) —
+  //     1 ta harf bilan (elapsed ≈ 0) absurd qiymat sakrab chiqmasligi uchun.
   useEffect(() => {
     if (!started || finished || !startTimeRef.current) return;
     const update = () => {
       const elapsedMs = Date.now() - startTimeRef.current!;
-      if (elapsedMs < 1000) return;
-      const elapsedMin = elapsedMs / 60000;
-      // 300 WPM — app bo'ylab umumiy yuqori chegara
-      const rawWpm = Math.min(300, Math.round((correctCharsRef.current / 5) / elapsedMin));
-      setWpm(Math.max(0, rawWpm));
+      setWpm((prev) => nextLiveWpm(prev, correctCharsRef.current, elapsedMs));
     };
     update();
     const id = setInterval(update, 500);
@@ -402,6 +401,11 @@ export default function App() {
       if (ok) {
         // To'g'ri harf — yoziladi va cursor keyingi harfga o'tadi
         correctCharsRef.current += 1;
+        // Har bir to'g'ri klavishada WPM yangilanadi (haqiqiy o'tgan vaqtga qarab,
+        // faqat yuqoriga) — taymer orqaga sanagani bilan WPM tushib ketmaydi
+        if (startTimeRef.current) {
+          setWpm((prev) => nextLiveWpm(prev, correctCharsRef.current, Date.now() - startTimeRef.current!));
+        }
         setTyped((tt) => tt + k);
         setCombo((cc) => {
           const nc = cc + 1;

@@ -8,6 +8,7 @@ import {
 import { FaTrophy } from "react-icons/fa6";
 import type { ThemeColors } from "../../types";
 import { charsEqual } from "../../utils/typingChars";
+import { nextLiveWpm } from "../../utils/wpm";
 import { createAudioController } from "../../utils/audio";
 
 // ══════════════════════════════════════════════════════════════════════
@@ -958,16 +959,14 @@ function ChallengePractice({
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [started, finished]);
 
-  // WPM update
+  // WPM update — FAQAT YUQORIGA boradi (teskari sanamaydi).
+  // Net WPM = (to'g'ri belgilar / 5) / (o'tgan haqiqiy vaqt daqiqada),
+  // har 500ms da hisoblanadi, lekin avvalgi qiymatdan katta bo'lsagina yangilanadi.
   useEffect(() => {
     if (!started || finished) return;
     const update = () => {
       if (!startTimeRef.current) return;
-      const elapsedMs = Date.now() - startTimeRef.current;
-      if (elapsedMs < 1000) return;
-      const elapsedMin = elapsedMs / 60000;
-      const rawWpm = Math.min(300, Math.round((correctCharsRef.current / 5) / elapsedMin));
-      setWpm(Math.max(0, rawWpm));
+      setWpm((prev) => nextLiveWpm(prev, correctCharsRef.current, Date.now() - startTimeRef.current!));
     };
     update();
     const id = setInterval(update, 500);
@@ -997,6 +996,10 @@ function ChallengePractice({
 
       if (ok) {
         correctCharsRef.current += 1;
+        // Har bir to'g'ri klavishada WPM yangilanadi (faqat yuqoriga)
+        if (startTimeRef.current) {
+          setWpm((prev) => nextLiveWpm(prev, correctCharsRef.current, Date.now() - startTimeRef.current!));
+        }
         setTyped((tt) => tt + k);
         setWordErr(false);
         setCursor((c) => {
