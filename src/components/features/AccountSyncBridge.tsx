@@ -45,11 +45,9 @@ function readActiveAvatar(): string {
  * aks holda hech narsa qilmaydi.
  */
 export default function AccountSyncBridge() {
-  const configured = useMemo(() => {
-    const client = getConvexClient();
-    if (!client) return false;
-    return typeof (api as any)?.users?.me === "function";
-  }, []);
+  // Convex 1.4x runtime'da `api` `anyApi` proksi — typeof tekshiruvi hech qachon
+  // o'tmaydi. URL o'rnatilgan bo'lsa sinxronlashni yoqamiz.
+  const configured = useMemo(() => getConvexClient() != null, []);
 
   if (!configured) return null;
   return <AccountSyncBridgeInner />;

@@ -5,6 +5,7 @@ export type Role = "user" | "admin" | "owner";
 export interface CurrentUser {
   identity: {
     tokenIdentifier: string;
+    subject: string;
     [k: string]: unknown;
   };
   user: {
@@ -17,6 +18,18 @@ export interface CurrentUser {
   };
 }
 
+/**
+ * Barqaror foydalanuvchi identifikatori.
+ *
+ * DIQQAT: Convex Auth'da `identity.tokenIdentifier` sessiyaga bog'liq
+ * (`sub` = `userId|sessionId`), shuning uchun u har yangi sessiyada o'zgaradi.
+ * Profillarni saqlash va qidirishda `users` jadvalining `_id` si bilan mos
+ * keladigan BARQAROR qismdan (`userId`) foydalanamiz.
+ */
+export function stableUserId(identity: { subject: string }): string {
+  return identity.subject.split("|")[0];
+}
+
 export async function getCurrentUser(
   ctx: QueryCtx | MutationCtx
 ): Promise<CurrentUser | null> {
@@ -24,7 +37,9 @@ export async function getCurrentUser(
   if (!identity) return null;
   const user = await ctx.db
     .query("users")
-    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+    .withIndex("by_token", (q: any) =>
+      q.eq("tokenIdentifier", stableUserId(identity))
+    )
     .first();
   if (!user) return null;
   return { identity, user };

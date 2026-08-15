@@ -1,7 +1,6 @@
 "use client";
 
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api } from "../../../convex/_generated/api";
 import {
   FiAward, FiBarChart2, FiBell, FiCopy, FiDatabase, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
   FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUser, FiUserPlus, FiUsers, FiZap,
@@ -78,14 +77,13 @@ const ALL_TABS: TabDef[] = [
 // ENTRY — Convex haqiqatan sozlanganmi?
 // ══════════════════════════════════════════════════════════════════════
 export default function AdminPanel(props: AdminPanelProps) {
-  // Server rejimga faqat Convex URL mavjud BO'LSA VA api kodgen qilingan bo'lsa o'tamiz.
-  // convex/_generated/api.ts STUB (api = {}) bo'lsa useQuery(undefined) butun sahifani qulatadi —
-  // shuning uchun server rejimda ishlatiladigan funksiyalar haqiqiy ekanini tekshiramiz.
-  const configured = useMemo(() => {
-    const client = getConvexClient();
-    if (!client) return false;
-    return typeof (api as any)?.users?.me === "function";
-  }, []);
+  // Server rejim Convex URL o'rnatilgan bo'lsa yoqiladi.
+  // DIQQAT: Convex 1.4x runtime'da `api` har doim `anyApi` proksi bo'ladi — har qanday
+  // kirish obyekt qaytaradi, shuning uchun `typeof api.users.me === "function"`
+  // HECh QACHON true bo'lmaydi va server rejim o'chib qolardi. URL borligini
+  // tekshiramiz; backend ishlamasa AdminGate xatoni ko'rsatadi va legacy rejimga
+  // o'tishni taklif qiladi.
+  const configured = useMemo(() => getConvexClient() != null, []);
   return (
     <AdminErrorBoundary t={props.t} onClose={props.onClose}>
       {configured ? <ServerAdminPanel {...props} /> : <LegacyAdminPanel {...props} />}
@@ -317,6 +315,18 @@ function AdminGate({
     }
   };
 
+  const doSignIn = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await signIn();
+    } catch (e) {
+      setError(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const copyToken = () => {
     if (!myToken) return;
     navigator.clipboard?.writeText(myToken).then(() => {
@@ -346,8 +356,8 @@ function AdminGate({
               Saytning yangi admin tizimi Convex orqali ishlaydi. Avval hisobga kiring, so'ng
               admin rolini so'rang yoki quyida owner parolidan foydalaning.
             </p>
-            <PrimaryBtn t={t} className="w-full justify-center" onClick={() => void signIn()}>
-              <FiZap size={13} /> Convex hisob bilan kirish
+            <PrimaryBtn t={t} className="w-full justify-center" onClick={() => void doSignIn()} disabled={busy}>
+              <FiZap size={13} /> {busy ? "Kirilmoqda..." : "Convex hisob bilan kirish"}
             </PrimaryBtn>
             <div className="my-3 flex items-center gap-3 text-[10px] text-gray-600">
               <div className="flex-1 h-px bg-white/5" /> yoki <div className="flex-1 h-px bg-white/5" />

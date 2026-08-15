@@ -1,12 +1,15 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { stableUserId } from "./authz";
 
-// Joriy foydalanuvchining token identifikatori (xona ichida "men" ni topish uchun)
+// Joriy foydalanuvchining barqaror identifikatori (ADMIN_TOKENS env uchun).
+// DIQQAT: Convex Auth'da `identity.tokenIdentifier` sessiyaga bog'liq —
+// bu yerda BARQAROR userId qismini qaytaramiz (users._id bilan mos keladi).
 export const myToken = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    return identity?.tokenIdentifier ?? null;
+    return identity ? stableUserId(identity) : null;
   },
 });
 
@@ -18,7 +21,9 @@ export const me = query({
     if (!identity) return null;
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", stableUserId(identity))
+      )
       .first();
     return user ?? null;
   },
@@ -32,7 +37,9 @@ export const heartbeat = mutation({
     if (!identity) return;
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("by_token", (q) =>
+        q.eq("tokenIdentifier", stableUserId(identity))
+      )
       .first();
     if (user) await ctx.db.patch(user._id, { lastSeen: Date.now() });
   },
@@ -54,7 +61,7 @@ export const setUsername = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
-    const tokenIdentifier = identity.tokenIdentifier;
+    const token = stableUserId(identity);
 
     const raw = args.username.trim();
     if (raw.length < 2 || raw.length > 20) {
@@ -68,7 +75,7 @@ export const setUsername = mutation({
     const now = Date.now();
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", token))
       .first();
 
     const firstName = args.firstName?.trim();
@@ -87,7 +94,7 @@ export const setUsername = mutation({
     }
 
     return await ctx.db.insert("users", {
-      tokenIdentifier,
+      tokenIdentifier: token,
       username: raw,
       avatar: args.avatar ?? "avatar_default",
       firstName,

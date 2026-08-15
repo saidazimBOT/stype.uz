@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, type MutationCtx } from "./_generated/server";
-import { requireAdmin, getCurrentUser, displayName } from "./authz";
+import { requireAdmin, getCurrentUser, displayName, stableUserId } from "./authz";
 
 // ── Yordamchi: admin harakatini jurnalga yozish ────────────────────────
 // Diqqat: jurnalga HECH QACHON parol, token yoki maxfiy kalit yozilmaydi.
@@ -43,7 +43,8 @@ export const claimAdmin = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Avval tizimga kiring");
-    const token = identity.tokenIdentifier;
+    // Barqaror identifikator — Convex Auth'da tokenIdentifier sessiyaga bog'liq
+    const token = stableUserId(identity);
 
     const envTokens = (process.env.ADMIN_TOKENS || "")
       .split(",")
@@ -320,7 +321,7 @@ export const setUserRole = mutation({
     if (!target) throw new Error("Foydalanuvchi topilmadi");
     if (args.role === "owner" && admin.user.role !== "owner")
       throw new Error("Faqat owner bu rolni bera oladi");
-    if (target.tokenIdentifier === admin.identity.tokenIdentifier && args.role !== "owner")
+    if (target.tokenIdentifier === stableUserId(admin.identity) && args.role !== "owner")
       throw new Error("O'z rolingizni tushira olmaysiz");
     await ctx.db.patch(target._id, { role: args.role });
     await logAdminAction(ctx, displayName(admin.user), "role_change", target.username || "?", `rol → ${args.role}`);
@@ -333,7 +334,7 @@ export const setUserBan = mutation({
     const admin = await requireAdmin(ctx);
     const target = await ctx.db.get(args.userId);
     if (!target) throw new Error("Foydalanuvchi topilmadi");
-    if (target.tokenIdentifier === admin.identity.tokenIdentifier)
+    if (target.tokenIdentifier === stableUserId(admin.identity))
       throw new Error("O'zingizni ban qila olmaysiz");
     if (target.role === "owner" && admin.user.role !== "owner")
       throw new Error("Ownerni ban qilish mumkin emas");
@@ -357,7 +358,7 @@ export const deleteUser = mutation({
     const admin = await requireAdmin(ctx);
     const target = await ctx.db.get(args.userId);
     if (!target) throw new Error("Foydalanuvchi topilmadi");
-    if (target.tokenIdentifier === admin.identity.tokenIdentifier)
+    if (target.tokenIdentifier === stableUserId(admin.identity))
       throw new Error("O'z hisobingizni o'chira olmaysiz");
     if (target.role === "owner" && admin.user.role !== "owner")
       throw new Error("Ownerni o'chirish mumkin emas");
@@ -805,7 +806,7 @@ export const fileReport = mutation({
   handler: async (ctx, args) => {
     const cur = await getCurrentUser(ctx);
     if (!cur) throw new Error("Avval tizimga kiring");
-    if (cur.identity.tokenIdentifier === args.targetToken)
+    if (stableUserId(cur.identity) === args.targetToken)
       throw new Error("O'zingizga shikoyat yoza olmaysiz");
     const now = Date.now();
     const recent = await ctx.db
@@ -815,7 +816,7 @@ export const fileReport = mutation({
     if (
       recent.some(
         (r: any) =>
-          r.reporterToken === cur.identity.tokenIdentifier &&
+          r.reporterToken === stableUserId(cur.identity) &&
           r.targetToken === args.targetToken &&
           now - r.createdAt < 60 * 60 * 1000
       )
@@ -823,7 +824,7 @@ export const fileReport = mutation({
       throw new Error("Bu foydalanuvchi haqida so'nggi soatda allaqachon hisobot yuborgansiz");
     }
     await ctx.db.insert("reports", {
-      reporterToken: cur.identity.tokenIdentifier,
+      reporterToken: stableUserId(cur.identity),
       reporterName: displayName(cur.user),
       targetToken: args.targetToken,
       targetName: args.targetName || "?",

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation, type MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { getRandomRaceText } from "./raceTexts";
+import { stableUserId } from "./authz";
 
 // ── Konstantalar ──────────────────────────────────────────────────────
 const MAX_1V1_PLAYERS = 2;
@@ -49,7 +50,7 @@ export const createRoom = mutation({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", stableUserId(identity)))
       .first();
     if (!user?.username) throw new Error("Avval username o'rnating");
 
@@ -62,10 +63,10 @@ export const createRoom = mutation({
       visibility: args.visibility,
       status: "lobby",
       text: "",
-      createdBy: identity.tokenIdentifier,
+      createdBy: stableUserId(identity),
       players: [
         {
-          tokenIdentifier: identity.tokenIdentifier,
+          tokenIdentifier: stableUserId(identity),
           username: user.username,
           avatar: user.avatar,
           color: PLAYER_COLORS[0],
@@ -101,14 +102,14 @@ export const joinRoom = mutation({
     const room = await getRoomByCode(ctx, args.code);
     if (!room) throw new Error("Xona topilmadi");
     if (room.status !== "lobby") throw new Error("Jang allaqachon boshlangan");
-    if (room.players.some((p) => p.tokenIdentifier === identity.tokenIdentifier)) {
+    if (room.players.some((p) => p.tokenIdentifier === stableUserId(identity))) {
       throw new Error("Siz allaqachon bu xonadasiz");
     }
     if (room.players.length >= room.maxPlayers) throw new Error("Xona to'la");
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", stableUserId(identity)))
       .first();
     if (!user?.username) throw new Error("Avval username o'rnating");
 
@@ -129,7 +130,7 @@ export const joinRoom = mutation({
       players: [
         ...room.players,
         {
-          tokenIdentifier: identity.tokenIdentifier,
+          tokenIdentifier: stableUserId(identity),
           username: user.username,
           avatar: user.avatar,
           color: PLAYER_COLORS[room.players.length % PLAYER_COLORS.length],
@@ -160,7 +161,7 @@ export const quickMatch = mutation({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", stableUserId(identity)))
       .first();
     if (!user?.username) throw new Error("Avval username o'rnating");
 
@@ -178,7 +179,7 @@ export const quickMatch = mutation({
         r.quickMatch &&
         r.mode === args.mode &&
         r.players.length < r.maxPlayers &&
-        !r.players.some((p) => p.tokenIdentifier === identity.tokenIdentifier) &&
+        !r.players.some((p) => p.tokenIdentifier === stableUserId(identity)) &&
         now - r.createdAt < QUICK_MATCH_STALE_MS
     );
 
@@ -197,7 +198,7 @@ export const quickMatch = mutation({
         players: [
           ...open.players,
           {
-            tokenIdentifier: identity.tokenIdentifier,
+            tokenIdentifier: stableUserId(identity),
             username: user.username,
             avatar: user.avatar,
             color: PLAYER_COLORS[open.players.length % PLAYER_COLORS.length],
@@ -225,10 +226,10 @@ export const quickMatch = mutation({
       quickMatch: true,
       status: "lobby",
       text: "",
-      createdBy: identity.tokenIdentifier,
+      createdBy: stableUserId(identity),
       players: [
         {
-          tokenIdentifier: identity.tokenIdentifier,
+          tokenIdentifier: stableUserId(identity),
           username: user.username,
           avatar: user.avatar,
           color: PLAYER_COLORS[0],
@@ -261,7 +262,7 @@ export const leaveRoom = mutation({
     if (!room) return;
 
     const players = room.players.filter(
-      (p) => p.tokenIdentifier !== identity.tokenIdentifier
+      (p) => p.tokenIdentifier !== stableUserId(identity)
     );
     if (players.length === 0) {
       await ctx.db.delete(room._id);
@@ -280,7 +281,7 @@ export const startRoom = mutation({
 
     const room = await getRoomByCode(ctx, args.code);
     if (!room) throw new Error("Xona topilmadi");
-    if (room.createdBy !== identity.tokenIdentifier) throw new Error("Faqat xona egasi boshlasa bo'ladi");
+    if (room.createdBy !== stableUserId(identity)) throw new Error("Faqat xona egasi boshlasa bo'ladi");
     if (room.status !== "lobby") throw new Error("Jang allaqachon boshlangan");
 
     if (room.mode === "1v1" && room.players.length < 2) {
@@ -387,7 +388,7 @@ export const updateProgress = mutation({
     const room = await getRoomByCode(ctx, args.code);
     if (!room || room.status !== "racing" || !room.startedAt) return null;
 
-    const idx = room.players.findIndex((p) => p.tokenIdentifier === identity.tokenIdentifier);
+    const idx = room.players.findIndex((p) => p.tokenIdentifier === stableUserId(identity));
     if (idx < 0) return null;
 
     const me = room.players[idx];
@@ -445,7 +446,7 @@ export const switchTeam = mutation({
 
     await ctx.db.patch(room._id, {
       players: room.players.map((p) =>
-        p.tokenIdentifier === identity.tokenIdentifier ? { ...p, team: args.team } : p
+        p.tokenIdentifier === stableUserId(identity) ? { ...p, team: args.team } : p
       ),
     });
   },
@@ -461,7 +462,7 @@ export const rematch = mutation({
     const room = await getRoomByCode(ctx, args.code);
     if (!room) throw new Error("Xona topilmadi");
     if (room.status !== "finished") throw new Error("Jang hali tugamagan");
-    if (!room.players.some((p) => p.tokenIdentifier === identity.tokenIdentifier)) {
+    if (!room.players.some((p) => p.tokenIdentifier === stableUserId(identity))) {
       throw new Error("Siz bu xonada emassiz");
     }
 

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
+import { stableUserId } from "./authz";
 
 // ── Konstantalar ──────────────────────────────────────────────────────
 const MAX_TEXT_LEN = 300;
@@ -19,7 +20,7 @@ export const sendMessage = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Avval tizimga kiring");
-    const token = identity.tokenIdentifier;
+    const token = stableUserId(identity);
     const now = Date.now();
 
     let user = await ctx.db

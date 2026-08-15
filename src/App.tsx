@@ -41,6 +41,7 @@ import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
 import AIExercises from "./components/features/AIExercises";
 import CustomTextImport from "./components/features/CustomTextImport";
+import TypingChallenge from "./components/features/TypingChallenge";
 import TypingReplayView from "./components/features/TypingReplay";
 import SettingsModal from "./components/layout/SettingsModal";
 import TelegramPromo from "./components/features/TelegramPromo";
@@ -566,6 +567,7 @@ export default function App() {
     { id: "daily", icon: FiZap, label: T("nav.daily") },
     { id: "seasonal", icon: FaMedal, label: T("nav.seasonal") },
     { id: "dna", icon: FaDna, label: T("nav.dna") },
+    { id: "challenge", icon: FiAward, label: "Challenge" },
     { id: "multiplyer", icon: FiSend, label: T("nav.battle") },
     { id: "friends", icon: FiUsers, label: T("nav.friends") },
     { id: "chat", icon: FiMessageCircle, label: T("nav.chat") },
@@ -978,6 +980,8 @@ export default function App() {
               daily={daily}
               usedLangs={usedLangs}
             />
+          ) : view === "challenge" ? (
+            <TypingChallenge t={t} onClose={() => setView("type")} />
           ) : view === "admin" ? (
             <AdminPanel t={t} onClose={() => setView("type")} history={history} xp={xp} />
           ) : view === "type" ? (

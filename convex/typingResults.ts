@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { mutation, type MutationCtx } from "./_generated/server";
+import { type Doc, type Id } from "./_generated/dataModel";
+import { stableUserId } from "./authz";
 
 /**
  * Test yakunlanganda serverga natija yozadi.
@@ -21,18 +23,18 @@ export const recordTypingResult = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return;
-    const token = identity.tokenIdentifier;
+    const token = stableUserId(identity);
     const now = Date.now();
 
-    let user = await ctx.db
+    let user: Doc<"users"> | null = await ctx.db
       .query("users")
-      .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", token))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", token))
       .first();
 
     if (!user) {
       const fallback = token.replace(/[^a-zA-Z0-9]/g, "").slice(-6);
       const name = (args.username || "").trim() || `player_${fallback}`;
-      user = await ctx.db.insert("users", {
+      const userId = await ctx.db.insert("users", {
         tokenIdentifier: token,
         username: name,
         avatar: "avatar_default",
@@ -45,7 +47,9 @@ export const recordTypingResult = mutation({
         bestWpm: undefined,
         lastSeen: now,
       });
-      user = await ctx.db.get(user);
+      const created = await ctx.db.get("users", userId);
+      if (!created) throw new Error("Foydalanuvchi yaratilmadi");
+      user = created;
     } else {
       await ctx.db.patch(user._id, {
         lastSeen: now,
@@ -77,7 +81,7 @@ export const recordTypingResult = mutation({
 // ── Yutuqlarni avtomatik ochish ──────────────────────────────────────────
 async function checkAchievements(
   ctx: MutationCtx,
-  userId: any,
+  userId: Id<"users">,
   token: string,
   current: { wpm: number; accuracy: number }
 ) {
@@ -86,17 +90,17 @@ async function checkAchievements(
 
   const unlocked = await ctx.db
     .query("userAchievements")
-    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", token))
+    .withIndex("by_token", (q) => q.eq("tokenIdentifier", token))
     .collect();
-  const has = new Set(unlocked.map((u: any) => u.achievementKey));
+  const has = new Set(unlocked.map((u) => u.achievementKey));
 
-  const user = await ctx.db.get(userId);
+  const user = await ctx.db.get("users", userId);
   if (!user) return;
 
   const testCount = (
     await ctx.db
       .query("typingResults")
-      .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", token))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", token))
       .collect()
   ).length;
 

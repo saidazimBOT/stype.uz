@@ -28,12 +28,9 @@ interface ChatMessageItem {
 }
 
 export default function Chat({ t, onClose, activeAvatar = "avatar_default", heroEquip }: ChatProps) {
-  const configured = useMemo(() => {
-    const client = getConvexClient();
-    if (!client) return false;
-    // _generated/api.ts hali STUB bo'lsa (convex dev ishga tushmagan) crash qilmaymiz
-    return typeof (api as any)?.chat?.listMessages === "function";
-  }, []);
+  // Convex 1.4x runtime'da `api` `anyApi` proksi — typeof tekshiruvi hech qachon
+  // o'tmaydi. URL o'rnatilgan bo'lsa chatni yoqamiz.
+  const configured = useMemo(() => getConvexClient() != null, []);
   if (!configured) {
     return <BackendMissing t={t} onClose={onClose} />;
   }
