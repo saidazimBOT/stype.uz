@@ -63,7 +63,7 @@ import { TypingRecorderBridge } from "./components/features/SiteOverlays";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
-  FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGrid, FiHeart, FiInfo, FiList,
+  FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGift, FiGrid, FiHeart, FiInfo, FiList,
   FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
@@ -105,6 +105,7 @@ export default function App() {
   const [bgDim, setBgDim] = useLocalStorage("typeuz_bgdim", 0.55);
   const [showSettings, setShowSettings] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
+  const [promoNotice, setPromoNotice] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
   const [showLingohub, setShowLingohub] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
@@ -713,13 +714,16 @@ export default function App() {
               </button>
             </>
           )}
-          {/* 200 WPM → Telegram Premium aksiyasi (sovg'a qutisi belgisi bilan) */}
+          {/* 200 WPM → Telegram Premium aksiyasi (sovg'a qutisi belgisi bilan) — hozircha vaqtincha o'chirilgan */}
           <button
             onClick={() => {
-              setShowPromo((s) => !s);
+              setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
               setShowLingohub(false);
+              // Aksiya hozircha ishlamayapti — faqat xabar chiqadi
+              setPromoNotice(true);
+              window.setTimeout(() => setPromoNotice(false), 2600);
             }}
             className="promo-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
             title={T("navbar.promoTitle")}
@@ -1249,6 +1253,17 @@ export default function App() {
 
       {/* Coin earning notifications */}
       <CoinNotification notifications={coinNotifs} onDismiss={dismissCoinNotif} />
+
+      {/* Telegram Premium aksiyasi vaqtincha ishlamayapti — bildirishnoma */}
+      {promoNotice && (
+        <div
+          className="fixed top-16 left-1/2 -translate-x-1/2 z-[70] px-4 py-2 rounded-xl text-sm font-bold animate-fade-in"
+          style={{ background: "#1c1205ee", border: "1px solid #f59e0b66", color: "#fde68a", boxShadow: "0 8px 30px #00000066" }}
+        >
+          <FiGift size={13} className="inline mr-1.5" style={{ color: "#f59e0b" }} />
+          {T("promo.notWorking")}
+        </div>
+      )}
 
       {/* Avatar + Coin balance badge (bottom-right — yuqorida Egasi tugmasini berkitib qo'ymasligi uchun) */}
       {(() => {

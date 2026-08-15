@@ -99,6 +99,7 @@ const en: Dict = {
   // ── TELEGRAM PROMO ──
   "promo.title": "Telegram Premium Gift",
   "promo.back": "← Back",
+  "promo.notWorking": "Currently not working",
   "promo.heroTitle": "{target} WPM — 1 month Telegram Premium!",
   "promo.heroDesc": "Everyone who reaches {target} WPM gets a 1 month Telegram Premium gift. 🎁",
   "promo.skrinHint": "Screenshot your result and send it via Telegram!",
@@ -338,6 +339,7 @@ const uz: Dict = {
   // ── TELEGRAM PROMO ──
   "promo.title": "Telegram Premium Sovg'asi",
   "promo.back": "← Orqaga",
+  "promo.notWorking": "Hozircha ishlamayapti",
   "promo.heroTitle": "{target} WPM — 1 oylik Telegram Premium!",
   "promo.heroDesc": "{target} WPM ga erishgan har bir foydalanuvchiga 1 oylik Telegram Premium sovg'a qilinadi. 🎁",
   "promo.skrinHint": "Natijangizni skrin qilib Telegram orqali yuboring!",
@@ -578,6 +580,7 @@ const ru: Dict = {
   // ── TELEGRAM PROMO ──
   "promo.title": "Подарок Telegram Premium",
   "promo.back": "← Назад",
+  "promo.notWorking": "Сейчас не работает",
   "promo.heroTitle": "{target} WPM — 1 месяц Telegram Premium!",
   "promo.heroDesc": "Каждый, кто достигнет {target} WPM, получит 1 месяц Telegram Premium в подарок. 🎁",
   "promo.skrinHint": "Сделайте скриншот результата и отправьте его в Telegram!",
