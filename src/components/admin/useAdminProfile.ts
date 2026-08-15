@@ -14,6 +14,7 @@ export function useAdminProfile() {
   const me = useQuery(api.users.me) as (AdminUser & { tokenIdentifier?: string }) | null | undefined;
   const myToken = useQuery(api.users.myToken) as string | null | undefined;
   const claim = useMutation(api.admin.claimAdmin);
+  const loginWithPassword = useMutation(api.admin.loginWithPassword);
   const { signIn, signOut } = useAuthActions();
 
   return {
@@ -25,6 +26,7 @@ export function useAdminProfile() {
     signIn: () => signIn("anonymous"),
     signOut: () => signOut(),
     claimAdmin: claim,
+    loginWithPassword: (password: string) => loginWithPassword({ password }),
   };
 }
 

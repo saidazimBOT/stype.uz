@@ -20,7 +20,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl animate-fade-in ${className}`}
+      className={`rounded-2xl animate-fade-in admin-card admin-card-in ${className}`}
       style={{ background: t.surface, border: `1px solid ${t.accent}1a`, ...style }}
     >
       {children}
@@ -50,12 +50,19 @@ export function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`p-4 rounded-2xl transition-all ${onClick ? "cursor-pointer hover:scale-[1.03]" : "hover:scale-[1.02]"}`}
-      style={{ background: t.surface, border: `1px solid ${c}22` }}
+      className={`p-4 rounded-2xl transition-all admin-card ${onClick ? "cursor-pointer hover:scale-[1.03]" : "hover:scale-[1.02]"}`}
+      style={{
+        background: t.surface,
+        border: `1px solid ${c}22`,
+        // @ts-ignore -- custom property for admin-card glow
+        "--card-glow": c,
+      }}
       title={sub}
     >
       <Icon size={16} style={{ color: c }} className="mb-2" />
-      <div className="text-2xl font-bold text-white truncate">{value}</div>
+      <div className="text-2xl font-bold text-white truncate">
+        <span className="admin-stat-value">{value}</span>
+      </div>
       <div className="text-xs text-gray-500 truncate">{label}</div>
       {sub && <div className="text-[10px] text-gray-600 mt-1 truncate">{sub}</div>}
     </div>
@@ -78,7 +85,7 @@ export function SectionHeader({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-gray-300 min-w-0">
+      <div className="flex items-center gap-2 text-sm font-medium text-gray-300 min-w-0 admin-section-title">
         {Icon && <Icon size={16} style={{ color: t.accent }} className="flex-shrink-0" />}
         <span className="truncate">{title}</span>
         {subtitle && (

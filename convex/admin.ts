@@ -97,6 +97,61 @@ export const claimAdmin = mutation({
   },
 });
 
+/**
+ * Parol bilan admin kirish (xavfsiz — parol faqat serverda tekshiriladi).
+ *
+ * ADMIN_PASSWORD env o'rnatilgan bo'lsa ishlaydi: to'g'ri parol kiritgan
+ * foydalanuvchiga owner roli beriladi. Parol frontend kodida KO'RINMAYDI —
+ * faqat Convex env'da saqlanadi.
+ *
+ * Oqim: foydalanuvchi anonymous sign-in qiladi (yoki allaqachon kirgan),
+ * so'ng parolni shu mutation'ga yuboradi. Parol to'g'ri bo'lsa — rol beriladi.
+ */
+export const loginWithPassword = mutation({
+  args: { password: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Avval tizimga kiring");
+    const token = stableUserId(identity);
+
+    const envPassword = process.env.ADMIN_PASSWORD || "";
+    if (!envPassword) {
+      throw new Error(
+        "ADMIN_PASSWORD env o'rnatilmagan. Convex dashboard → Settings → Environment Variables bo'limida qo'shing."
+      );
+    }
+    if (args.password !== envPassword) {
+      throw new Error("Parol noto'g'ri!");
+    }
+
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", token))
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { role: "owner", banned: false });
+    } else {
+      await ctx.db.insert("users", {
+        tokenIdentifier: token,
+        username: undefined,
+        avatar: "avatar_default",
+        coins: 0,
+        xp: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        races: 0,
+        bestWpm: undefined,
+        lastSeen: Date.now(),
+        role: "owner",
+        banned: false,
+      });
+    }
+    await logAdminAction(ctx, token.slice(-8), "password_login", token.slice(-8), "parol orqali owner rol berildi");
+    return true;
+  },
+});
+
 // ══════════════════════════════════════════════════════════════════════
 // ANALYTICS DASHBOARD
 // ══════════════════════════════════════════════════════════════════════

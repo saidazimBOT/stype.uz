@@ -162,7 +162,7 @@ export default function DashboardSection({ t, serverAdmin, history, xp }: Props)
       {serverAdmin && <ServerAnalytics t={t} />}
 
       {/* ══ LEGACY LOCAL STATS (har doim) ══ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 admin-stagger">
         <StatCard t={t} icon={FiEye} label="Jami tashrif" value={local.total} color={t.accent} />
         <StatCard t={t} icon={FiActivity} label="Bugun" value={local.today} color="#22c55e" />
         <StatCard t={t} icon={FiClock} label="7 kun ichida" value={local.week} color="#38bdf8" />
@@ -345,7 +345,7 @@ function ServerAnalytics({ t }: { t: ThemeColors }) {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 admin-stagger">
             <StatCard t={t} icon={FiUsers} label="Jami foydalanuvchilar" value={stats.totals.users} color={t.accent} sub={`+${stats.totals.newUsers7d} (7 kun)`} />
             <StatCard t={t} icon={FiActivity} label="Onlayn (5 daq.)" value={stats.totals.online} color="#22c55e" />
             <StatCard t={t} icon={FiZap} label="Yangi bugun" value={stats.totals.newToday} color="#38bdf8" />

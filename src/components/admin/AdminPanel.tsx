@@ -170,7 +170,7 @@ function LegacyAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
 // SERVER MODE (Convex ulangan) — admin gate + shell
 // ══════════════════════════════════════════════════════════════════════
 function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
-  const { authLoading, isAuthenticated, me, myToken, isServerAdmin, signIn, signOut, claimAdmin } =
+  const { authLoading, isAuthenticated, me, myToken, isServerAdmin, signIn, signOut, claimAdmin, loginWithPassword } =
     useAdminProfile();
   const [legacyLoggedIn, setLegacyLoggedIn] = useLocalStorage(SESSION_KEY, false);
   const [connecting, setConnecting] = useState(false);
@@ -239,6 +239,7 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
         myToken={myToken}
         signIn={signIn}
         claimAdmin={claimAdmin}
+        loginWithPassword={loginWithPassword}
         onLegacy={() => setLegacyLoggedIn(true)}
       />
     );
@@ -289,6 +290,7 @@ function AdminGate({
   myToken,
   signIn,
   claimAdmin,
+  loginWithPassword,
   onLegacy,
 }: {
   t: ThemeColors;
@@ -297,11 +299,35 @@ function AdminGate({
   myToken: string | null;
   signIn: () => Promise<unknown>;
   claimAdmin: () => Promise<unknown>;
+  loginWithPassword: (password: string) => Promise<unknown>;
   onLegacy: () => void;
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Parol bilan kirish
+  const [password, setPassword] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+
+  const doPasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      setPwError("Parolni kiriting");
+      return;
+    }
+    setPwBusy(true);
+    setPwError("");
+    try {
+      // Anonymous sign-in shart — parolni shu hisobga biriktiramiz
+      if (!isAuthenticated) await signIn();
+      await loginWithPassword(password);
+    } catch (err) {
+      setPwError(errMsg(err));
+    } finally {
+      setPwBusy(false);
+    }
+  };
 
   const doClaim = async () => {
     setBusy(true);
@@ -336,7 +362,7 @@ function AdminGate({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-10 flex items-start justify-center">
+    <div className="flex-1 overflow-y-auto px-4 py-10 flex items-start justify-center admin-shell">
       <div className="w-full max-w-md space-y-4 animate-pop-in">
         <div className="text-center">
           <div
@@ -348,6 +374,43 @@ function AdminGate({
           <h2 className="text-xl font-bold text-white">Admin Panel</h2>
           <p className="text-xs text-gray-500 mt-1">Faqat administratorlar uchun</p>
         </div>
+
+        {/* Parol bilan kirish — asosiy usul (parol serverda tekshiriladi) */}
+        <form
+          onSubmit={doPasswordLogin}
+          className="p-5 rounded-2xl"
+          style={{ background: t.surface, border: `1px solid ${t.accent}33` }}
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-white mb-1">
+            <FiLock size={13} style={{ color: t.accent }} />
+            Parol bilan kirish
+          </div>
+          <p className="text-[11px] text-gray-500 mb-4 leading-relaxed">
+            Admin parolini kiriting. Parol faqat serverda tekshiriladi va frontend kodida ko'rinmaydi.
+          </p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+            className="w-full px-4 py-2.5 rounded-xl text-sm mb-3 outline-none transition-all"
+            style={{
+              background: "#ffffff08",
+              border: `1px solid ${password ? t.accent + "55" : "#ffffff14"}`,
+              color: "#fff",
+            }}
+          />
+          {pwError && (
+            <div className="mb-3 px-3 py-2 rounded-lg text-xs text-red-400 bg-red-500/10 border border-red-500/30 animate-pop-in">
+              {pwError}
+            </div>
+          )}
+          <PrimaryBtn t={t} className="w-full justify-center" disabled={pwBusy}>
+            <FiLock size={13} /> {pwBusy ? "Tekshirilmoqda..." : "Kirish"}
+          </PrimaryBtn>
+        </form>
 
         {!isAuthenticated ? (
           <div className="p-5 rounded-2xl" style={{ background: t.surface, border: `1px solid ${t.accent}33` }}>
@@ -369,7 +432,7 @@ function AdminGate({
         ) : (
           <div className="p-5 rounded-2xl" style={{ background: t.surface, border: `1px solid ${t.accent}33` }}>
             <div className="flex items-center gap-2 text-sm font-medium text-white mb-1">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-green-400 admin-live-dot" style={{ color: "#22c55e" }} />
               Siz tizimga kirgansiz
             </div>
             <p className="text-[11px] text-gray-500 mb-4 leading-relaxed">
@@ -448,7 +511,7 @@ function LegacyLoginScreen({
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-10 overflow-y-auto">
+    <div className="flex-1 flex items-center justify-center px-4 py-10 overflow-y-auto admin-shell">
       <form
         onSubmit={handleLogin}
         className="w-full max-w-sm p-8 rounded-3xl animate-pop-in"
@@ -611,7 +674,7 @@ function AdminShell({
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row min-h-0">
+    <div className="flex-1 flex flex-col md:flex-row min-h-0 admin-shell">
       {/* ── Sidebar (desktop) ── */}
       <aside
         className="hidden md:flex flex-col w-56 flex-shrink-0 border-r border-white/5 p-3 gap-0.5 overflow-y-auto"
@@ -619,13 +682,13 @@ function AdminShell({
       >
         <div className="flex items-center gap-2.5 px-2.5 py-3 mb-2">
           <span
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}44` }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 admin-shield"
+            style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}44`, boxShadow: `0 0 16px ${t.accent}33` }}
           >
             <FiShield size={17} />
           </span>
           <div className="min-w-0">
-            <div className="text-sm font-bold text-white leading-tight">Admin Panel</div>
+            <div className="text-sm font-bold text-white leading-tight admin-title">Admin Panel</div>
             <div className="text-[10px] text-gray-500 flex items-center gap-1">
               STypeUz
               {serverAdmin && (
@@ -644,11 +707,13 @@ function AdminShell({
               <button
                 key={tb.id}
                 onClick={() => setTab(tb.id)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left"
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left admin-tab ${isActive ? "active" : ""}`}
                 style={{
                   background: isActive ? t.accent + "1f" : "transparent",
                   color: isActive ? t.accent : "#9ca3af",
                   border: `1px solid ${isActive ? t.accent + "44" : "transparent"}`,
+                  // @ts-ignore -- custom property for admin-tab glow
+                  "--tab-glow": t.accent,
                 }}
               >
                 <tb.icon size={15} className="flex-shrink-0" />
@@ -751,7 +816,7 @@ function AdminShell({
               <button
                 key={tb.id}
                 onClick={() => setTab(tb.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all admin-tab-mobile ${isActive ? "active" : ""}`}
                 style={{
                   background: isActive ? t.accent + "22" : "#ffffff08",
                   color: isActive ? t.accent : "#9ca3af",
@@ -767,7 +832,7 @@ function AdminShell({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
-          <div key={active} className="animate-fade-in">
+          <div key={active} className="admin-content">
             {renderTab()}
           </div>
         </div>
