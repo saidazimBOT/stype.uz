@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import type { CSSProperties } from "react";
 import { TEXTS, LANG_LABELS, LANG_FLAGS } from "./data/texts";
 import { getT } from "./data/i18n";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
@@ -13,6 +14,7 @@ import { useProfile, fullName } from "./hooks/useProfile";
 import SignUpModal from "./components/features/SignUpModal";
 import LoginModal from "./components/features/LoginModal";
 import { isSupabaseConfigured } from "./lib/supabase";
+import { getSupabaseUser } from "./lib/supabaseService";
 import ProfileAvatar from "./components/features/ProfileAvatar";
 import { useMissions } from "./components/features/WeeklyMissions";
 import { useReplay } from "./components/features/TypingReplay";
@@ -112,6 +114,19 @@ export default function App() {
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  // Hydration tugaguncha majburiy modal ko'rsatilmaydi — aks holda
+  // localStorage'da profil bor bo'lsa ham har kirishda qisqa "ro'yxatdan o'tish"
+  // oynasi ko'rinib qolardi.
+  const [mounted, setMounted] = useState(false);
+  // Supabase sessiyasidan profil tiklanayotgan payt modal yashiriladi.
+  const [restoringCloudProfile, setRestoringCloudProfile] = useState(false);
+  const cloudRestoreStartedRef = useRef(false);
+  // ── Kirish ekrani (splash) ──
+  const [splash, setSplash] = useState(true);
+  const [splashLeaving, setSplashLeaving] = useState(false);
+  // Yozish effektlari: xatoda matn silkinadi, to'g'ri klavishada kursor atrofida nur
+  const [errTick, setErrTick] = useState(0);
+  const [ripple, setRipple] = useState<{ x: number; y: number; id: number } | null>(null);
   // Supabase sozlangan bo'lsa — ro'yxatdan o'tish va kirish haqiqiy backend orqali ishlaydi
   const cloudEnabled = isSupabaseConfigured();
 
@@ -155,6 +170,39 @@ export default function App() {
   // Foydalanuvchi profili (ism, familiya, rasm)
   const { profile, saveProfile, isSignedUp } = useProfile();
 
+  // Hydration tugagach mounted bo'ladi — shundan keyingina modal haqida qaror qilamiz.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Supabase'da sessiya saqlangan, lekin lokal profil yo'qolgan bo'lsa (masalan
+  // eski bug tufayli localStorage'ga "null" yozilib qolgan) — profilni qayta
+  // tiklaymiz, foydalanuvchi qaytadan ro'yxatdan o'tishga majbur bo'lmaydi.
+  useEffect(() => {
+    if (!cloudEnabled || isSignedUp || cloudRestoreStartedRef.current) return;
+    cloudRestoreStartedRef.current = true;
+    setRestoringCloudProfile(true);
+    (async () => {
+      try {
+        const user = await getSupabaseUser();
+        if (!user) return;
+        const md = (user.user_metadata || {}) as Record<string, string | undefined>;
+        if (!md.firstName) return;
+        saveProfile({
+          firstName: md.firstName,
+          lastName: md.lastName || "",
+          photo: "",
+          avatarId: md.avatarId || "avatar_default",
+          signedUpAt: Date.now(),
+        });
+      } catch {
+        // Oflayn yoki Supabase ishlamayapti — lokal rejimda qolamiz
+      } finally {
+        setRestoringCloudProfile(false);
+      }
+    })();
+  }, [cloudEnabled, isSignedUp, saveProfile]);
+
   // Feature hooks
   const daily = useDailyReward();
   const { missions, xp, updateProgress, addXp } = useMissions();
@@ -182,6 +230,7 @@ export default function App() {
 
   // Refs
   const inputRef = useRef<HTMLInputElement>(null);
+  const caretRef = useRef<HTMLSpanElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const clickBufRef = useRef<AudioBuffer | null>(null);
@@ -209,6 +258,16 @@ export default function App() {
     if (p.has("gsc_connected") || p.has("gsc_sid") || p.has("error")) {
       window.history.replaceState({}, "", window.location.pathname + window.location.hash);
     }
+  }, []);
+
+  // Splash ekrani: 1.4 soniyada yashira boshlaydi, 1.85 soniyada butunlay yo'qoladi
+  useEffect(() => {
+    const t1 = setTimeout(() => setSplashLeaving(true), 1400);
+    const t2 = setTimeout(() => setSplash(false), 1850);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, []);
 
   // Auto Dark/Light Mode
@@ -287,10 +346,44 @@ export default function App() {
   }, [text, finished, view, showKeyboard]);
 
   // ── PARTICLE EFFECTS ────────────────────────────────────────────────
-  const spawnP = useCallback((ok: boolean) => {
-    const id = Date.now() + Math.random();
-    setParticles((p) => [...p.slice(-20), { id, ok, x: 35 + Math.random() * 30, y: 40 + Math.random() * 15 }]);
-    setTimeout(() => setParticles((p) => p.filter((x) => x.id !== id)), 700);
+  // To'g'ri klavishada — kuchli burst: 5 zarracha turli yo'nalishda uchadi;
+  // xatoda — 2 ta qizil ✕ zarracha. Har biri o'z yo'nalishi, o'lchami va
+  // rangi bilan (CSS --dx/--dy/--rot orqali animatsiyalanadi).
+  const spawnP = useCallback((ok: boolean, accent?: string) => {
+    const count = ok ? 5 : 2;
+    const now = Date.now();
+    const parts: Particle[] = [];
+    for (let i = 0; i < count; i++) {
+      let color: string | undefined;
+      let char: string | undefined;
+      if (ok) {
+        // Rang aralashmasi: oq, oltin yoki tanlangan tema akzent rangi
+        const r = Math.random();
+        if (r > 0.6) color = "#ffffff";
+        else if (r > 0.4) color = "#fbbf24";
+        else color = accent;
+        const cr = Math.random();
+        char = cr > 0.75 ? "✧" : cr > 0.45 ? "·" : "✦";
+      }
+      parts.push({
+        id: now + Math.random(),
+        ok,
+        x: 35 + Math.random() * 30,
+        y: 40 + Math.random() * 15,
+        // To'g'ri — keng yelpig'ich, xato — tor/yuqoriga
+        dx: (Math.random() * 2 - 1) * (ok ? 75 : 35),
+        dy: -(15 + Math.random() * (ok ? 65 : 25)),
+        rot: (Math.random() * 2 - 1) * 240,
+        size: ok ? 10 + Math.random() * 12 : 14 + Math.random() * 6,
+        color,
+        char: ok ? char : "✕",
+      });
+    }
+    const ids = parts.map((p) => p.id);
+    setParticles((p) => [...p.slice(-30), ...parts]);
+    setTimeout(() => {
+      setParticles((p) => p.filter((x) => !ids.includes(x.id)));
+    }, 800);
   }, []);
 
   // ── TIMER ────────────────────────────────────────────────────────────
@@ -361,6 +454,13 @@ export default function App() {
     return () => clearInterval(id);
   }, [started, finished]);
 
+  // Har bir to'g'ri klavishada kursor atrofida tarqaladigan nur (ripple)
+  useEffect(() => {
+    if (!started || finished || !caretRef.current) return;
+    const r = caretRef.current.getBoundingClientRect();
+    setRipple({ x: r.left + r.width / 2, y: r.top + r.height / 2, id: Date.now() });
+  }, [cursor, started, finished]);
+
   // ── KEYBOARD HANDLING ───────────────────────────────────────────────
   // Yozish logikasi — fizik klaviatura va ekran klaviaturasi (visualizer)
   // uchun umumiy: bitta belgi (yoki tab/escape) qabul qiladi.
@@ -396,7 +496,7 @@ export default function App() {
         if (ok) playClick();
         else playError();
       }
-      spawnP(ok);
+      spawnP(ok, t.accent);
       recordEvent({ type: "keydown", key: k, correct: ok, time: Date.now() - (startTimeRef.current || Date.now()) });
 
       if (ok) {
@@ -435,6 +535,8 @@ export default function App() {
         setErrors((er) => er + 1);
         setCombo(0);
         setWordErr(true);
+        // Matn bloki xato belgisida silkinadi
+        setErrTick((t) => t + 1);
       }
 
       const nt = totalKs + 1;
@@ -555,7 +657,7 @@ export default function App() {
     }
     return (
       <span key={i} className={cls}>
-        {i === cursor && <span className="caret-bar" style={{ background: t.accent }} />}
+        {i === cursor && <span ref={caretRef} className="caret-bar" style={{ background: t.accent }} />}
         {ch}
       </span>
     );
@@ -621,29 +723,79 @@ export default function App() {
       {/* Ambient animated background */}
       <div className="aurora-layer" aria-hidden>
         <div className="aurora" />
+        {/* Harakatlanuvchi yorug'lik sharlari */}
+        <div className="bg-orbs">
+          <div
+            className="bg-orb"
+            style={{
+              width: 420,
+              height: 420,
+              top: "-8%",
+              left: "-6%",
+              background: "radial-gradient(circle, rgba(56,189,248,0.35), transparent 70%)",
+            }}
+          />
+          <div
+            className="bg-orb"
+            style={{
+              width: 380,
+              height: 380,
+              top: "52%",
+              right: "-8%",
+              background: "radial-gradient(circle, rgba(167,139,250,0.3), transparent 70%)",
+              animationDelay: "-6s",
+              animationDuration: "20s",
+            }}
+          />
+          <div
+            className="bg-orb"
+            style={{
+              width: 300,
+              height: 300,
+              bottom: "-10%",
+              left: "28%",
+              background: "radial-gradient(circle, rgba(34,197,94,0.22), transparent 70%)",
+              animationDelay: "-11s",
+              animationDuration: "24s",
+            }}
+          />
+        </div>
+        {/* Miltillovchi yulduzlar */}
+        <div className="bg-stars" />
+        <div className="bg-stars bg-stars-b" />
       </div>
 
-      {/* Particles */}
+      {/* Particles — to'g'ri klavishada burst, xatoda qizil ✕ */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
         {particles.map((p) => (
           <div
             key={p.id}
-            className="absolute"
-            style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              fontSize: "18px",
-              animation: "floatUp .7s ease-out forwards",
-            }}
+            className="burst-particle"
+            style={
+              {
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                fontSize: `${p.size ?? 18}px`,
+                color: p.ok ? (p.color ?? t.accent) : "#f87171",
+                "--dx": `${p.dx ?? 0}px`,
+                "--dy": `${p.dy ?? -60}px`,
+                "--rot": `${p.rot ?? 0}deg`,
+              } as CSSProperties
+            }
           >
-            {p.ok ? (
-              <span style={{ color: t.accent }}>✦</span>
-            ) : (
-              <span className="text-red-400">✕</span>
-            )}
+            {p.char ?? (p.ok ? "✦" : "✕")}
           </div>
         ))}
       </div>
+
+      {/* Klavishada kursor atrofida tarqaladigan nur (ripple) */}
+      {ripple && (
+        <span
+          key={ripple.id}
+          className="key-ripple"
+          style={{ left: ripple.x, top: ripple.y, "--ripple-color": t.accent } as CSSProperties}
+        />
+      )}
 
       {/* Navbar */}
       <nav className="flex items-center justify-between px-4 md:px-8 py-3 border-b border-white/5 flex-shrink-0">
@@ -915,7 +1067,9 @@ export default function App() {
               setBgDim={setBgDim}
               onClose={() => setShowSettings(false)}
             />
-          ) : view === "leaderboard" ? (
+          ) : (
+            <div key={view} className="flex-1 min-h-0 overflow-hidden flex flex-col animate-view-in">
+            {view === "leaderboard" ? (
             <LeaderboardView t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "countryrank" ? (
             <CountryRanking t={t} onClose={() => setView("type")} />
@@ -1036,9 +1190,10 @@ export default function App() {
               {/* Text display */}
               <div className="w-full max-w-2xl relative">
                 <div
+                  key={`typing-text-${errTick}`}
                   className={`leading-relaxed tracking-wide text-center select-none ${
                     FONT_SIZES[fontSize] || FONT_SIZES.md
-                  }`}
+                  } ${errTick > 0 ? "text-shake" : ""}`}
                   style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
                   onClick={() => inputRef.current?.focus()}
                 >
@@ -1197,12 +1352,15 @@ export default function App() {
               )}
 
             </main>
-          ) : null}
+            ) : null}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Sign up modal — birinchi kirishda majburiy (login oynasi ochiq bo'lsa yashirinadi) */}
-      {!isSignedUp && !showLogin && (
+      {/* mounted + restoring gatlari: profil bor bo'lsa yoki tiklanayotgan bo'lsa modal ko'rinmaydi */}
+      {!isSignedUp && !showLogin && mounted && !restoringCloudProfile && (
         <SignUpModal
           t={t}
           lang={lang}
@@ -1377,6 +1535,35 @@ export default function App() {
           <FaPalette size={15} />
         </button>
       </div>
+
+      {/* ── Splash / kirish ekrani ────────────────────────────────────── */}
+      {splash && (
+        <div className={`splash-screen ${splashLeaving ? "splash-leave" : ""}`}>
+          <div
+            className="splash-logo w-24 h-24 rounded-3xl flex items-center justify-center"
+            style={{
+              background: t.accent + "22",
+              border: `1px solid ${t.accent}66`,
+              boxShadow: `0 0 60px ${t.accent}44`,
+              color: t.accent,
+            }}
+          >
+            <FaKeyboard size={52} />
+          </div>
+          <div className="splash-title text-3xl font-black tracking-tight" style={{ color: t.accent }}>
+            SType<span style={{ color: "#fff" }}>Uz</span>
+          </div>
+          <div
+            className="splash-title text-[11px] text-gray-500 uppercase tracking-[0.3em]"
+            style={{ animationDelay: "0.25s" }}
+          >
+            Tez yozish platformasi
+          </div>
+          <div className="splash-bar-track splash-title" style={{ animationDelay: "0.3s" }}>
+            <div className="splash-bar-fill" style={{ background: t.accent }} />
+          </div>
+        </div>
+      )}
     </div>
     </ConvexClientProvider>
   );

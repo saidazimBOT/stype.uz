@@ -2,27 +2,29 @@ import { useState, useEffect, Dispatch, SetStateAction } from "react";
 
 /**
  * SSR-safe localStorage hook.
- * - During SSR: always returns `initialValue` (no `window` access).
- * - During hydration: also returns `initialValue` so server & client match
- *   exactly — no hydration mismatch.
- * - After hydration (useEffect): reads the real value from localStorage.
+ * - During SSR: returns `initialValue` (no `window` access).
+ * - On the client: reads the real value from localStorage lazily on the
+ *   FIRST render, so the stored value is correct from the very start and is
+ *   never overwritten (clobbered) by the initial value.
  */
 export function useLocalStorage<T>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] {
-  const [value, setValue] = useState<T>(initialValue);
-
-  // After hydration, read the actual value from localStorage
-  useEffect(() => {
+  const [value, setValue] = useState<T>(() => {
+    if (typeof window === "undefined") return initialValue;
     try {
       const item = window.localStorage.getItem(key);
       if (item !== null) {
-        setValue(JSON.parse(item));
+        return JSON.parse(item) as T;
       }
     } catch {
       // Ignore storage errors
     }
-  }, [key]);
+    return initialValue;
+  });
 
-  // Sync to localStorage on every change
+  // Sync to localStorage on every change. Because `value` already reflects
+  // the stored value on the first render, this never writes `initialValue`
+  // over an existing value (the previous implementation did exactly that,
+  // which wiped saved data on every page load).
   useEffect(() => {
     try {
       window.localStorage.setItem(key, JSON.stringify(value));

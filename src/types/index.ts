@@ -202,6 +202,18 @@ export interface Particle {
   ok: boolean;
   x: number;
   y: number;
+  /** Burst yo'nalishi (px) — o'nga/chapga */
+  dx?: number;
+  /** Burst yo'nalishi (px) — yuqoriga/pastga */
+  dy?: number;
+  /** Aylanish (deg) */
+  rot?: number;
+  /** Belgi o'lchami (px) */
+  size?: number;
+  /** Belgining rangi (undefined bo'lsa: ok → akzent, xato → qizil) */
+  color?: string;
+  /** Ko'rsatiladigan belgi (undefined bo'lsa: ✦ / ✕) */
+  char?: string;
 }
 
 // ── Component Props ──────────────────────────────────────────────────────
