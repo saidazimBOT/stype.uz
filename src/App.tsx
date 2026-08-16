@@ -66,7 +66,7 @@ import { TypingRecorderBridge } from "./components/features/SiteOverlays";
 // SVG icons (stiker/emoji o'rniga)
 import {
   FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGift, FiGrid, FiHeart, FiInfo, FiList,
-  FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiTarget, FiThumbsUp, FiTrendingUp,
+  FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
 import { FaDna, FaKeyboard, FaMedal, FaPalette, FaRobot, FaTelegram, FaTrophy } from "react-icons/fa6";
@@ -674,8 +674,6 @@ export default function App() {
     { id: "countryrank", icon: FiMap, label: T("nav.countries") },
     { id: "profile", icon: FiUser, label: T("nav.profile") },
     { id: "history", icon: FiList, label: T("nav.history") },
-    { id: "dashboard", icon: FiTrendingUp, label: T("nav.dashboard") },
-    { id: "missions", icon: FiTarget, label: T("nav.missions") },
     { id: "daily", icon: FiZap, label: T("nav.daily") },
     { id: "seasonal", icon: FaMedal, label: T("nav.seasonal") },
     { id: "dna", icon: FaDna, label: T("nav.dna") },
@@ -802,7 +800,7 @@ export default function App() {
       )}
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-4 md:px-8 py-3 border-b border-white/5 flex-shrink-0">
+      <nav className="animate-nav-in flex items-center justify-between px-4 md:px-8 py-3 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button
             onClick={() => setView("type")}
@@ -1014,7 +1012,7 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-14 md:w-44 px-1 md:px-3 pt-3 pb-16 border-r border-white/5 flex flex-col gap-0.5 text-xs md:text-sm flex-shrink-0 overflow-y-auto min-h-0">
-          {navItems.map((item) => (
+          {navItems.map((item, i) => (
             <button
               key={item.id}
               onClick={() => {
@@ -1023,11 +1021,15 @@ export default function App() {
                 setShowLingohub(false);
                 setView(view === item.id ? "type" : item.id);
               }}
-              className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5"
+              className={`nav-item-anim flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 ${
+                view === item.id ? "is-active" : ""
+              }`}
               style={{
                 color: view === item.id ? t.accent : "#6b7280",
                 background: view === item.id ? t.accent + "11" : "transparent",
-              }}
+                animationDelay: `${i * 35}ms`,
+                "--nav-glow": t.accent,
+              } as CSSProperties}
               title={item.label}
             >
               <item.icon size={16} className="flex-shrink-0" />
@@ -1160,18 +1162,18 @@ export default function App() {
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
               {/* Stats */}
               <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
-                <div className="text-center">
+                <div className="text-center animate-stat-pop">
                   <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.wpm")}</div>
                   <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: t.accent }}>
                     {wpm}
                   </div>
                 </div>
-                <div className="text-center">
+                <div className="text-center animate-stat-pop" style={{ animationDelay: "80ms" }}>
                   <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.accuracy")}</div>
                   <div className="text-2xl sm:text-3xl md:text-5xl font-bold text-white">{accuracy}%</div>
                 </div>
                 {duration !== "∞" && (
-                  <div className="text-center">
+                  <div className="text-center animate-stat-pop" style={{ animationDelay: "160ms" }}>
                     <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.time")}</div>
                     <div
                       className="text-2xl sm:text-3xl md:text-5xl font-bold"
@@ -1182,7 +1184,7 @@ export default function App() {
                   </div>
                 )}
                 {combo >= 5 && (
-                  <div className="text-center">
+                  <div className="text-center animate-stat-pop" style={{ animationDelay: "240ms" }}>
                     <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.combo")}</div>
                     <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: "#f59e0b" }}>
                       ×{combo}
