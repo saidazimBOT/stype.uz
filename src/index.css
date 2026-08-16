@@ -894,20 +894,19 @@ input:focus, textarea:focus {
   animation: navSlideDown 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Sidebar tugmalari: ketma-ket chapdan kirib keladi */
+/* Sidebar tugmalari: bir joyda turadi — faqat yumshoq paydo bo'ladi (siljimaydi) */
 @keyframes navItemIn {
-  from { opacity: 0; transform: translateX(-14px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .nav-item-anim {
   opacity: 0;
-  animation: navItemIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: navItemIn 0.4s ease-out forwards;
+  position: relative;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Faol tugma: yon chiziq indikatori + nurli puls */
-.nav-item-anim {
-  position: relative;
-}
+/* Faol tugma: yon chiziq indikatori (silliq o'sadi) + nurli puls */
 .nav-item-anim::before {
   content: "";
   position: absolute;
@@ -924,7 +923,20 @@ input:focus, textarea:focus {
 .nav-item-anim.is-active::before {
   height: 55%;
 }
-.nav-item-anim.is-active {
+
+/* Nurli puls faqat ::after qatlamida — tugmaning o'z animatsiyasiga aralashmaydi,
+   shuning uchun bosilganda tugma joyidan qimirlamaydi */
+.nav-item-anim::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+.nav-item-anim.is-active::after {
+  opacity: 1;
   animation: navGlowPulse 2.4s ease-in-out infinite;
 }
 @keyframes navGlowPulse {
@@ -932,13 +944,7 @@ input:focus, textarea:focus {
   50% { box-shadow: 0 0 14px rgba(56, 189, 248, 0.35); }
 }
 
-/* Hover: icon biroz kattalashadi, tugma o'ngga siljiydi */
-.nav-item-anim {
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-.nav-item-anim:hover {
-  transform: translateX(3px);
-}
+/* Hover: faqat icon biroz kattalashadi — tugma o'zi qimirlamaydi */
 .nav-item-anim svg {
   transition: transform 0.2s ease;
 }
@@ -959,7 +965,9 @@ input:focus, textarea:focus {
 @media (prefers-reduced-motion: reduce) {
   .splash-screen, .splash-leave, .splash-logo, .splash-title, .splash-bar-fill,
   .bg-orb, .bg-stars, .key-ripple, .text-shake, .animate-view-in,
-  .burst-particle, .animate-nav-in, .nav-item-anim, .animate-stat-pop { animation: none; }
+  .burst-particle, .animate-nav-in, .nav-item-anim, .nav-item-anim::after,
+  .animate-stat-pop { animation: none; }
   .nav-item-anim, .animate-stat-pop { opacity: 1; }
+  .nav-item-anim.is-active::after { opacity: 1; }
   .key-ripple, .burst-particle { display: none; }
 }
