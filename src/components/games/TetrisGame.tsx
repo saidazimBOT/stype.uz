@@ -10,6 +10,7 @@ interface TetrisGameProps {
 }
 
 const TC = 26, TW = 10, TH = 18;
+const W = TW * TC, H = TH * TC;
 const T_SHAPES: number[][][] = [
   [[1, 1, 1, 1]],
   [[1, 1], [1, 1]],
@@ -43,6 +44,7 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
   const [score, setScore] = useState(0);
   const raf = useRef<number | null>(null);
   const lastDrop = useRef(0);
+  const flash = useRef<{ t: number } | null>(null);
 
   const mkPiece = (): Piece => {
     const i = Math.floor(Math.random() * T_SHAPES.length);
@@ -62,119 +64,185 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
 
   const initBoard = (): (string | null)[][] => Array.from({ length: TH }, () => Array(TW).fill(null));
 
+  // 3D beveled block
+  const drawBlock = useCallback((ctx: CanvasRenderingContext2D, bx: number, by: number, color: string, alpha = 1) => {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(bx + 1, by + 1, TC - 2, TC - 2, 4);
+    ctx.fill();
+    const g = ctx.createLinearGradient(bx + 1, by + 1, bx + 1, by + TC - 2);
+    g.addColorStop(0, "rgba(255,255,255,0.35)");
+    g.addColorStop(0.4, "rgba(255,255,255,0.05)");
+    g.addColorStop(1, "rgba(0,0,0,0.3)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(bx + 1, by + 1, TC - 2, TC - 2, 4);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }, []);
+
   const draw = useCallback(() => {
     const c = cvs.current;
     if (!c) return;
     const ctx = c.getContext("2d")!;
-    const W = TW * TC, H = TH * TC;
-    ctx.fillStyle = "#0f0f13";
+
+    // background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#0c1424");
+    bg.addColorStop(0.6, "#0e1120");
+    bg.addColorStop(1, "#0b0d15");
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
+
+    // subtle grid
     ctx.strokeStyle = "#ffffff06";
-    for (let x = 0; x <= TW; x++) { ctx.beginPath(); ctx.moveTo(x * TC, 0); ctx.lineTo(x * TC, H); ctx.stroke(); }
-    for (let y = 0; y <= TH; y++) { ctx.beginPath(); ctx.moveTo(0, y * TC); ctx.lineTo(W, y * TC); ctx.stroke(); }
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= TW; x++) {
+      ctx.beginPath(); ctx.moveTo(x * TC, 0); ctx.lineTo(x * TC, H); ctx.stroke();
+    }
+    for (let y = 0; y <= TH; y++) {
+      ctx.beginPath(); ctx.moveTo(0, y * TC); ctx.lineTo(W, y * TC); ctx.stroke();
+    }
 
     const g = G.current;
     if (g) {
+      // settled blocks
       g.board.forEach((row, r) =>
         row.forEach((col, c2) => {
-          if (col) { ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(c2 * TC + 1, r * TC + 1, TC - 2, TC - 2, 3); ctx.fill(); }
+          if (col) drawBlock(ctx, c2 * TC, r * TC, col);
         })
       );
+
       if (g.piece) {
+        // ghost piece
         let gy = 0;
         while (fits(g.board, g.piece, 0, gy + 1)) gy++;
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = g.piece.c + "99";
+        ctx.lineWidth = 1.5;
         g.piece.s.forEach((row, r) =>
           row.forEach((v, col) => {
-            if (v) {
-              ctx.fillStyle = g.piece.c + "33";
-              ctx.beginPath();
-              ctx.roundRect((g.piece.x + col) * TC + 1, (g.piece.y + r + gy) * TC + 1, TC - 2, TC - 2, 3);
-              ctx.fill();
-            }
+            if (v) ctx.strokeRect((g.piece.x + col) * TC + 3, (g.piece.y + r + gy) * TC + 3, TC - 6, TC - 6);
           })
         );
+        ctx.restore();
+        // ghost fill (light)
         g.piece.s.forEach((row, r) =>
           row.forEach((v, col) => {
-            if (v) {
-              ctx.fillStyle = g.piece.c;
-              ctx.beginPath();
-              ctx.roundRect((g.piece.x + col) * TC + 1, (g.piece.y + r) * TC + 1, TC - 2, TC - 2, 3);
-              ctx.fill();
-            }
+            if (v) drawBlock(ctx, (g.piece.x + col) * TC, (g.piece.y + r + gy) * TC, g.piece.c, 0.18);
+          })
+        );
+        // active piece
+        g.piece.s.forEach((row, r) =>
+          row.forEach((v, col) => {
+            if (v) drawBlock(ctx, (g.piece.x + col) * TC, (g.piece.y + r) * TC, g.piece.c);
           })
         );
       }
     }
 
+    // line-clear flash
+    if (flash.current && flash.current.t > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${(flash.current.t / 8) * 0.35})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
     if (!g || !g.started) {
-      ctx.fillStyle = "rgba(0,0,0,0.7)";
+      ctx.fillStyle = "rgba(8,10,16,0.78)";
       ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 18px Inter";
-      ctx.textAlign = "center";
-      ctx.fillText("Press SPACE or click", W / 2, H / 2 - 12);
-      ctx.fillText("to start Tetris", W / 2, H / 2 + 14);
-    } else if (g && !g.alive) {
-      ctx.fillStyle = "rgba(0,0,0,0.75)";
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#151a24";
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.fill();
+      ctx.strokeStyle = t.accent + "66";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.stroke();
       ctx.fillStyle = t.accent;
       ctx.font = "bold 24px Inter";
       ctx.textAlign = "center";
-      ctx.fillText("Game Over", W / 2, H / 2 - 18);
+      ctx.fillText("TETRIS", W / 2, H / 2 - 24);
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = "13px Inter";
+      ctx.fillText("Clear lines before they stack up!", W / 2, H / 2 + 2);
       ctx.fillStyle = "#fff";
-      ctx.font = "16px Inter";
-      ctx.fillText("Score: " + g.score, W / 2, H / 2 + 8);
-      ctx.fillText("SPACE / click to restart", W / 2, H / 2 + 32);
+      ctx.font = "bold 14px Inter";
+      ctx.fillText("Press SPACE or click to start", W / 2, H / 2 + 30);
+    } else if (g && !g.alive) {
+      ctx.fillStyle = "rgba(8,10,16,0.8)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#151a24";
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.fill();
+      ctx.strokeStyle = t.accent + "66";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.stroke();
+      ctx.fillStyle = t.accent;
+      ctx.font = "bold 26px Inter";
+      ctx.textAlign = "center";
+      ctx.fillText("Game Over", W / 2, H / 2 - 22);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 16px Inter";
+      ctx.fillText("Score: " + g.score, W / 2, H / 2 + 6);
+      ctx.fillStyle = t.accent;
+      ctx.font = "bold 14px Inter";
+      ctx.fillText("SPACE / click to restart", W / 2, H / 2 + 34);
     }
   }, [t]);
 
   const loop = useCallback(
     (ts: number) => {
       const g = G.current;
-      if (!g || !g.alive || !g.started) { draw(); return; }
-      const speed = Math.max(80, 500 - Math.floor(g.score / 5));
-      if (ts - lastDrop.current > speed) {
-        lastDrop.current = ts;
-        if (fits(g.board, g.piece, 0, 1)) {
-          g.piece.y++;
-        } else {
-          g.piece.s.forEach((row, r) =>
-            row.forEach((v, col) => {
-              if (v && g.piece.y + r >= 0) g.board[g.piece.y + r][g.piece.x + col] = g.piece.c;
-            })
-          );
-          let cleared = 0;
-          for (let r = TH - 1; r >= 0; ) {
-            if (g.board[r].every((c) => c)) { g.board.splice(r, 1); g.board.unshift(Array(TW).fill(null)); cleared++; } else r--;
-          }
-          g.score += cleared === 1 ? 100 : cleared === 2 ? 300 : cleared === 3 ? 500 : cleared === 4 ? 800 : 0;
-          setScore(g.score);
-          g.piece = g.next;
-          g.next = mkPiece();
-          if (!fits(g.board, g.piece)) {
-            g.alive = false;
-            if (g.score > 0 && onCoinEarned) {
-              onCoinEarned(Math.round(g.score / 10));
+      if (g && g.alive && g.started) {
+        const speed = Math.max(80, 500 - Math.floor(g.score / 5));
+        if (ts - lastDrop.current > speed) {
+          lastDrop.current = ts;
+          if (fits(g.board, g.piece, 0, 1)) {
+            g.piece.y++;
+          } else {
+            g.piece.s.forEach((row, r) =>
+              row.forEach((v, col) => {
+                if (v && g.piece.y + r >= 0) g.board[g.piece.y + r][g.piece.x + col] = g.piece.c;
+              })
+            );
+            let cleared = 0;
+            for (let r = TH - 1; r >= 0; ) {
+              if (g.board[r].every((c) => c)) { g.board.splice(r, 1); g.board.unshift(Array(TW).fill(null)); cleared++; } else r--;
             }
-            draw();
-            return;
+            if (cleared > 0) flash.current = { t: 8 };
+            g.score += cleared === 1 ? 100 : cleared === 2 ? 300 : cleared === 3 ? 500 : cleared === 4 ? 800 : 0;
+            setScore(g.score);
+            g.piece = g.next;
+            g.next = mkPiece();
+            if (!fits(g.board, g.piece)) {
+              g.alive = false;
+              if (g.score > 0 && onCoinEarned) {
+                onCoinEarned(Math.round(g.score / 10));
+              }
+            }
           }
         }
       }
+      if (flash.current) flash.current.t--;
       draw();
       raf.current = requestAnimationFrame(loop);
     },
-    [draw]
+    [draw, onCoinEarned]
   );
 
   const startGame = useCallback(() => {
-    if (raf.current) cancelAnimationFrame(raf.current);
     const p = mkPiece();
     G.current = { board: initBoard(), piece: p, next: mkPiece(), score: 0, alive: true, started: true };
     setScore(0);
     lastDrop.current = 0;
-    raf.current = requestAnimationFrame(loop);
-  }, [loop]);
+    flash.current = null;
+  }, []);
 
   const handleClick = useCallback(() => {
     const g = G.current;
@@ -186,7 +254,9 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
     G.current = null;
     draw();
     raf.current = requestAnimationFrame(loop);
-    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
+    return () => {
+      if (raf.current) cancelAnimationFrame(raf.current);
+    };
   }, [loop, draw]);
 
   useEffect(() => {
@@ -206,16 +276,16 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: TW * TC }}>
-        <span className="text-gray-400 text-sm flex items-center gap-1.5"><FaPuzzlePiece size={14} /> Tetris</span>
+      <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: W }}>
+        <span className="text-gray-400 text-sm flex items-center gap-1.5"><FaPuzzlePiece size={14} style={{ color: t.accent }} /> Tetris</span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
       <canvas
         ref={cvs}
-        width={TW * TC}
-        height={TH * TC}
+        width={W}
+        height={H}
         className="rounded-xl cursor-pointer max-w-full h-auto"
-        style={{ border: `1px solid ${t.accent}33` }}
+        style={{ border: `1px solid ${t.accent}33`, boxShadow: `0 0 24px ${t.accent}22` }}
         onClick={handleClick}
       />
       <p className="text-xs text-gray-600">← → move · ↑ rotate · ↓ drop · SPACE start/hard-drop</p>

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { FiGrid, FiPlay } from "react-icons/fi";
-import { FaDove, FaPuzzlePiece } from "react-icons/fa6";
+import { FaCar, FaDove, FaPuzzlePiece } from "react-icons/fa6";
 import { GiSnake } from "react-icons/gi";
 import type { IconType } from "react-icons";
 import SnakeGame from "../games/SnakeGame";
 import TetrisGame from "../games/TetrisGame";
 import FlappyBird from "../games/FlappyBird";
+import CarGame from "../games/CarGame";
 import type { ThemeColors } from "../../types";
 
 interface GamesViewProps {
@@ -20,6 +21,7 @@ const GAMES: { id: string; icon: IconType; name: string; desc: string }[] = [
   { id: "snake", icon: GiSnake, name: "Snake", desc: "Eat apples, grow longer, don't crash!" },
   { id: "tetris", icon: FaPuzzlePiece, name: "Tetris", desc: "Clear lines before they reach the top!" },
   { id: "flappy", icon: FaDove, name: "Flappy Bird", desc: "Tap to fly through the pipes!" },
+  { id: "car", icon: FaCar, name: "Car Race", desc: "Dodge traffic and drive as far as you can!" },
 ];
 
 export default function GamesView({ t, onClose, onCoinEarned }: GamesViewProps) {
@@ -63,6 +65,7 @@ export default function GamesView({ t, onClose, onCoinEarned }: GamesViewProps) 
           {game === "snake" && <SnakeGame t={t} onCoinEarned={onCoinEarned} />}
           {game === "tetris" && <TetrisGame t={t} onCoinEarned={onCoinEarned} />}
           {game === "flappy" && <FlappyBird t={t} onCoinEarned={onCoinEarned} />}
+          {game === "car" && <CarGame t={t} onCoinEarned={onCoinEarned} />}
         </div>
       )}
     </div>

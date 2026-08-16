@@ -21,7 +21,7 @@ export default function AboutView({ t, onClose }: AboutViewProps) {
     [FaPalette, "25+ premium themes + VS Code themes"],
     [FiVolume2, "Keyboard sounds with audio feedback"],
     [FaTrophy, "Global & Country leaderboards"],
-    [FaGamepad, "3 mini games (Snake, Tetris, Flappy)"],
+    [FaGamepad, "4 mini games (Snake, Tetris, Flappy, Car Race)"],
     [FiList, "Test history & progress tracking"],
     [FiZap, "Combo streak & XP system"],
     [FiSend, "Multiplayer typing race mode"],
