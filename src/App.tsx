@@ -69,13 +69,8 @@ import {
   FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaDna, FaKeyboard, FaMedal, FaPalette, FaRobot, FaTelegram, FaTrophy } from "react-icons/fa6";
+import { FaDna, FaInstagram, FaKeyboard, FaMedal, FaPalette, FaTelegram, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
-
-// ── TELEGRAM BOT ────────────────────────────────────────────────────────
-// Bot yaratilgach shu linkni t.me/<username> ga o'zgartiring!
-// (BotFather → /newbot → username — masalan: t.me/stypeuz_bot)
-const TELEGRAM_BOT_URL = "https://t.me/stypeuz_bot";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
 // Bu React mount bo'lishidan OLDIN ishlaydi, shuning uchun useLocalStorage
@@ -946,17 +941,17 @@ export default function App() {
             <FaTelegram size={13} />
             <span className="hidden sm:inline">Telegram</span>
           </a>
-          {/* Telegram bot — yangiliklarga obuna bo'lish */}
+          {/* Instagram — @styping.uz1 */}
           <a
-            href={TELEGRAM_BOT_URL}
+            href="https://instagram.com/styping.uz1"
             target="_blank"
             rel="noopener noreferrer"
             className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
-            title={T("navbar.botTitle")}
+            title={T("navbar.instagramTitle")}
             style={{ background: "#229ed926", color: "#5fb8e8", border: "1px solid #229ed955" }}
           >
-            <FaRobot size={13} />
-            <span className="hidden sm:inline">Bot</span>
+            <FaInstagram size={13} />
+            <span className="hidden sm:inline">Instagram</span>
           </a>
           {/* Lingohub.uz reklamasi — Egasi tugmasi yonida */}
           <button
