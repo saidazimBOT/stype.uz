@@ -114,6 +114,10 @@ export default function App() {
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  // Birinchi kirishda majburiy ro'yxatdan o'tish oynasini o'tkazib yuborish
+  // (skip) — sayt tugmalari bloklanib qolmasligi uchun. Keyingi safar qayta
+  // ko'rsatilmaydi, navbar'dagi "Sign up" tugmasi orqali ochish mumkin.
+  const [skipSignup, setSkipSignup] = useLocalStorage("typeuz_signup_skipped", false);
   // Hydration tugaguncha majburiy modal ko'rsatilmaydi — aks holda
   // localStorage'da profil bor bo'lsa ham har kirishda qisqa "ro'yxatdan o'tish"
   // oynasi ko'rinib qolardi.
@@ -1358,9 +1362,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Sign up modal — birinchi kirishda majburiy (login oynasi ochiq bo'lsa yashirinadi) */}
-      {/* mounted + restoring gatlari: profil bor bo'lsa yoki tiklanayotgan bo'lsa modal ko'rinmaydi */}
-      {!isSignedUp && !showLogin && mounted && !restoringCloudProfile && (
+      {/* Sign up modal — birinchi kirishda majburiy emas, o'tkazib yuborish mumkin
+          (login oynasi ochiq bo'lsa yashirinadi). Profil bor bo'lsa yoki
+          tiklanayotgan bo'lsa modal ko'rinmaydi. */}
+      {!isSignedUp && !skipSignup && !showLogin && mounted && !restoringCloudProfile && (
         <SignUpModal
           t={t}
           lang={lang}
@@ -1369,6 +1374,7 @@ export default function App() {
             saveProfile(p);
             setShowSignUp(false);
           }}
+          onClose={() => setSkipSignup(true)}
           onLoginRequest={() => {
             setShowSignUp(false);
             setShowLogin(true);
@@ -1453,16 +1459,16 @@ export default function App() {
 
       {/* Bottom user badge */}
       <div
-        className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md"
+        className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md pointer-events-none"
         style={{ background: t.surface + "cc", border: `1px solid ${t.accent}33` }}
       >
-        {/* Admin button (footer) */}
+        {/* Admin button (footer) — bosiladigan yagona qismi, sidebar bloklanmasligi uchun */}
         <button
           onClick={() => {
             setShowLingohub(false);
             setView(view === "admin" ? "type" : "admin");
           }}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 mr-1"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 mr-1 pointer-events-auto"
           style={{
             background: view === "admin" ? t.accent + "33" : "#ffffff0d",
             color: view === "admin" ? t.accent : "#9ca3af",

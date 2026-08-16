@@ -170,11 +170,12 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
             className="absolute top-0 left-0 right-0 h-1"
             style={{ background: `linear-gradient(90deg, ${t.accent}, #f59e0b, ${t.accent})` }}
           />
-          {!required && onClose && (
+          {onClose && (
             <button
               onClick={onClose}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/10 transition-all"
               aria-label={T("signup.close")}
+              title={T("signup.close")}
             >
               <FiX size={18} className="text-gray-400" />
             </button>
