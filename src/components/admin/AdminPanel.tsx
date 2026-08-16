@@ -29,8 +29,6 @@ import { Spinner, ErrorBox, PrimaryBtn, GhostBtn, Badge } from "./adminUi";
 // ── LEGACY OWNER CREDENTIALS (asosiy kirish — saqlanib qoladi) ──────────
 const ADMIN_TELEGRAM = "@said_khujayev";
 const ADMIN_TELEGRAM_URL = "https://t.me/said_khujayev";
-const ADMIN_LOGIN = "adminstype@gmail.com";
-const ADMIN_EMAIL = "adminstype@gmail.com";
 const ADMIN_PASSWORD = "admin0550";
 const SESSION_KEY = "typeuz_admin_session";
 
@@ -176,6 +174,31 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
   const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
+  // Legacy parol ekrani — AdminGate'da "Owner paroli bilan" bosilganda ochiladi
+  const [showLegacyLogin, setShowLegacyLogin] = useState(false);
+
+  // ── Backend timeout himoyasi ─────────────────────────────────────
+  // Convex URL build'da qolib ketgan bo'lsa ham (eski build) backend javob
+  // bermasa `authLoading` hech qachon tugamasligi mumkin — spinner abadiy
+  // aylanardi. 8 soniyadan keyin legacy rejimga tushamiz (parol admin0550).
+  const [backendTimedOut, setBackendTimedOut] = useState(false);
+  useEffect(() => {
+    if (!authLoading || backendTimedOut) return;
+    const id = window.setTimeout(() => setBackendTimedOut(true), 8000);
+    return () => window.clearTimeout(id);
+  }, [authLoading, backendTimedOut]);
+
+  // Legacy parol bilan kirilgan, lekin backendga ulanish ham osilib qolishi mumkin
+  const [connectTimedOut, setConnectTimedOut] = useState(false);
+  useEffect(() => {
+    if (!connecting || connectTimedOut) return;
+    const id = window.setTimeout(() => {
+      setConnectTimedOut(true);
+      setConnecting(false);
+      setConnectError("Backendga ulanish vaqti tugadi. Parol bilan kirish davom etadi.");
+    }, 8000);
+    return () => window.clearTimeout(id);
+  }, [connecting, connectTimedOut]);
 
   // Convex o'rnatilgan va legacy (owner parol) bilan kirilgan bo'lsa — Convex admin
   // sessiyasini avtomatik o'rnatamiz. Shunda "Ro'yxatdan o'tganlar" va boshqa server
@@ -222,6 +245,11 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
     }
   }, [isServerAdmin]);
 
+  // Backend umuman javob bermayapti — legacy rejimga tushamiz (spinner o'rniga)
+  if (backendTimedOut) {
+    return <LegacyAdminPanel t={t} onClose={onClose} history={history} xp={xp} />;
+  }
+
   if (authLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -231,6 +259,16 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
   }
 
   if (!isServerAdmin && !legacyLoggedIn) {
+    // "Owner paroli bilan (eski usul)" — avval parol so'raladi (to'g'ridan-to'g'ri emas)
+    if (showLegacyLogin) {
+      return (
+        <LegacyLoginScreen
+          t={t}
+          onClose={onClose}
+          onSuccess={() => setLegacyLoggedIn(true)}
+        />
+      );
+    }
     return (
       <AdminGate
         t={t}
@@ -240,7 +278,7 @@ function ServerAdminPanel({ t, onClose, history, xp }: AdminPanelProps) {
         signIn={signIn}
         claimAdmin={claimAdmin}
         loginWithPassword={loginWithPassword}
-        onLegacy={() => setLegacyLoggedIn(true)}
+        onLegacy={() => setShowLegacyLogin(true)}
       />
     );
   }
@@ -494,19 +532,18 @@ function LegacyLoginScreen({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const login = email.trim().toLowerCase();
-    if ((login === ADMIN_LOGIN || login === ADMIN_EMAIL) && password === ADMIN_PASSWORD) {
+    // Parol yetarli — login maydoni ixtiyoriy (foydalanuvchi parolni biladi)
+    if (password === ADMIN_PASSWORD) {
       setError("");
       setPassword("");
       onSuccess();
     } else {
-      setError("Login yoki parol noto'g'ri!");
+      setError("Parol noto'g'ri!");
     }
   };
 
@@ -527,22 +564,6 @@ function LegacyLoginScreen({
           <h2 className="text-xl font-bold text-white">Admin Panel</h2>
           <p className="text-xs text-gray-500 mt-1">Faqat administratorlar uchun</p>
         </div>
-
-        <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1.5">Login</label>
-        <input
-          type="text"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="admin"
-          autoComplete="username"
-          required
-          className="w-full px-4 py-2.5 rounded-xl text-sm mb-4 outline-none transition-all"
-          style={{
-            background: "#ffffff08",
-            border: `1px solid ${email ? t.accent + "55" : "transparent"}`,
-            color: "#fff",
-          }}
-        />
 
         <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1.5">Parol</label>
         <input

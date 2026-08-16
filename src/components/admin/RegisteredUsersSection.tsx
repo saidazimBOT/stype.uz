@@ -11,6 +11,8 @@ import {
   AvatarDot, Card, EmptyState, RoleBadge, SearchInput, SectionHeader, Spinner,
   fmtDateTime, timeAgo,
 } from "./adminUi";
+import { isSupabaseConfigured } from "../../lib/supabase";
+import SupabaseUsersSection from "./SupabaseUsersSection";
 import type { RegisteredUser } from "./types";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -19,7 +21,9 @@ function displayName(u: RegisteredUser): string {
   return [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || u.username || "(nomsiz)";
 }
 
-// ── Bosh komponent: backend yoqilganmi? ─────────────────────────────────
+// ── Bosh komponent: qaysi backend ishlayapti? ───────────────────────────
+// Convex yoqilgan bo'lsa — Convex ro'yxati. Aks holda Supabase sozlangan
+// bo'lsa — Supabase real foydalanuvchilari. Hech biri yo'q bo'lsa — yo'l-yo'riq.
 export default function RegisteredUsersSection({
   t,
   serverMode,
@@ -27,7 +31,9 @@ export default function RegisteredUsersSection({
   t: ThemeColors;
   serverMode: boolean;
 }) {
-  return serverMode ? <RegisteredList t={t} /> : <SetupGuide t={t} />;
+  if (serverMode) return <RegisteredList t={t} />;
+  if (isSupabaseConfigured()) return <SupabaseUsersSection t={t} />;
+  return <SetupGuide t={t} />;
 }
 
 // ── REAL ro'yxat (Convex ulangan) ───────────────────────────────────────
