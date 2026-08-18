@@ -15,7 +15,7 @@ export interface ShopItem {
   preview?: string;
 }
 
-export type ShopCategory = "themes" | "avatars" | "hero" | "effects";
+export type ShopCategory = "themes" | "avatars" | "hero" | "watches" | "effects";
 
 // ── Theme Unlock Prices ─────────────────────────────────────────────────
 // Classic themes are FREE, Premium themes cost coins
@@ -72,12 +72,13 @@ export const AVATAR_SHOP: ShopItem[] = [
 ];
 
 // ── Hero Items (wearable) ───────────────────────────────────────────────
-export type HeroSlot = "hat" | "glasses" | "outfit";
+export type HeroSlot = "hat" | "glasses" | "outfit" | "watch";
 
 export interface HeroEquip {
   hat: string;
   glasses: string;
   outfit: string;
+  watch: string;
 }
 
 export interface HeroShopItem extends ShopItem {
@@ -88,12 +89,14 @@ export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
   hat: "Hats",
   glasses: "Glasses",
   outfit: "Outfits",
+  watch: "Watches",
 };
 
 export const DEFAULT_HERO_EQUIP: HeroEquip = {
   hat: "hero_hat_none",
   glasses: "hero_glasses_none",
   outfit: "hero_outfit_none",
+  watch: "hero_watch_none",
 };
 
 export const HERO_SHOP: HeroShopItem[] = [
@@ -117,6 +120,24 @@ export const HERO_SHOP: HeroShopItem[] = [
   { id: "hero_jersey", name: "Gamer Jersey", desc: "Pro gamer jersey", price: 50, slot: "outfit", color: "#ec4899", rarity: "epic" },
   { id: "hero_suit", name: "Black Suit", desc: "Formal business suit", price: 70, slot: "outfit", color: "#334155", rarity: "epic" },
   { id: "hero_armor", name: "Knight Armor", desc: "Legendary silver armor", price: 100, slot: "outfit", color: "#94a3b8", rarity: "legendary" },
+  { id: "hero_vest", name: "Tactical Vest", desc: "Military tactical vest", price: 55, slot: "outfit", color: "#374151", rarity: "rare" },
+  { id: "hero_puffer", name: "Puffer Jacket", desc: "Warm puffer jacket", price: 60, slot: "outfit", color: "#1e40af", rarity: "rare" },
+  { id: "hero_kimono", name: "Silk Kimono", desc: "Elegant Japanese kimono", price: 90, slot: "outfit", color: "#dc2626", rarity: "epic" },
+  { id: "hero_track", name: "Track Suit", desc: "Sporty Adidas-style tracksuit", price: 35, slot: "outfit", color: "#16a34a", rarity: "common" },
+  { id: "hero_labcoat", name: "Lab Coat", desc: "Scientist lab coat", price: 40, slot: "outfit", color: "#f1f5f9", rarity: "common" },
+  { id: "hero_leather", name: "Leather Jacket", desc: "Cool leather biker jacket", price: 75, slot: "outfit", color: "#292524", rarity: "epic" },
+  { id: "hero_aladdin", name: "Prince Outfit", desc: "Arabian prince vest", price: 110, slot: "outfit", color: "#c084fc", rarity: "legendary" },
+  { id: "hero_ninja", name: "Ninja Gear", desc: "Shadow ninja suit", price: 85, slot: "outfit", color: "#1f2937", rarity: "epic" },
+  { id: "hero_biker", name: "Biker Gear", desc: "Motorcycle biker outfit", price: 65, slot: "outfit", color: "#44403c", rarity: "rare" },
+  // ── Watches ──
+  { id: "hero_watch_none", name: "No Watch", desc: "Default look", price: 0, slot: "watch", color: "#9ca3af", rarity: "common" },
+  { id: "hero_watch_classic", name: "Classic Watch", desc: "Silver classic analog watch", price: 25, slot: "watch", color: "#c0c0c0", rarity: "common" },
+  { id: "hero_watch_gold", name: "Gold Watch", desc: "Luxury golden watch", price: 60, slot: "watch", color: "#f59e0b", rarity: "rare" },
+  { id: "hero_watch_smart", name: "Smart Watch", desc: "Digital smart watch", price: 40, slot: "watch", color: "#38bdf8", rarity: "rare" },
+  { id: "hero_watch_ruby", name: "Ruby Watch", desc: "Precious ruby-studded watch", price: 90, slot: "watch", color: "#ef4444", rarity: "epic" },
+  { id: "hero_watch_neon", name: "Neon Watch", desc: "Futuristic glowing watch", price: 70, slot: "watch", color: "#a855f7", rarity: "epic" },
+  { id: "hero_watch_diamond", name: "Diamond Watch", desc: "Iced out diamond watch", price: 150, slot: "watch", color: "#e0f2fe", rarity: "legendary" },
+  { id: "hero_watch_royal", name: "Royal Pocket Watch", desc: "Antique pocket watch on chain", price: 100, slot: "watch", color: "#d97706", rarity: "legendary" },
 ];
 
 export function getHeroItem(id: string): HeroShopItem | undefined {
@@ -124,7 +145,7 @@ export function getHeroItem(id: string): HeroShopItem | undefined {
 }
 
 export function isHeroFreeItem(id: string): boolean {
-  return id === "hero_hat_none" || id === "hero_glasses_none" || id === "hero_outfit_none";
+  return id === "hero_hat_none" || id === "hero_glasses_none" || id === "hero_outfit_none" || id === "hero_watch_none";
 }
 
 // ── Effect Items ────────────────────────────────────────────────────────

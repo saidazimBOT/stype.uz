@@ -31,6 +31,7 @@ export default function HeroAvatar({
   const hat = eq.hat;
   const glasses = eq.glasses;
   const outfit = eq.outfit;
+  const watch = eq.watch || "hero_watch_none";
 
   const skin = "#ffd9b8";
   const hair = "#4a3428";
@@ -166,6 +167,67 @@ export default function HeroAvatar({
           <path d="M32 42 L68 42" stroke="#a5f3fc" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
           <circle cx="50" cy="45.5" r="2" fill="#67e8f9" />
           <rect x="40" y="52" width="20" height="4" rx="2" fill="#155e75" />
+        </g>
+      )}
+
+      {/* ── WATCH (soat) ── */}
+      {watch === "hero_watch_classic" && (
+        <g>
+          <rect x="20" y="88" width="12" height="10" rx="2.5" fill="#c0c0c0" stroke="#9ca3af" strokeWidth="1.2" />
+          <circle cx="26" cy="93" r="4" fill="#1f2937" stroke="#c0c0c0" strokeWidth="1" />
+          <line x1="26" y1="93" x2="26" y2="90" stroke="#e5e7eb" strokeWidth="0.8" strokeLinecap="round" />
+          <line x1="26" y1="93" x2="28.5" y2="93" stroke="#e5e7eb" strokeWidth="0.8" strokeLinecap="round" />
+        </g>
+      )}
+      {watch === "hero_watch_gold" && (
+        <g>
+          <rect x="20" y="88" width="12" height="10" rx="2.5" fill="#d97706" stroke="#b45309" strokeWidth="1.2" />
+          <circle cx="26" cy="93" r="4" fill="#422006" stroke="#f59e0b" strokeWidth="1" />
+          <line x1="26" y1="93" x2="26" y2="90.5" stroke="#fde68a" strokeWidth="0.8" strokeLinecap="round" />
+          <line x1="26" y1="93" x2="28" y2="91.5" stroke="#fde68a" strokeWidth="0.8" strokeLinecap="round" />
+          <circle cx="26" cy="93" r="1" fill="#f59e0b" />
+        </g>
+      )}
+      {watch === "hero_watch_smart" && (
+        <g>
+          <rect x="19" y="87" width="14" height="12" rx="3" fill="#0f172a" stroke="#38bdf8" strokeWidth="1.2" />
+          <rect x="21" y="89" width="10" height="7" rx="1.5" fill="#0c4a6e" />
+          <text x="26" y="94" textAnchor="middle" fontSize="4" fill="#67e8f9" fontWeight="bold">12:45</text>
+        </g>
+      )}
+      {watch === "hero_watch_ruby" && (
+        <g>
+          <rect x="20" y="88" width="12" height="10" rx="2.5" fill="#991b1b" stroke="#ef4444" strokeWidth="1.2" />
+          <circle cx="26" cy="93" r="4.5" fill="#450a0a" stroke="#dc2626" strokeWidth="1.2" />
+          <circle cx="26" cy="93" r="2.2" fill="#ef4444" opacity="0.7" />
+          <circle cx="26" cy="93" r="1" fill="#fca5a5" />
+        </g>
+      )}
+      {watch === "hero_watch_neon" && (
+        <g>
+          <rect x="19" y="87" width="14" height="12" rx="3" fill="#1e1b4b" stroke="#a855f7" strokeWidth="1.5" />
+          <rect x="21" y="89" width="10" height="7" rx="2" fill="#581c87" opacity="0.8" />
+          <path d="M23 92 L25 90 L27 93 L29 91" stroke="#c084fc" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        </g>
+      )}
+      {watch === "hero_watch_diamond" && (
+        <g>
+          <rect x="19" y="87" width="14" height="12" rx="2.5" fill="#e2e8f0" stroke="#bae6fd" strokeWidth="1.5" />
+          <circle cx="26" cy="93" r="4" fill="#0f172a" stroke="#e0f2fe" strokeWidth="1.2" />
+          <circle cx="26" cy="93" r="2" fill="#e0f2fe" opacity="0.6" />
+          <circle cx="24" cy="89" r="1" fill="#bae6fd" opacity="0.8" />
+          <circle cx="28" cy="90" r="0.8" fill="#bae6fd" opacity="0.7" />
+          <circle cx="23" y="96" r="0.7" fill="#bae6fd" opacity="0.6" />
+        </g>
+      )}
+      {watch === "hero_watch_royal" && (
+        <g>
+          <circle cx="26" cy="95" r="5.5" fill="#92400e" stroke="#f59e0b" strokeWidth="1.5" />
+          <circle cx="26" cy="95" r="3.5" fill="#1c1917" stroke="#d97706" strokeWidth="0.8" />
+          <line x1="26" y1="95" x2="26" y2="92.5" stroke="#fde68a" strokeWidth="0.8" strokeLinecap="round" />
+          <line x1="26" y1="95" x2="28.5" y2="94" stroke="#fde68a" strokeWidth="0.8" strokeLinecap="round" />
+          <path d="M26 88 L26 82 Q24 80 22 82" stroke="#d97706" strokeWidth="1" fill="none" strokeLinecap="round" />
+          <circle cx="22" cy="82" r="1.5" fill="#f59e0b" />
         </g>
       )}
 

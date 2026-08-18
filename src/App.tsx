@@ -795,8 +795,8 @@ export default function App() {
       )}
 
       {/* Navbar */}
-      <nav className="animate-nav-in flex items-center justify-between px-4 md:px-8 py-3 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+      <nav className="animate-nav-in flex items-center justify-between flex-wrap gap-x-2 px-3 sm:px-4 md:px-8 py-3 border-b border-white/5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-4 min-w-0">
           <button
             onClick={() => setView("type")}
             className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-xl md:text-2xl font-bold tracking-tight transition-all hover:scale-105 whitespace-nowrap"
@@ -836,13 +836,13 @@ export default function App() {
                 title={LANG_LABELS[l]}
               >
                 <span className="mr-0.5">{LANG_FLAGS[l]}</span>
-                {l.toUpperCase()}
+                <span className="hidden sm:inline">{l.toUpperCase()}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {view === "type" && (
             <>
               <button
@@ -878,7 +878,7 @@ export default function App() {
             title={T("navbar.promoTitle")}
           >
             <GiftIcon size={16} />
-            <span>{T("navbar.promoBadge")}</span>
+            <span className="hidden sm:inline">{T("navbar.promoBadge")}</span>
           </button>
           {/* Kirish (Supabase sozlangan bo'lsa) */}
           {cloudEnabled && !isSignedUp && (
@@ -934,7 +934,7 @@ export default function App() {
             href="https://t.me/khoja_akbar"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
+            className="hidden sm:flex px-2.5 py-1.5 rounded-lg text-[11px] font-bold items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
             title={T("navbar.telegramTitle")}
             style={{ background: "#229ed926", color: "#5fb8e8", border: "1px solid #229ed955" }}
           >
@@ -946,7 +946,7 @@ export default function App() {
             href="https://instagram.com/styping.uz1"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
+            className="hidden sm:flex px-2.5 py-1.5 rounded-lg text-[11px] font-bold items-center gap-1.5 transition-all hover:scale-105 hover:brightness-110"
             title={T("navbar.instagramTitle")}
             style={{ background: "#229ed926", color: "#5fb8e8", border: "1px solid #229ed955" }}
           >
@@ -961,7 +961,7 @@ export default function App() {
               setShowSettings(false);
               setShowOwner(false);
             }}
-            className="ad-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            className="hidden sm:flex ad-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold items-center gap-1.5 transition-all hover:scale-105"
             title="Lingohub.uz — 27 tilda bepul til o'rganish"
           >
             <LingohubLogo size={20} />
@@ -975,7 +975,7 @@ export default function App() {
               setShowSettings(false);
               setShowLingohub(false);
             }}
-            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+            className="hidden sm:flex px-2.5 py-1.5 rounded-lg text-[11px] font-bold items-center gap-1.5 transition-all hover:scale-105"
             title={T("navbar.ownerTitle")}
             style={{
               background: showOwner ? t.accent + "33" : "#ffffff0d",
@@ -1188,6 +1188,23 @@ export default function App() {
                 )}
               </div>
 
+              {/* Duration selector (mobile) — navbar'dagi tanlov kichik ekranlarda yashiringan */}
+              <div className="flex sm:hidden items-center gap-1.5 flex-wrap justify-center">
+                {DURATIONS.map((d) => (
+                  <button
+                    key={String(d)}
+                    onClick={() => selectDuration(d)}
+                    className="px-3 py-1 rounded-md text-xs font-semibold transition-all"
+                    style={{
+                      background: duration === d ? t.accent + "22" : "transparent",
+                      color: duration === d ? t.accent : "#6b7280",
+                    }}
+                  >
+                    {d === "∞" ? T("type.free") : `${d}s`}
+                  </button>
+                ))}
+              </div>
+
               {/* Text display */}
               <div className="w-full max-w-2xl relative">
                 <div
@@ -1211,7 +1228,7 @@ export default function App() {
                   onClick={() =>
                     setFavorites((f) => (f.includes(text) ? f.filter((x) => x !== text) : [...f, text]))
                   }
-                  className="absolute -right-8 md:-right-10 top-0 p-2 rounded-lg transition-all hover:scale-110"
+                  className="absolute -right-1 sm:-right-8 md:-right-10 top-0 p-2 rounded-lg transition-all hover:scale-110"
                   style={{ color: favorites.includes(text) ? t.accent : "#4b5563" }}
                 >
                   {favorites.includes(text) ? <FiHeart size={18} fill="currentColor" /> : <FiHeart size={18} />}
@@ -1266,7 +1283,7 @@ export default function App() {
 
                   {/* Katta natija bloklari — WPM | ACCURACY | COMBO (screenshotdagi uslub) */}
                   {typed.length > 0 && (
-                    <div className="flex items-start justify-center gap-8 sm:gap-14 md:gap-20">
+                    <div className="flex flex-wrap items-start justify-center gap-6 sm:gap-14 md:gap-20">
                       <div className="text-center animate-pop-in">
                         <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.wpm")}</div>
                         <div

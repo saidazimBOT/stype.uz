@@ -6,6 +6,7 @@ import { FaCrown, FaGem, FaFire, FaBolt, FaRocket } from "react-icons/fa6";
 import { GiSparkles, GiCrystalBall, GiSwordsPower } from "react-icons/gi";
 import CoinIcon from "../CoinIcon";
 import HeroAvatar from "../features/HeroAvatar";
+import RotatingMannequin from "../features/RotatingMannequin";
 import { getT } from "../../data/i18n";
 import type { ThemeColors } from "../../types";
 import type { ShopItem, EffectItem, ShopCategory, HeroEquip, HeroSlot, HeroShopItem } from "../../data/shop";
@@ -50,6 +51,7 @@ const CATEGORIES: { id: ShopCategory; label: string; icon: typeof FiShoppingBag 
   { id: "themes", label: "Themes", icon: FiStar },
   { id: "avatars", label: "Avatars", icon: FaCrown },
   { id: "hero", label: "Hero", icon: GiSwordsPower },
+  { id: "watches", label: "Watches", icon: FiStar },
   { id: "effects", label: "Effects", icon: GiSparkles },
 ];
 
@@ -396,7 +398,7 @@ export default function ShopView({
       {/* Category Tabs */}
       <div className="flex gap-2 mb-6">
         {CATEGORIES.map((cat) => {
-          const count = cat.id === "themes" ? THEME_SHOP.length : cat.id === "avatars" ? AVATAR_SHOP.length : cat.id === "hero" ? HERO_SHOP.length : EFFECT_SHOP.length;
+          const count = cat.id === "themes" ? THEME_SHOP.length : cat.id === "avatars" ? AVATAR_SHOP.length : cat.id === "hero" ? HERO_SHOP.length : cat.id === "watches" ? HERO_SHOP.filter(h => h.slot === "watch").length : EFFECT_SHOP.length;
           return (
             <button
               key={cat.id}
@@ -444,27 +446,18 @@ export default function ShopView({
               style={{ background: `radial-gradient(circle at 50% 30%, ${t.accent}, transparent 70%)` }}
             />
             <div className="relative">
-              <div className="mb-2 flex justify-center">
-                <HeroAvatar equip={heroEquip} color={t.accent} size={120} />
-              </div>
-              <div className="text-sm font-bold text-white">{T("shop.yourHero")}</div>
+              <RotatingMannequin
+                equip={heroEquip}
+                color={t.accent}
+                t={t}
+                purchased={purchased}
+                coins={coins}
+                onEquipHero={onEquipHero}
+                onPurchase={onPurchase}
+              />
+              <div className="text-sm font-bold text-white mt-2">{T("shop.yourHero")}</div>
               <div className="text-xs text-gray-500 mt-0.5">
-                {T("shop.heroPreview")}
-              </div>
-              <div className="mt-3 flex justify-center gap-2 text-[10px] font-bold uppercase tracking-wider">
-                {(["hat", "glasses", "outfit"] as HeroSlot[]).map((slot) => {
-                  const id = heroEquip[slot];
-                  const it = getHeroItem(id);
-                  return (
-                    <span
-                      key={slot}
-                      className="px-2 py-1 rounded-full"
-                      style={{ background: (it?.color || t.accent) + "22", color: it?.color || t.accent }}
-                    >
-                      {HERO_SLOT_LABELS[slot]}: {it?.name || "—"}
-                    </span>
-                  );
-                })}
+                Drag to rotate 360° · {T("shop.heroPreview")}
               </div>
             </div>
           </div>
@@ -480,6 +473,19 @@ export default function ShopView({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {activeTab === "watches" && (
+        <div>
+          <div className="mb-5">
+            <div className="text-xs text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+              <span style={{ color: t.accent }}>◆</span> Watches
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+              {HERO_SHOP.filter((h) => h.slot === "watch").map(renderHeroItem)}
+            </div>
+          </div>
         </div>
       )}
 
