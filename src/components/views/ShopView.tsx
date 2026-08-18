@@ -463,7 +463,7 @@ export default function ShopView({
           </div>
 
           {/* Har bir slot uchun bo'lim */}
-          {(["hat", "glasses", "outfit"] as HeroSlot[]).map((slot) => (
+          {(["hat", "glasses", "outfit", "pants", "shoes"] as HeroSlot[]).map((slot) => (
             <div key={slot} className="mb-5">
               <div className="text-xs text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
                 <span style={{ color: t.accent }}>◆</span> {HERO_SLOT_LABELS[slot]}
@@ -480,7 +480,7 @@ export default function ShopView({
         <div>
           <div className="mb-5">
             <div className="text-xs text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <span style={{ color: t.accent }}>◆</span> Watches
+              <span style={{ color: t.accent }}>◆</span> {HERO_SLOT_LABELS.watch}
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
               {HERO_SHOP.filter((h) => h.slot === "watch").map(renderHeroItem)}

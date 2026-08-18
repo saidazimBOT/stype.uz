@@ -72,12 +72,14 @@ export const AVATAR_SHOP: ShopItem[] = [
 ];
 
 // ── Hero Items (wearable) ───────────────────────────────────────────────
-export type HeroSlot = "hat" | "glasses" | "outfit" | "watch";
+export type HeroSlot = "hat" | "glasses" | "outfit" | "pants" | "shoes" | "watch";
 
 export interface HeroEquip {
   hat: string;
   glasses: string;
   outfit: string;
+  pants: string;
+  shoes: string;
   watch: string;
 }
 
@@ -88,7 +90,9 @@ export interface HeroShopItem extends ShopItem {
 export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
   hat: "Hats",
   glasses: "Glasses",
-  outfit: "Outfits",
+  outfit: "Shirts",
+  pants: "Pants",
+  shoes: "Shoes",
   watch: "Watches",
 };
 
@@ -96,6 +100,8 @@ export const DEFAULT_HERO_EQUIP: HeroEquip = {
   hat: "hero_hat_none",
   glasses: "hero_glasses_none",
   outfit: "hero_outfit_none",
+  pants: "hero_pants_none",
+  shoes: "hero_shoes_none",
   watch: "hero_watch_none",
 };
 
@@ -129,6 +135,28 @@ export const HERO_SHOP: HeroShopItem[] = [
   { id: "hero_aladdin", name: "Prince Outfit", desc: "Arabian prince vest", price: 110, slot: "outfit", color: "#c084fc", rarity: "legendary" },
   { id: "hero_ninja", name: "Ninja Gear", desc: "Shadow ninja suit", price: 85, slot: "outfit", color: "#1f2937", rarity: "epic" },
   { id: "hero_biker", name: "Biker Gear", desc: "Motorcycle biker outfit", price: 65, slot: "outfit", color: "#44403c", rarity: "rare" },
+  // ── Pants ──
+  { id: "hero_pants_none", name: "Default Pants", desc: "Basic cargo pants", price: 0, slot: "pants", color: "#a0845c", rarity: "common" },
+  { id: "hero_pants_jeans", name: "Blue Jeans", desc: "Classic blue denim jeans", price: 15, slot: "pants", color: "#2563eb", rarity: "common" },
+  { id: "hero_pants_black", name: "Black Trousers", desc: "Sleek black trousers", price: 20, slot: "pants", color: "#1f2937", rarity: "common" },
+  { id: "hero_pants_cargo", name: "Tactical Cargo", desc: "Military cargo pants", price: 30, slot: "pants", color: "#4d7c0f", rarity: "rare" },
+  { id: "hero_pants_chino", name: "Khaki Chinos", desc: "Casual khaki pants", price: 25, slot: "pants", color: "#d4a574", rarity: "common" },
+  { id: "hero_pants_leather", name: "Leather Pants", desc: "Biker leather pants", price: 50, slot: "pants", color: "#1c1917", rarity: "epic" },
+  { id: "hero_pants_track", name: "Track Pants", desc: "Sporty track pants", price: 20, slot: "pants", color: "#111827", rarity: "common" },
+  { id: "hero_pants_snow", name: "Snow Pants", desc: "Warm winter pants", price: 35, slot: "pants", color: "#e2e8f0", rarity: "rare" },
+  { id: "hero_pants_silk", name: "Silk Sarong", desc: "Elegant silk wrap pants", price: 65, slot: "pants", color: "#dc2626", rarity: "epic" },
+  { id: "hero_pants_royal", name: "Royal Sash Pants", desc: "Golden royal pants", price: 90, slot: "pants", color: "#d97706", rarity: "legendary" },
+  // ── Shoes ──
+  { id: "hero_shoes_none", name: "Barefoot", desc: "No shoes", price: 0, slot: "shoes", color: "#a0845c", rarity: "common" },
+  { id: "hero_shoes_sneakers", name: "White Sneakers", desc: "Clean white sneakers", price: 20, slot: "shoes", color: "#f1f5f9", rarity: "common" },
+  { id: "hero_shoes_boots", name: "Brown Boots", desc: "Rugged brown boots", price: 30, slot: "shoes", color: "#92400e", rarity: "common" },
+  { id: "hero_shoes_jordans", name: "Red Jordans", desc: "Classic red basketball shoes", price: 50, slot: "shoes", color: "#ef4444", rarity: "rare" },
+  { id: "hero_shoes_slides", name: "Cloud Slides", desc: "Comfy foam slides", price: 15, slot: "shoes", color: "#c084fc", rarity: "common" },
+  { id: "hero_shoes_biker", name: "Biker Boots", desc: "Heavy motorcycle boots", price: 45, slot: "shoes", color: "#292524", rarity: "rare" },
+  { id: "hero_shoes_ninja", name: "Tabi Boots", desc: "Traditional ninja tabi", price: 55, slot: "shoes", color: "#1f2937", rarity: "epic" },
+  { id: "hero_shoes_golden", name: "Golden Kicks", desc: "Luxury golden shoes", price: 80, slot: "shoes", color: "#f59e0b", rarity: "epic" },
+  { id: "hero_shoes_crystal", name: "Crystal Heels", desc: "Glass slipper crystal shoes", price: 100, slot: "shoes", color: "#bae6fd", rarity: "legendary" },
+  { id: "hero_shoes_flame", name: "Flame Runners", desc: "Fire-themed running shoes", price: 70, slot: "shoes", color: "#ea580c", rarity: "epic" },
   // ── Watches ──
   { id: "hero_watch_none", name: "No Watch", desc: "Default look", price: 0, slot: "watch", color: "#9ca3af", rarity: "common" },
   { id: "hero_watch_classic", name: "Classic Watch", desc: "Silver classic analog watch", price: 25, slot: "watch", color: "#c0c0c0", rarity: "common" },
@@ -145,7 +173,7 @@ export function getHeroItem(id: string): HeroShopItem | undefined {
 }
 
 export function isHeroFreeItem(id: string): boolean {
-  return id === "hero_hat_none" || id === "hero_glasses_none" || id === "hero_outfit_none" || id === "hero_watch_none";
+  return id === "hero_hat_none" || id === "hero_glasses_none" || id === "hero_outfit_none" || id === "hero_pants_none" || id === "hero_shoes_none" || id === "hero_watch_none";
 }
 
 // ── Effect Items ────────────────────────────────────────────────────────
