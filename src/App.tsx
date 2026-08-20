@@ -1173,9 +1173,9 @@ export default function App() {
                     <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.time")}</div>
                     <div
                       className="text-2xl sm:text-3xl md:text-5xl font-bold"
-                      style={{ color: timeLeft !== null && timeLeft <= 5 ? "#ef4444" : "#e5e7eb" }}
+                      style={{ color: finished ? "#e5e7eb" : (timeLeft !== null && timeLeft <= 5 ? "#ef4444" : "#e5e7eb") }}
                     >
-                      {timeLeft ?? duration}
+                      {finished ? resultTime : (timeLeft ?? duration)}
                     </div>
                   </div>
                 )}
