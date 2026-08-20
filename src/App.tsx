@@ -56,6 +56,7 @@ import SupabaseCoinSync from "./components/features/SupabaseCoinSync";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import CoinIcon from "./components/CoinIcon";
+import { formatCoin } from "./utils/formatCoin";
 import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
@@ -1466,7 +1467,7 @@ export default function App() {
             >
               <AvIcon size={12} />
             </div>
-            <span className="flex items-center gap-1.5"><CoinIcon size={18} /> {coinsStore.coins.toLocaleString()}</span>
+            <span className="flex items-center gap-1.5"><CoinIcon size={18} /> {formatCoin(coinsStore.coins)}</span>
           </div>
         );
       })()}
@@ -1515,7 +1516,7 @@ export default function App() {
                   {isSignedUp ? fullName(profile) : `${av.name} · ${LANG_FLAGS[lang] || "🏳️"} ${LANG_LABELS[lang]}`}
                 </div>
                 <div className="text-gray-500">
-                  {coinsStore.coins.toLocaleString()} <CoinIcon size={13} /> · {xp.toLocaleString()} XP
+                  {formatCoin(coinsStore.coins)} <CoinIcon size={13} /> · {xp.toLocaleString()} XP
                 </div>
               </div>
             </>

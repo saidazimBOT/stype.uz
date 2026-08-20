@@ -14,6 +14,7 @@ import {
   adminAddCoins, fetchAdminUsers, getMyProfile, isAdminRole, signInWithEmail, signOutSupabase,
   type SupabaseProfileRow,
 } from "../../lib/supabaseService";
+import { formatCoin } from "../../utils/formatCoin";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -296,7 +297,7 @@ function SectionBody({ t }: { t: ThemeColors }) {
                         <div className="flex items-center gap-2">
                           <span className="flex items-center gap-1 text-gray-300 font-medium">
                             <span style={{ color: "#f59e0b" }}>🪙</span>
-                            {(u.coins ?? 0).toLocaleString()}
+                            {formatCoin(u.coins ?? 0)}
                           </span>
                           <button
                             onClick={() => setGivingTo(u)}
@@ -373,7 +374,7 @@ function GiveCoinsModal({
     try {
       await adminAddCoins(user.id, n);
       setBalance((b) => b + n);
-      setMsg({ ok: true, text: `${n.toLocaleString()} coin ${displayName(user)} ga qo'shildi!` });
+      setMsg({ ok: true, text: `${formatCoin(n)} coin ${displayName(user)} ga qo'shildi!` });
       onGiven();
       // Muvaffaqiyatdan so'ng oynani yopamiz — ro'yxat yangilangan bo'ladi
       window.setTimeout(onClose, 1200);
@@ -398,7 +399,7 @@ function GiveCoinsModal({
           <span className="text-xs text-gray-500">Joriy balans</span>
           <span className="text-sm font-bold text-white flex items-center gap-1.5">
             <span style={{ color: "#f59e0b" }}>🪙</span>
-            {balance.toLocaleString()}
+            {formatCoin(balance)}
           </span>
         </div>
 
@@ -416,7 +417,7 @@ function GiveCoinsModal({
                   border: `1px solid ${amount === String(v) ? "#f59e0b66" : "#ffffff14"}`,
                 }}
               >
-                +{v.toLocaleString()}
+                +{formatCoin(v)}
               </button>
             ))}
           </div>

@@ -18,6 +18,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { FaMedal, FaTrophy } from "react-icons/fa6";
+import { formatCoin } from "../../../utils/formatCoin";
 import type { ThemeColors } from "../../../types";
 import { getConvexClient, getStoredUsername, storeUsername } from "../../../lib/battle";
 import { useBattleProfile } from "../../../hooks/useBattleProfile";
@@ -111,7 +112,7 @@ function BattleApp({ t, onClose, coinsStore, heroEquip, addXp }: BattleHubProps)
           <p className="text-sm text-gray-500 mt-0.5">
             {me.username} ·{" "}
             <span className="inline-flex items-center gap-1" style={{ color: t.accent }}>
-              <CoinIcon size={13} /> {coinsStore.coins.toLocaleString()}
+              <CoinIcon size={13} /> {formatCoin(coinsStore.coins)}
             </span>{" "}
             · {me.xp.toLocaleString()} XP
           </p>

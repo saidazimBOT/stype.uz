@@ -11,6 +11,7 @@ import {
   readVisits, visitsPerDay, countToday, countThisWeek, uniqueVisitors, readTypingLog,
 } from "../../hooks/useVisitTracker";
 import { StatCard, Card, SectionHeader, Spinner, EmptyState, PrimaryBtn, TextInput } from "./adminUi";
+import { formatCoin } from "../../utils/formatCoin";
 import { LineChart, BarChart, type ChartPoint } from "./charts";
 import type { AdminStats } from "./types";
 
@@ -117,7 +118,7 @@ export default function DashboardSection({ t, serverAdmin, history, xp }: Props)
         />
         <div className="mt-3 flex items-center gap-4 flex-wrap">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl font-bold" style={{ color: "#fbbf24" }}>{myCoins.toLocaleString()}</span>
+            <span className="text-3xl font-bold" style={{ color: "#fbbf24" }}>{formatCoin(myCoins)}</span>
             <span className="text-xs text-gray-500">🪙 coin</span>
           </div>
           <div className="flex gap-1.5 flex-wrap">

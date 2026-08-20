@@ -5,6 +5,7 @@ import { FiShoppingBag, FiCheck, FiLock, FiZap, FiStar, FiHeart } from "react-ic
 import { FaCrown, FaGem, FaFire, FaBolt, FaRocket } from "react-icons/fa6";
 import { GiSparkles, GiCrystalBall, GiSwordsPower } from "react-icons/gi";
 import CoinIcon from "../CoinIcon";
+import { formatCoin } from "../../utils/formatCoin";
 import HeroAvatar from "../features/HeroAvatar";
 import RotatingMannequin from "../features/RotatingMannequin";
 import { getT } from "../../data/i18n";
@@ -387,7 +388,7 @@ export default function ShopView({
         </div>
         <div className="relative">
           <div className="mb-1 flex justify-center"><CoinIcon size={56} /></div>
-          <div className="text-3xl font-bold text-white mb-1">{coins.toLocaleString()}</div>
+          <div className="text-3xl font-bold text-white mb-1">{formatCoin(coins)}</div>
           <div className="text-sm text-yellow-300/80">Coins</div>
           <div className="mt-2 text-[11px] text-yellow-200/50">
             Earn coins by typing tests & playing games!
