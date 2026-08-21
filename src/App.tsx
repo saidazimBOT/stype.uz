@@ -63,6 +63,7 @@ import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
 import { getTypingRecorder, getUserToken } from "./lib/convexBridge";
 import { TypingRecorderBridge } from "./components/features/SiteOverlays";
+import ResultsChart, { type WpmSample } from "./components/features/ResultsChart";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
@@ -158,6 +159,8 @@ export default function App() {
   const [maxCombo, setMaxCombo] = useState(0);
   // Test tugagach natijalar ekranida ko'rsatiladigan aniq vaqt (soniyalarda)
   const [resultTime, setResultTime] = useState(0);
+  // WPM namunalari — har soniyada WPM, xato va vaqt qiymatlarini saqlaydi
+  const [wpmHistory, setWpmHistory] = useState<WpmSample[]>([]);
   // Xato kiritilganda qizil ko'rsatiladigan harf holati (faqat o'sha harf)
   const [wordErr, setWordErr] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -386,6 +389,20 @@ export default function App() {
     }, 800);
   }, []);
 
+  // ── WPM SAMPLING — har soniyada WPM namunasini yig'amiz ──────────
+  useEffect(() => {
+    if (!started || finished || duration === "∞") return;
+    const sampleInterval = setInterval(() => {
+      if (!startTimeRef.current) return;
+      const elapsedSec = Math.round((Date.now() - startTimeRef.current) / 1000);
+      setWpmHistory((prev) => [
+        ...prev,
+        { time: elapsedSec, wpm, errors },
+      ]);
+    }, 1000);
+    return () => clearInterval(sampleInterval);
+  }, [started, finished, duration, wpm, errors]);
+
   // ── TIMER ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!started || finished || duration === "∞") return;
@@ -427,6 +444,7 @@ export default function App() {
     setWpm(0);
     setAccuracy(100);
     setParticles([]);
+    setWpmHistory([]);
     correctCharsRef.current = 0;
     startTimeRef.current = d === "∞" ? null : Date.now();
   };
@@ -592,6 +610,11 @@ export default function App() {
       // (jonli hisoblagich oxirgi marta 500ms avval yangilangan bo'lishi mumkin)
       setWpm(fw);
       setResultTime(result.time);
+      // Yakuniy WPM namunasini qo'shamiz
+      setWpmHistory((prev) => [
+        ...prev,
+        { time: result.time, wpm: fw, errors },
+      ]);
       setHistory((h) => [result, ...h.slice(0, 49)]);
 
       // Admin panel uchun: kim type qilganini qayd qilamiz (to'liq haqiqiy ko'rsatkichlar bilan)
@@ -1258,7 +1281,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* Finished state — natijalar ekrani */}
+              {/* Finished state — Monkeytype uslubidagi natijalar grafigi */}
               {finished && (
                 <div className="flex flex-col items-center gap-6 animate-fade-in w-full">
                   {/* Baholash xabari */}
@@ -1282,70 +1305,26 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Katta natija bloklari — WPM | ACCURACY | COMBO (screenshotdagi uslub) */}
-                  {typed.length > 0 && (
-                    <div className="flex flex-wrap items-start justify-center gap-6 sm:gap-14 md:gap-20">
-                      <div className="text-center animate-pop-in">
-                        <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.wpm")}</div>
-                        <div
-                          className="text-5xl sm:text-6xl md:text-7xl font-bold leading-none"
-                          style={{ color: t.accent, fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
-                        >
-                          {wpm}
-                        </div>
-                      </div>
-                      <div className="text-center animate-pop-in" style={{ animationDelay: "70ms" }}>
-                        <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.accuracy")}</div>
-                        <div
-                          className="text-5xl sm:text-6xl md:text-7xl font-bold leading-none text-white"
-                          style={{ fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
-                        >
-                          {accuracy}%
-                        </div>
-                      </div>
-                      {maxCombo > 0 && (
-                        <div className="text-center animate-pop-in" style={{ animationDelay: "140ms" }}>
-                          <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-2">{T("type.combo")}</div>
-                          <div
-                            className="text-5xl sm:text-6xl md:text-7xl font-bold leading-none"
-                            style={{ color: "#f59e0b", fontFamily: "'JetBrains Mono','Fira Code',monospace" }}
-                          >
-                            ×{maxCombo}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  {/* Monkeytype uslubidagi natijalar grafigi */}
+                  {typed.length > 0 ? (
+                    <ResultsChart
+                      t={t}
+                      wpm={wpm}
+                      accuracy={accuracy}
+                      wpmHistory={wpmHistory}
+                      correctChars={typed.length}
+                      totalChars={totalKs}
+                      errors={errors}
+                      time={resultTime}
+                      maxCombo={maxCombo}
+                      lang={lang}
+                      duration={duration}
+                      xp={wpm + accuracy}
+                      coins={Math.round(wpm * 1) + (accuracy >= 95 ? 5 : 0)}
+                    />
+                  ) : (
+                    <div className="text-sm text-gray-500">{T("type.timeUp")}</div>
                   )}
-
-                  {/* Batafsil ko'rsatkichlar */}
-                  <div className="flex gap-4 sm:gap-6 text-sm text-gray-400 flex-wrap justify-center animate-row">
-                    {typed.length > 0 && (
-                      <span>
-                        {T("type.time")}: <strong className="text-gray-300">{resultTime}s</strong>
-                      </span>
-                    )}
-                    <span>
-                      {T("type.errors")} <strong className="text-red-400">{errors}</strong>
-                    </span>
-                    <span>
-                      {T("type.correct")}:{" "}
-                      <strong style={{ color: t.accent }}>{typed.length}</strong>
-                    </span>
-                    <span>
-                      {T("type.total")}:{" "}
-                      <strong className="text-gray-300">{totalKs}</strong>
-                    </span>
-                    {typed.length > 0 && (
-                      <>
-                        <span>
-                          {T("type.xp")} <strong style={{ color: "#f59e0b" }}>+{wpm + accuracy}</strong>
-                        </span>
-                        <span>
-                          <CoinIcon size={14} /> +{Math.round(wpm * 1) + (accuracy >= 95 ? 5 : 0)}
-                        </span>
-                      </>
-                    )}
-                  </div>
 
                   <button
                     onClick={() => newText()}
