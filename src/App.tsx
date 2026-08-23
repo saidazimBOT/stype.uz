@@ -1179,20 +1179,10 @@ export default function App() {
           ) : view === "type" ? (
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
-              {/* Stats */}
+              {/* Stats — faqat VAQT (yozish boshlanganda yoki tugaganda) */}
               <div className="flex items-center gap-4 sm:gap-6 md:gap-16">
-                <div className="text-center animate-stat-pop">
-                  <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.wpm")}</div>
-                  <div className="text-2xl sm:text-3xl md:text-5xl font-bold" style={{ color: t.accent }}>
-                    {wpm}
-                  </div>
-                </div>
-                <div className="text-center animate-stat-pop" style={{ animationDelay: "80ms" }}>
-                  <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.accuracy")}</div>
-                  <div className="text-2xl sm:text-3xl md:text-5xl font-bold text-white">{accuracy}%</div>
-                </div>
-                {duration !== "∞" && (
-                  <div className="text-center animate-stat-pop" style={{ animationDelay: "160ms" }}>
+                {duration !== "∞" && (started || finished) && (
+                  <div className="text-center animate-stat-pop">
                     <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">{T("type.time")}</div>
                     <div
                       className="text-2xl sm:text-3xl md:text-5xl font-bold"
