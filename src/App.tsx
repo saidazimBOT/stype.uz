@@ -137,6 +137,9 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [ripple, setRipple] = useState<{ x: number; y: number; id: number } | null>(null);
   // Supabase sozlangan bo'lsa — ro'yxatdan o'tish va kirish haqiqiy backend orqali ishlaydi
   const cloudEnabled = isSupabaseConfigured();
+  // Google OAuth redirect aniqlash — URL'da access_token bo'lsa modal'larni yashiramiz
+  const isOAuthRedirect = cloudEnabled && typeof window !== "undefined" &&
+    (window.location.hash.includes("access_token") || window.location.search.includes("code="));
 
   // Coin notification helper
   const showCoinNotif = useCallback((amount: number, source: CoinNotif["source"]) => {
@@ -192,6 +195,10 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     if (!cloudEnabled || isSignedUp || cloudRestoreStartedRef.current) return;
     cloudRestoreStartedRef.current = true;
     setRestoringCloudProfile(true);
+    // URL'dagi OAuth tokenlarni tozalamiz
+    if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     (async () => {
       try {
         const user = await getSupabaseUser();
@@ -219,6 +226,10 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     const { data: { subscription } } = supabase!.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
+          // URL'dagi access_token/to'larni tozalamiz — loopni oldini oladi
+          if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
+            window.history.replaceState({}, "", window.location.pathname);
+          }
           const user = session.user;
           const md = (user.user_metadata || {}) as Record<string, string | undefined>;
           const emailPrefix = (user.email || "").split("@")[0] || "user";
@@ -1441,7 +1452,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
       {/* Sign up modal — birinchi kirishda majburiy emas, o'tkazib yuborish mumkin
           (login oynasi ochiq bo'lsa yashirinadi). Profil bor bo'lsa yoki
           tiklanayotgan bo'lsa modal ko'rinmaydi. */}
-      {!isSignedUp && !skipSignup && !showLogin && mounted && !restoringCloudProfile && (
+      {!isSignedUp && !skipSignup && !showLogin && mounted && !restoringCloudProfile && !isOAuthRedirect && (
         <SignUpModal
           t={t}
           lang={lang}
@@ -1475,7 +1486,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
         />
       )}
       {/* Login modal — Supabase orqali (email + parol) */}
-      {showLogin && (
+      {showLogin && !isOAuthRedirect && (
         <LoginModal
           t={t}
           lang={lang}
