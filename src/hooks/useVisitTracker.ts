@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isOAuthPopup } from "../lib/oauthPopup";
 
 // ── Visit Tracking (localStorage-based) ──────────────────────────────────
 // Eslatma: Bu statik sayt — server/database yo'q. Shuning uchun tashriflar
@@ -216,6 +217,8 @@ export function recordVisit(lang: string, theme: string): void {
 /** Sayt ochilganda bir marta tashrifni qayd qiladi va onlayn statusni yangilab turadi. */
 export function useVisitTracker(lang: string, theme: string): void {
   useEffect(() => {
+    // Google OAuth popup oynasi tashrif sifatida hisoblanmaydi
+    if (isOAuthPopup()) return;
     recordVisit(lang, theme);
 
     // Onlayn status / tashrif davomiyligi — har 20 soniyada yangilanadi

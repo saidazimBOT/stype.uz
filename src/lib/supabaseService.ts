@@ -8,6 +8,7 @@
  *  - administrator (role = admin | owner) barcha profillarni ko'ra oladi.
  */
 import { supabase } from "./supabase";
+import { GOOGLE_POPUP_NAME } from "./oauthPopup";
 import type { UserProfile } from "../hooks/useProfile";
 import { usernameFromProfile } from "../hooks/useProfile";
 
@@ -64,20 +65,58 @@ export async function signOutSupabase() {
   await supabase.auth.signOut();
 }
 
-/** Google orqali kirish — Supabase OAuth */
+/**
+ * Google orqali kirish — Supabase OAuth, POPUP oynada.
+ *
+ * Asosiy sahifa joyida qoladi (hard refresh bo'lmaydi): Google alohida
+ * kichik oynada ochiladi, sessiya localStorage'ga yozilgach supabase-js
+ * BroadcastChannel orqali asosiy oynaga SIGNED_IN hodisasini yuboradi.
+ * Popup bloklangan bo'lsa — eski to'liq redirect rejimiga qaytamiz.
+ */
 export async function signInWithGoogle() {
   if (!supabase) throw new Error("Supabase not configured");
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/`,
-      queryParams: {
-        access_type: "offline",
-        prompt: "consent",
-      },
+  const options = {
+    redirectTo: `${window.location.origin}/`,
+    queryParams: {
+      access_type: "offline",
+      prompt: "consent",
     },
+  };
+
+  // Popup FAQAT bosish hodisasi ichida ochilsa bloklanmaydi — shuning uchun
+  // avval bo'sh oyna ochamiz, manzilni keyin (so'rov qaytgach) qo'yamiz.
+  const w = 480;
+  const h = 640;
+  const left = window.screenX + Math.max(0, (window.outerWidth - w) / 2);
+  const top = window.screenY + Math.max(0, (window.outerHeight - h) / 2);
+  let popup: Window | null = null;
+  try {
+    popup = window.open(
+      "about:blank",
+      GOOGLE_POPUP_NAME,
+      `width=${w},height=${h},left=${Math.round(left)},top=${Math.round(top)},resizable=yes,scrollbars=yes`,
+    );
+  } catch {
+    popup = null;
+  }
+
+  if (!popup) {
+    // Popup bloklangan — avvalgidek to'liq redirect (sahifa yangilanadi)
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options });
+    if (error) throw error;
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { ...options, skipBrowserRedirect: true },
   });
-  if (error) throw error;
+  if (error || !data?.url) {
+    popup.close();
+    throw error ?? new Error("OAuth manzili olinmadi");
+  }
+  popup.location.href = data.url;
+  popup.focus();
 }
 
 /** Joriy Supabase foydalanuvchisi (agar kirgan bo'lsa) */
