@@ -148,13 +148,16 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
               <div className="text-right text-base font-bold" style={{ color: p.color }}>
                 {p.wpm}
               </div>
-              <div className="text-right text-sm text-gray-400">{p.acc}%</div>
+              <div className="text-right text-sm text-gray-400">
+                {p.hasResult ? `${p.acc}%` : "—"}
+              </div>
               <div className="text-right">
                 <span
                   className="text-xs px-2 py-0.5 rounded-full"
                   style={{ background: "#ffffff0d", color: "#9ca3af" }}
                 >
-                  {LANG_FLAGS[p.lang] || "🏳️"} {p.lang.toUpperCase()}
+                  {/* Hali test topshirmagan foydalanuvchida til ham yo'q */}
+                  {p.lang ? `${LANG_FLAGS[p.lang] || "🏳️"} ${p.lang.toUpperCase()}` : "—"}
                 </span>
               </div>
             </div>

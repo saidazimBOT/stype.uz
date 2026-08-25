@@ -26,15 +26,20 @@ function entryColor(role: string, index: number): string {
 }
 
 /**
- * Global leaderboard — HAMMA foydalanuvchi (oddiy, admin, owner) ko'radi.
+ * Global leaderboard — HAMMA foydalanuvchi (oddiy, admin, owner) ko'radi va
+ * ro'yxatda HAR BIR ro'yxatdan o'tgan foydalanuvchi turadi.
  *
- * Asosiy manba `typing_results`: har bir foydalanuvchining eng yaxshi natijasi
- * olinadi, shuning uchun WPM bilan birga haqiqiy aniqlik (acc) va til ham
- * ko'rsatiladi. Agar natijalar jadvali hali bo'sh bo'lsa (eski akkauntlar),
- * `profiles.best_wpm` zaxira sifatida ishlatiladi.
+ * Hali test topshirmaganlar ham chiqadi — 0 WPM bilan, ro'yxat oxirida.
+ * Shunday qilib yangi user ro'yxatdan o'tishi bilan leaderboard'da paydo
+ * bo'ladi va birinchi testidan keyin o'z o'rniga ko'tariladi.
  *
- * RLS: `typing_results` va `profiles` uchun "hamma o'qiy oladi" (select) siyosati
- * bor — supabase/schema.sql ga qarang.
+ * WPM manbai `typing_results` — har bir foydalanuvchining eng yaxshi natijasi,
+ * shuning uchun aniqlik (acc) va til ham haqiqiy qiymat. Til filtri tanlanganda
+ * faqat o'sha tildagi natijalar hisobga olinadi (o'sha tilda yozmaganlar 0 bilan
+ * qoladi).
+ *
+ * RLS: `profiles` va `typing_results` uchun "hamma o'qiy oladi" siyosati bor —
+ * supabase/schema.sql ga qarang.
  */
 export async function fetchLeaderboard(lang?: string): Promise<LeaderboardEntry[]> {
   if (!supabase) return [];
@@ -43,21 +48,20 @@ export async function fetchLeaderboard(lang?: string): Promise<LeaderboardEntry[
   const { data: { user } } = await supabase.auth.getUser();
   const myId = user?.id ?? null;
 
-  // ── 1. Profillar (ism, rol, holat) ──
+  // ── 1. Barcha profillar ──
   const { data: profileData } = await supabase
     .from('profiles')
     .select('id, username, first_name, best_wpm, role, status, banned')
     .limit(1000);
-  const profiles = (profileData ?? []) as ProfileRow[];
-  const profById = new Map(profiles.map((p) => [p.id, p]));
-  const isBlocked = (p?: ProfileRow) => !!p && (p.status === 'blocked' || p.banned === true);
+  const profiles = ((profileData ?? []) as ProfileRow[])
+    .filter((p) => p.status !== 'blocked' && p.banned !== true);
 
   // ── 2. Natijalar — eng yuqori WPM birinchi ──
   let query = supabase
     .from('typing_results')
     .select('user_id, username, wpm, accuracy, lang')
     .order('wpm', { ascending: false })
-    .limit(1000);
+    .limit(2000);
   if (lang) query = query.eq('lang', lang);
   const { data: resultData } = await query;
 
@@ -65,57 +69,34 @@ export async function fetchLeaderboard(lang?: string): Promise<LeaderboardEntry[
   const best = new Map<string, ResultRow>();
   for (const r of (resultData ?? []) as ResultRow[]) {
     if (!r.user_id || !r.wpm || r.wpm <= 0) continue;
-    if (isBlocked(profById.get(r.user_id))) continue;
     if (!best.has(r.user_id)) best.set(r.user_id, r);
   }
 
-  if (best.size > 0) {
-    return [...best.values()]
-      .sort((a, b) => (b.wpm ?? 0) - (a.wpm ?? 0))
-      .map((r, i) => {
-        const p = profById.get(r.user_id);
-        const role = p?.role ?? 'user';
-        const name = p?.username || p?.first_name || r.username || 'Anonymous';
-        return {
-          rank: i + 1,
-          name,
-          country: '🌍',
-          countryName: 'Global',
-          wpm: r.wpm ?? 0,
-          acc: r.accuracy ?? 0,
-          lang: r.lang || 'en',
-          avatar: name.slice(0, 2).toUpperCase(),
-          color: entryColor(role, i),
-          isMe: r.user_id === myId,
-          role,
-          id: r.user_id,
-        };
-      });
-  }
-
-  // ── 3. Zaxira: natijalar jadvali bo'sh bo'lsa — profildagi best_wpm ──
-  // (til bo'yicha filtr bunda qo'llanmaydi — profilda til saqlanmaydi)
-  if (lang) return [];
   return profiles
-    .filter((p) => !isBlocked(p) && (p.best_wpm ?? 0) > 0)
-    .sort((a, b) => (b.best_wpm ?? 0) - (a.best_wpm ?? 0))
-    .map((p, i) => {
-      const name = p.username || p.first_name || 'Anonymous';
+    .map((p) => {
+      const row = best.get(p.id);
+      // Filtrsiz ko'rinishda profildagi best_wpm ham hisobga olinadi — eski
+      // akkauntlarda natija qatori bo'lmasligi mumkin. Til filtri bilan esa
+      // faqat o'sha tildagi natija hisoblanadi (best_wpm tilga bog'liq emas).
+      const wpm = lang ? (row?.wpm ?? 0) : Math.max(row?.wpm ?? 0, p.best_wpm ?? 0);
+      const name = p.username || p.first_name || row?.username || 'Anonymous';
       return {
-        rank: i + 1,
         name,
+        wpm,
+        acc: row?.accuracy ?? 0,
+        lang: row?.lang || '',
+        hasResult: wpm > 0,
         country: '🌍',
         countryName: 'Global',
-        wpm: p.best_wpm ?? 0,
-        acc: 0,
-        lang: 'en',
         avatar: name.slice(0, 2).toUpperCase(),
-        color: entryColor(p.role, i),
-        isMe: p.id === myId,
         role: p.role,
         id: p.id,
+        isMe: p.id === myId,
       };
-    });
+    })
+    // Yuqori WPM tepada; teng bo'lsa ism bo'yicha — tartib har yuklashda bir xil
+    .sort((a, b) => b.wpm - a.wpm || a.name.localeCompare(b.name))
+    .map((e, i) => ({ ...e, rank: i + 1, color: entryColor(e.role, i) }));
 }
 
 /**

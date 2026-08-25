@@ -42,6 +42,8 @@ export interface LeaderboardEntry {
   isMe?: boolean;
   role?: string;
   id?: string;
+  /** Foydalanuvchi hech qachon test topshirmagan bo'lsa false — WPM/Acc "—" ko'rinadi */
+  hasResult?: boolean;
 }
 
 export interface CountryStats {
