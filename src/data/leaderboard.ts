@@ -1,44 +1,121 @@
 import { supabase } from '../lib/supabase';
 import type { LeaderboardEntry } from '../types';
 
-// Fetch real leaderboard from Supabase
+interface ResultRow {
+  user_id: string;
+  username: string | null;
+  wpm: number | null;
+  accuracy: number | null;
+  lang: string | null;
+}
+
+interface ProfileRow {
+  id: string;
+  username: string | null;
+  first_name: string | null;
+  best_wpm: number | null;
+  role: string;
+  status: string | null;
+  banned: boolean | null;
+}
+
+const PALETTE = ['#a78bfa', '#22c55e', '#38bdf8', '#ec4899', '#f97316'];
+
+function entryColor(role: string, index: number): string {
+  return role === 'admin' || role === 'owner' ? '#f59e0b' : PALETTE[index % PALETTE.length];
+}
+
+/**
+ * Global leaderboard — HAMMA foydalanuvchi (oddiy, admin, owner) ko'radi.
+ *
+ * Asosiy manba `typing_results`: har bir foydalanuvchining eng yaxshi natijasi
+ * olinadi, shuning uchun WPM bilan birga haqiqiy aniqlik (acc) va til ham
+ * ko'rsatiladi. Agar natijalar jadvali hali bo'sh bo'lsa (eski akkauntlar),
+ * `profiles.best_wpm` zaxira sifatida ishlatiladi.
+ *
+ * RLS: `typing_results` va `profiles` uchun "hamma o'qiy oladi" (select) siyosati
+ * bor — supabase/schema.sql ga qarang.
+ */
 export async function fetchLeaderboard(lang?: string): Promise<LeaderboardEntry[]> {
   if (!supabase) return [];
 
-  // Current user ID to mark "you"
+  // "you" belgisi uchun joriy foydalanuvchi
   const { data: { user } } = await supabase.auth.getUser();
   const myId = user?.id ?? null;
 
-  const { data, error } = await supabase
+  // ── 1. Profillar (ism, rol, holat) ──
+  const { data: profileData } = await supabase
     .from('profiles')
-    .select('id, username, first_name, best_wpm, xp, role, avatar')
-    .not('best_wpm', 'is', null)
-    .order('best_wpm', { ascending: false })
-    .limit(100);
+    .select('id, username, first_name, best_wpm, role, status, banned')
+    .limit(1000);
+  const profiles = (profileData ?? []) as ProfileRow[];
+  const profById = new Map(profiles.map((p) => [p.id, p]));
+  const isBlocked = (p?: ProfileRow) => !!p && (p.status === 'blocked' || p.banned === true);
 
-  if (error || !data) return [];
+  // ── 2. Natijalar — eng yuqori WPM birinchi ──
+  let query = supabase
+    .from('typing_results')
+    .select('user_id, username, wpm, accuracy, lang')
+    .order('wpm', { ascending: false })
+    .limit(1000);
+  if (lang) query = query.eq('lang', lang);
+  const { data: resultData } = await query;
 
-  // Filter banned users
-  const active = (data as { id: string; username: string | null; first_name: string | null; best_wpm: number | null; xp: number | null; role: string; avatar: string | null }[])
-    .filter((p) => p.best_wpm && p.best_wpm > 0);
+  // Har bir foydalanuvchidan faqat eng yaxshi natija (ro'yxat allaqachon saralangan)
+  const best = new Map<string, ResultRow>();
+  for (const r of (resultData ?? []) as ResultRow[]) {
+    if (!r.user_id || !r.wpm || r.wpm <= 0) continue;
+    if (isBlocked(profById.get(r.user_id))) continue;
+    if (!best.has(r.user_id)) best.set(r.user_id, r);
+  }
 
-  return active.map((p, i) => {
-    const isAdmin = p.role === 'admin' || p.role === 'owner';
-    return {
-      rank: i + 1,
-      name: p.username || p.first_name || 'Anonymous',
-      country: '🌍',
-      countryName: 'Global',
-      wpm: p.best_wpm || 0,
-      acc: 95,
-      lang: lang || 'all',
-      avatar: (p.username || 'A').slice(0, 2).toUpperCase(),
-      color: isAdmin ? '#f59e0b' : ['#a78bfa', '#22c55e', '#38bdf8', '#ec4899', '#f97316'][i % 5],
-      isMe: p.id === myId,
-      role: p.role,
-      id: p.id,
-    };
-  });
+  if (best.size > 0) {
+    return [...best.values()]
+      .sort((a, b) => (b.wpm ?? 0) - (a.wpm ?? 0))
+      .map((r, i) => {
+        const p = profById.get(r.user_id);
+        const role = p?.role ?? 'user';
+        const name = p?.username || p?.first_name || r.username || 'Anonymous';
+        return {
+          rank: i + 1,
+          name,
+          country: '🌍',
+          countryName: 'Global',
+          wpm: r.wpm ?? 0,
+          acc: r.accuracy ?? 0,
+          lang: r.lang || 'en',
+          avatar: name.slice(0, 2).toUpperCase(),
+          color: entryColor(role, i),
+          isMe: r.user_id === myId,
+          role,
+          id: r.user_id,
+        };
+      });
+  }
+
+  // ── 3. Zaxira: natijalar jadvali bo'sh bo'lsa — profildagi best_wpm ──
+  // (til bo'yicha filtr bunda qo'llanmaydi — profilda til saqlanmaydi)
+  if (lang) return [];
+  return profiles
+    .filter((p) => !isBlocked(p) && (p.best_wpm ?? 0) > 0)
+    .sort((a, b) => (b.best_wpm ?? 0) - (a.best_wpm ?? 0))
+    .map((p, i) => {
+      const name = p.username || p.first_name || 'Anonymous';
+      return {
+        rank: i + 1,
+        name,
+        country: '🌍',
+        countryName: 'Global',
+        wpm: p.best_wpm ?? 0,
+        acc: 0,
+        lang: 'en',
+        avatar: name.slice(0, 2).toUpperCase(),
+        color: entryColor(p.role, i),
+        isMe: p.id === myId,
+        role: p.role,
+        id: p.id,
+      };
+    });
 }
 
 // Country ranking from real data

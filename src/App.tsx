@@ -63,8 +63,9 @@ import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
-import { getTypingRecorder, getUserToken } from "./lib/convexBridge";
+import { getUserToken } from "./lib/convexBridge";
 import { TypingRecorderBridge } from "./components/features/SiteOverlays";
+import { recordTypingResult } from "./lib/db";
 import ResultsChart, { type WpmSample } from "./components/features/ResultsChart";
 
 // SVG icons (stiker/emoji o'rniga)
@@ -230,6 +231,9 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
             window.history.replaceState({}, "", window.location.pathname);
           }
+          // Popup orqali kirishda sahifa yangilanmaydi — modallarni o'zimiz yopamiz
+          setShowLogin(false);
+          setSkipSignup(true);
           const user = session.user;
           const md = (user.user_metadata || {}) as Record<string, string | undefined>;
           const emailPrefix = (user.email || "").split("@")[0] || "user";
@@ -265,7 +269,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
       }
     );
     return () => subscription.unsubscribe();
-  }, [cloudEnabled, saveProfile]);
+  }, [cloudEnabled, saveProfile, setSkipSignup]);
 
   // Feature hooks
   const daily = useDailyReward();
@@ -689,22 +693,22 @@ export default function App({ initialView }: { initialView?: string } = {}) {
         lang,
       });
 
-      // Convex serverga ham HAQIQIY natijani yozamiz — foydalanuvchi login qilgan
-      // bo'lsa, server uning ID sini (tokenIdentifier) avtomatik saqlaydi.
-      const recorder = getTypingRecorder();
-      if (recorder) {
-        void recorder({
-          wpm: fw,
-          accuracy,
-          errors,
-          correct: typed.length,
-          total: totalKs,
-          time: result.time,
-          lang,
-          duration: typeof duration === "number" ? duration : 0,
-          username: fullName(profile) || undefined,
-        }).catch(() => {});
-      }
+      // Supabase'ga HAQIQIY natijani yozamiz — foydalanuvchi login qilgan bo'lsa
+      // typing_results ga qator qo'shiladi va profiles.best_wpm yangilanadi.
+      // Bevosita chaqiramiz (avval window ko'prigi orqali edi va u hech qachon
+      // o'rnatilmay qolgani uchun natijalar umuman saqlanmasdi).
+      void recordTypingResult({
+        wpm: fw,
+        accuracy,
+        errors,
+        correct: typed.length,
+        total: totalKs,
+        time: result.time,
+        lang,
+        duration: typeof duration === "number" ? duration : 0,
+      }).catch((e) => {
+        console.error("[stype] natijani saqlab bo'lmadi:", e);
+      });
 
       updateProgress("wpm", fw);
       updateProgress("accuracy", accuracy);
@@ -783,6 +787,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     <>
     <AccountSyncBridge />
     <SupabaseCoinSync />
+    {/* window.__userToken ni o'rnatadi — lokal tarixda userId uchun kerak */}
+    <TypingRecorderBridge />
     <div
       suppressHydrationWarning
       className="min-h-screen h-dvh flex flex-col isolate"

@@ -235,15 +235,17 @@ export async function recordTypingResult(result: {
   duration: number;
 }) {
   const uid = await getCurrentUserId();
+  // Mehmon (login qilmagan) natijasi serverga yozilmaydi — faqat lokal tarixda qoladi
   if (!uid) return;
 
   const profile = await getMyProfile();
   const username = profile?.username || profile?.first_name || "player";
+  const wpm = Math.round(result.wpm);
 
-  await supabase!.from("typing_results").insert({
+  const { error: insertError } = await supabase!.from("typing_results").insert({
     user_id: uid,
     username,
-    wpm: Math.round(result.wpm),
+    wpm,
     accuracy: Math.round(result.accuracy),
     errors: Math.round(result.errors),
     correct: Math.round(result.correct),
@@ -253,19 +255,25 @@ export async function recordTypingResult(result: {
     duration: Math.round(result.duration),
     created_at: Date.now(),
   });
+  // Xatoni jim yutmaymiz — aks holda natija saqlanmagani bilinmay qoladi
+  if (insertError) throw insertError;
 
-  // Profile'ni yangilash (best_wpm, last_seen)
-  if (profile) {
-    const bestWpm = Math.max(profile.best_wpm ?? 0, Math.round(result.wpm));
-    await supabase!.from("profiles").update({
-      best_wpm: bestWpm,
-      last_seen: Date.now(),
-      updated_at: new Date().toISOString(),
-    }).eq("id", uid);
+  // Profile'ni yangilash (best_wpm, last_seen). Profil qatori o'qilmagan
+  // bo'lsa ham yangilaymiz — leaderboard aynan best_wpm ga tayanadi.
+  const bestWpm = Math.max(profile?.best_wpm ?? 0, wpm);
+  const { error: profileError } = await supabase!.from("profiles").update({
+    best_wpm: bestWpm,
+    last_seen: Date.now(),
+    updated_at: new Date().toISOString(),
+  }).eq("id", uid);
+  if (profileError) throw profileError;
+
+  // Yutuqlarni tekshirish — bu yerdagi xato natija saqlanishini buzmasin
+  try {
+    await checkAchievements(uid);
+  } catch {
+    // yutuqlar jadvali hali to'ldirilmagan bo'lishi mumkin
   }
-
-  // Yutuqlarni tekshirish
-  await checkAchievements(uid);
 }
 
 /** Leaderboard uchun — eng yaxshi natijalar (har bir foydalanuvchidan bitta) */
