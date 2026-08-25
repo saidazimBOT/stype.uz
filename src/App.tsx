@@ -14,7 +14,7 @@ import { useDailyReward } from "./components/features/DailyLogin";
 import { useProfile, fullName } from "./hooks/useProfile";
 import SignUpModal from "./components/features/SignUpModal";
 import LoginModal from "./components/features/LoginModal";
-import { isSupabaseConfigured } from "./lib/supabase";
+import { supabase, isSupabaseConfigured } from "./lib/supabase";
 import { getSupabaseUser } from "./lib/supabaseService";
 import ProfileAvatar from "./components/features/ProfileAvatar";
 import { useMissions } from "./components/features/WeeklyMissions";
@@ -206,6 +206,39 @@ export default function App() {
       }
     })();
   }, [cloudEnabled, isSignedUp, saveProfile]);
+
+  // Google OAuth callback — auth state change listener
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          const user = session.user;
+          const md = (user.user_metadata || {}) as Record<string, string | undefined>;
+          const fullName = md.full_name || md.name || "";
+          const firstName = md.first_name || fullName.split(" ")[0] || user.email?.split("@")[0] || "User";
+          const lastName = md.last_name || fullName.split(" ").slice(1).join( "") || "";
+          const avatarUrl = md.avatar_url || md.picture || "";
+          saveProfile({
+            firstName,
+            lastName,
+            photo: avatarUrl,
+            avatarId: "avatar_default",
+            signedUpAt: Date.now(),
+          });
+          // last_login yangilash
+          void supabase!.from("profiles").update({
+            last_login: new Date().toISOString(),
+            email: user.email,
+          }).eq("id", user.id);
+        }
+        if (event === "SIGNED_OUT") {
+          saveProfile({ firstName: "", lastName: "", photo: "", avatarId: "avatar_default", signedUpAt: 0 });
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  }, [cloudEnabled, saveProfile]);
 
   // Feature hooks
   const daily = useDailyReward();
