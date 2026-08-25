@@ -65,7 +65,8 @@ import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
 import { getUserToken } from "./lib/convexBridge";
 import { TypingRecorderBridge } from "./components/features/SiteOverlays";
-import { recordTypingResult } from "./lib/db";
+import { recordTypingResult, getCurrentUserId, getMyProfile } from "./lib/db";
+import SidebarAccount from "./components/features/SidebarAccount";
 import ResultsChart, { type WpmSample } from "./components/features/ResultsChart";
 
 // SVG icons (stiker/emoji o'rniga)
@@ -119,6 +120,10 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  // Supabase sessiyasi — sidebar'dagi akkaunt bloki shunga qarab ko'rinadi.
+  // Lokal profil yo'qolgan bo'lsa ham chiqish tugmasi mavjud bo'lishi kerak.
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const [sessionRole, setSessionRole] = useState<string>("user");
   // Birinchi kirishda majburiy ro'yxatdan o'tish oynasini o'tkazib yuborish
   // (skip) — sayt tugmalari bloklanib qolmasligi uchun. Keyingi safar qayta
   // ko'rsatilmaydi, navbar'dagi "Sign up" tugmasi orqali ochish mumkin.
@@ -189,6 +194,21 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     setMounted(true);
   }, []);
 
+  // Sahifa ochilganda mavjud Supabase sessiyasini o'qiymiz (sidebar akkaunt bloki uchun)
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    let alive = true;
+    void (async () => {
+      const uid = await getCurrentUserId();
+      if (!alive) return;
+      setSessionUserId(uid);
+      if (!uid) return;
+      const p = await getMyProfile();
+      if (alive && p) setSessionRole(p.role);
+    })();
+    return () => { alive = false; };
+  }, [cloudEnabled]);
+
   // Supabase'da sessiya saqlangan, lekin lokal profil yo'qolgan bo'lsa (masalan
   // eski bug tufayli localStorage'ga "null" yozilib qolgan) — profilni qayta
   // tiklaymiz, foydalanuvchi qaytadan ro'yxatdan o'tishga majbur bo'lmaydi.
@@ -234,6 +254,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           // Popup orqali kirishda sahifa yangilanmaydi — modallarni o'zimiz yopamiz
           setShowLogin(false);
           setSkipSignup(true);
+          setSessionUserId(session.user.id);
+          void getMyProfile().then((p) => { if (p) setSessionRole(p.role); });
           const user = session.user;
           const md = (user.user_metadata || {}) as Record<string, string | undefined>;
           const emailPrefix = (user.email || "").split("@")[0] || "user";
@@ -264,6 +286,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           }).eq("id", user.id);
         }
         if (event === "SIGNED_OUT") {
+          setSessionUserId(null);
+          setSessionRole("user");
           saveProfile({ firstName: "", lastName: "", photo: "", avatarId: "avatar_default", signedUpAt: 0 });
         }
       }
@@ -1143,25 +1167,49 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <span className="hidden md:block">Admin</span>
           </button>
 
-          {/* Logout tugmasi (faqat kirgan foydalanuvchilar uchun) */}
-          {isSignedUp && (
-            <button
-              onClick={async () => {
-                try {
-                  const { signOutSupabase } = await import("./lib/supabaseService");
-                  await signOutSupabase();
-                } catch {}
-                saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
-                localStorage.removeItem("typeuz_signup_skipped");
-                setView("type");
-              }}
-              className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 text-red-400/70 hover:text-red-400 mb-2"
-              title="Chiqish (Logout)"
-            >
-              <FiLogOut size={16} className="flex-shrink-0" />
-              <span className="hidden md:block">Chiqish</span>
-            </button>
-          )}
+          {/* Akkaunt bloki — pastki chap burchak. Bosilsa Profil / Sozlamalar /
+              Chiqish menyusi ochiladi. Kirmagan bo'lsa "Kirish" tugmasi. */}
+          <SidebarAccount
+            t={t}
+            signedIn={!!sessionUserId || isSignedUp}
+            name={fullName(profile) || "Foydalanuvchi"}
+            role={sessionRole}
+            activeAvatar={coinsStore.activeAvatar}
+            heroEquip={coinsStore.heroEquip}
+            onOpenProfile={() => {
+              setShowOwner(false);
+              setShowPromo(false);
+              setShowLingohub(false);
+              setShowSettings(false);
+              setView("profile");
+            }}
+            onOpenSettings={() => {
+              setShowOwner(false);
+              setShowPromo(false);
+              setShowLingohub(false);
+              setShowSettings(true);
+            }}
+            onLogin={() => {
+              setShowSignUp(false);
+              setShowLogin(true);
+            }}
+            onLogout={async () => {
+              try {
+                const { signOutSupabase } = await import("./lib/supabaseService");
+                await signOutSupabase();
+              } catch {
+                // Oflayn bo'lsa ham lokal holatni tozalaymiz
+              }
+              setSessionUserId(null);
+              setSessionRole("user");
+              saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
+              // Chiqqandan keyin yana kirish/ro'yxatdan o'tish oynasi ochiladi
+              setSkipSignup(false);
+              setShowSettings(false);
+              setView("type");
+              setShowLogin(true);
+            }}
+          />
         </aside>
 
         {/* Main Content */}
