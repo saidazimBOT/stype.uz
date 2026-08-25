@@ -29,15 +29,18 @@ export function TypingRecorderBridge() {
       total: number; time: number; lang: string; duration: number;
       username?: string;
     }) => recordTypingResult(args);
-    (window as Record<string, unknown>).__typingRecorder = fn;
-    return () => { (window as Record<string, unknown>).__typingRecorder = null; };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__typingRecorder = fn;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return () => { (window as any).__typingRecorder = null; };
   }, []);
 
   // User token'ni window ga joylashtirish
   useEffect(() => {
     const setToken = async () => {
       const uid = await getCurrentUserId();
-      (window as Record<string, unknown>).__userToken = uid;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__userToken = uid;
     };
     void setToken();
     const iv = window.setInterval(() => void setToken(), 30_000);
@@ -51,7 +54,7 @@ export function TypingRecorderBridge() {
 function AnnouncementBanner({ t }: { t: ThemeColors }) {
   const { data: settings } = useSupabaseQuery(() => getPublicSettings());
   const { data: announcements } = useSupabaseQuery(() => getPublicAnnouncements());
-  const [dismissed, setDismissed] = useLocalStorage<string[]>(["typeuz_dismissed_ann"], []);
+  const [dismissed, setDismissed] = useLocalStorage<string[]>("typeuz_dismissed_ann", []);
 
   const visible = (announcements ?? []).filter((a) => !dismissed.includes(String(a.id)));
   if (!settings?.announcementsEnabled || visible.length === 0) return null;

@@ -1,9 +1,16 @@
 "use client";
 import type { ThemeColors } from "../../../types";
+import type { HeroEquip } from "../../../data/shop";
 import { FiSend } from "react-icons/fi";
 
 /** Battle — vaqtincha o'chirilgan (Convex real-time multiplayer Supabase Realtime ga o'tkazilmoqda) */
-export default function BattleHub({ t }: { t: ThemeColors }) {
+export default function BattleHub({ t, onClose, coinsStore, heroEquip, addXp }: {
+  t: ThemeColors;
+  onClose?: () => void;
+  coinsStore?: { heroEquip: HeroEquip; activeAvatar: string; coins: number };
+  heroEquip?: HeroEquip;
+  addXp?: (amount: number) => void;
+}) {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="text-center animate-fade-in">
@@ -15,6 +22,11 @@ export default function BattleHub({ t }: { t: ThemeColors }) {
         <p className="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
           Multiplayer tizimi yangilanmoqda. Tez orada Supabase Realtime orqali 1v1 va Team janglar ishga tushadi.
         </p>
+        {onClose && (
+          <button onClick={onClose} className="mt-4 px-4 py-2 rounded-lg text-sm hover:bg-white/10 text-gray-400">
+            ← Back
+          </button>
+        )}
       </div>
     </div>
   );

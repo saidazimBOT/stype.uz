@@ -238,6 +238,11 @@ drop policy if exists "Admins can view all profiles" on public.profiles;
 create policy "Admins can view all profiles"
   on public.profiles for select using (public.is_admin());
 
+-- Leaderboard uchun: hamma barcha profillarni o'qiy oladi (faqat o'qish)
+drop policy if exists "Anyone can read profiles for leaderboard" on public.profiles;
+create policy "Anyone can read profiles for leaderboard"
+  on public.profiles for select using (true);
+
 drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Users can insert own profile"
   on public.profiles for insert

@@ -52,7 +52,7 @@ export function useProfile() {
           setProfile({
             firstName: p.first_name || "",
             lastName: p.last_name || "",
-            photo: p.photo || "",
+            photo: (p as unknown as Record<string, string>).photo || "",
             avatarId: p.avatar_id || "avatar_default",
             signedUpAt: new Date(p.created_at).getTime(),
           });

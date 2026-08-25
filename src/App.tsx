@@ -14,7 +14,7 @@ import { useDailyReward } from "./components/features/DailyLogin";
 import { useProfile, fullName } from "./hooks/useProfile";
 import SignUpModal from "./components/features/SignUpModal";
 import LoginModal from "./components/features/LoginModal";
-import { isSupabaseConfigured } from "./lib/supabase";
+import { supabase, isSupabaseConfigured } from "./lib/supabase";
 import { getSupabaseUser } from "./lib/supabaseService";
 import ProfileAvatar from "./components/features/ProfileAvatar";
 import { useMissions } from "./components/features/WeeklyMissions";
@@ -31,6 +31,7 @@ import HistoryView from "./components/views/HistoryView";
 import AboutView from "./components/views/AboutView";
 import GamesView from "./components/views/GamesView";
 import ShopView from "./components/views/ShopView";
+import ProfileSettingsView from "./components/views/ProfileSettingsView";
 
 // Features
 import DailyLoginView from "./components/features/DailyLoginView";
@@ -62,14 +63,16 @@ import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
-import { getTypingRecorder, getUserToken } from "./lib/convexBridge";
+import { getUserToken } from "./lib/convexBridge";
 import { TypingRecorderBridge } from "./components/features/SiteOverlays";
+import { recordTypingResult, getCurrentUserId, getMyProfile } from "./lib/db";
+import SidebarAccount from "./components/features/SidebarAccount";
 import ResultsChart, { type WpmSample } from "./components/features/ResultsChart";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
   FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGift, FiGrid, FiHeart, FiInfo, FiList,
-  FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
+  FiLogIn, FiLogOut, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
 import { FaDna, FaInstagram, FaKeyboard, FaMedal, FaPalette, FaTelegram, FaTrophy } from "react-icons/fa6";
@@ -90,13 +93,18 @@ try {
 } catch {}
 
 // ── APP ──────────────────────────────────────────────────────────────────
-export default function App() {
+export default function App({ initialView }: { initialView?: string } = {}) {
   // Core state
   const [theme, setTheme] = useSyncedSettings("theme", "blue");
   const [lang, setLang] = useSyncedSettings("lang", "en");
   const [duration, setDuration] = useSyncedSettings<number | string>("duration", 15);
   const [fontSize, setFontSize] = useSyncedSettings("fontSize", "md");
   const [view, setView] = useLocalStorage("typeuz_view", "type");
+
+  // /admin page'dan kelganda avtomatik admin view'ni ochish
+  useEffect(() => {
+    if (initialView && view !== initialView) setView(initialView);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [soundEnabled, setSoundEnabled] = useSyncedSettings("soundEnabled", true);
   const [showKeyboard, setShowKeyboard] = useSyncedSettings("showKeyboard", false);
   const [showHeatmap, setShowHeatmap] = useSyncedSettings("showHeatmap", false);
@@ -112,6 +120,10 @@ export default function App() {
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  // Supabase sessiyasi — sidebar'dagi akkaunt bloki shunga qarab ko'rinadi.
+  // Lokal profil yo'qolgan bo'lsa ham chiqish tugmasi mavjud bo'lishi kerak.
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const [sessionRole, setSessionRole] = useState<string>("user");
   // Birinchi kirishda majburiy ro'yxatdan o'tish oynasini o'tkazib yuborish
   // (skip) — sayt tugmalari bloklanib qolmasligi uchun. Keyingi safar qayta
   // ko'rsatilmaydi, navbar'dagi "Sign up" tugmasi orqali ochish mumkin.
@@ -131,6 +143,9 @@ export default function App() {
   const [ripple, setRipple] = useState<{ x: number; y: number; id: number } | null>(null);
   // Supabase sozlangan bo'lsa — ro'yxatdan o'tish va kirish haqiqiy backend orqali ishlaydi
   const cloudEnabled = isSupabaseConfigured();
+  // Google OAuth redirect aniqlash — URL'da access_token bo'lsa modal'larni yashiramiz
+  const isOAuthRedirect = cloudEnabled && typeof window !== "undefined" &&
+    (window.location.hash.includes("access_token") || window.location.search.includes("code="));
 
   // Coin notification helper
   const showCoinNotif = useCallback((amount: number, source: CoinNotif["source"]) => {
@@ -179,6 +194,21 @@ export default function App() {
     setMounted(true);
   }, []);
 
+  // Sahifa ochilganda mavjud Supabase sessiyasini o'qiymiz (sidebar akkaunt bloki uchun)
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    let alive = true;
+    void (async () => {
+      const uid = await getCurrentUserId();
+      if (!alive) return;
+      setSessionUserId(uid);
+      if (!uid) return;
+      const p = await getMyProfile();
+      if (alive && p) setSessionRole(p.role);
+    })();
+    return () => { alive = false; };
+  }, [cloudEnabled]);
+
   // Supabase'da sessiya saqlangan, lekin lokal profil yo'qolgan bo'lsa (masalan
   // eski bug tufayli localStorage'ga "null" yozilib qolgan) — profilni qayta
   // tiklaymiz, foydalanuvchi qaytadan ro'yxatdan o'tishga majbur bo'lmaydi.
@@ -186,6 +216,10 @@ export default function App() {
     if (!cloudEnabled || isSignedUp || cloudRestoreStartedRef.current) return;
     cloudRestoreStartedRef.current = true;
     setRestoringCloudProfile(true);
+    // URL'dagi OAuth tokenlarni tozalamiz
+    if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
     (async () => {
       try {
         const user = await getSupabaseUser();
@@ -206,6 +240,60 @@ export default function App() {
       }
     })();
   }, [cloudEnabled, isSignedUp, saveProfile]);
+
+  // Google OAuth callback — auth state change listener
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          // URL'dagi access_token/to'larni tozalamiz — loopni oldini oladi
+          if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
+            window.history.replaceState({}, "", window.location.pathname);
+          }
+          // Popup orqali kirishda sahifa yangilanmaydi — modallarni o'zimiz yopamiz
+          setShowLogin(false);
+          setSkipSignup(true);
+          setSessionUserId(session.user.id);
+          void getMyProfile().then((p) => { if (p) setSessionRole(p.role); });
+          const user = session.user;
+          const md = (user.user_metadata || {}) as Record<string, string | undefined>;
+          const emailPrefix = (user.email || "").split("@")[0] || "user";
+          // Username — email prefix'dan yaratiladi (masalan: sardor@gmail.com → sardor)
+          const username = emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "");
+          const avatarUrl = md.avatar_url || md.picture || "";
+          // Profilni saqlash — firstName = username (email prefix)
+          saveProfile({
+            firstName: username,
+            lastName: "",
+            photo: avatarUrl,
+            avatarId: "avatar_default",
+            signedUpAt: Date.now(),
+          });
+          // Supabase profiles jadvaliga ham username yozish
+          void supabase!.from("profiles").update({
+            username,
+            first_name: username,
+            last_name: "",
+            email: user.email,
+            avatar: avatarUrl || "avatar_default",
+            avatar_id: avatarUrl || "avatar_default",
+          }).eq("id", user.id);
+          // last_login yangilash
+          void supabase!.from("profiles").update({
+            last_login: new Date().toISOString(),
+            email: user.email,
+          }).eq("id", user.id);
+        }
+        if (event === "SIGNED_OUT") {
+          setSessionUserId(null);
+          setSessionRole("user");
+          saveProfile({ firstName: "", lastName: "", photo: "", avatarId: "avatar_default", signedUpAt: 0 });
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  }, [cloudEnabled, saveProfile, setSkipSignup]);
 
   // Feature hooks
   const daily = useDailyReward();
@@ -629,22 +717,22 @@ export default function App() {
         lang,
       });
 
-      // Convex serverga ham HAQIQIY natijani yozamiz — foydalanuvchi login qilgan
-      // bo'lsa, server uning ID sini (tokenIdentifier) avtomatik saqlaydi.
-      const recorder = getTypingRecorder();
-      if (recorder) {
-        void recorder({
-          wpm: fw,
-          accuracy,
-          errors,
-          correct: typed.length,
-          total: totalKs,
-          time: result.time,
-          lang,
-          duration: typeof duration === "number" ? duration : 0,
-          username: fullName(profile) || undefined,
-        }).catch(() => {});
-      }
+      // Supabase'ga HAQIQIY natijani yozamiz — foydalanuvchi login qilgan bo'lsa
+      // typing_results ga qator qo'shiladi va profiles.best_wpm yangilanadi.
+      // Bevosita chaqiramiz (avval window ko'prigi orqali edi va u hech qachon
+      // o'rnatilmay qolgani uchun natijalar umuman saqlanmasdi).
+      void recordTypingResult({
+        wpm: fw,
+        accuracy,
+        errors,
+        correct: typed.length,
+        total: totalKs,
+        time: result.time,
+        lang,
+        duration: typeof duration === "number" ? duration : 0,
+      }).catch((e) => {
+        console.error("[stype] natijani saqlab bo'lmadi:", e);
+      });
 
       updateProgress("wpm", fw);
       updateProgress("accuracy", accuracy);
@@ -714,7 +802,7 @@ export default function App() {
   // O'chirilgan sahifalar (masalan "tutor") localStorage da qolgan bo'lsa — blank o'rniga "type" ochiladi.
   // "admin" navItems'da yo'q (maxsus view) — guard uni "type"ga qaytarib yubormasligi uchun qo'shilgan.
   useEffect(() => {
-    const valid = new Set([...navItems.map((n) => n.id), "admin"]);
+    const valid = new Set([...navItems.map((n) => n.id), "admin", "profile_settings"]);
     if (!valid.has(view)) setView("type");
   }, [view]);
 
@@ -723,6 +811,8 @@ export default function App() {
     <>
     <AccountSyncBridge />
     <SupabaseCoinSync />
+    {/* window.__userToken ni o'rnatadi — lokal tarixda userId uchun kerak */}
+    <TypingRecorderBridge />
     <div
       suppressHydrationWarning
       className="min-h-screen h-dvh flex flex-col isolate"
@@ -1054,6 +1144,72 @@ export default function App() {
               <span className="hidden md:block">{item.label}</span>
             </button>
           ))}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Admin panel tugmasi */}
+          <button
+            onClick={() => {
+              setShowLingohub(false);
+              setView(view === "admin" ? "type" : "admin");
+            }}
+            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 mt-2"
+            style={{
+              color: view === "admin" ? t.accent : "#6b7280",
+              background: view === "admin" ? t.accent + "11" : "transparent",
+            }}
+            title="Admin Panel"
+          >
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span className="hidden md:block">Admin</span>
+          </button>
+
+          {/* Akkaunt bloki — pastki chap burchak. Bosilsa Profil / Sozlamalar /
+              Chiqish menyusi ochiladi. Kirmagan bo'lsa "Kirish" tugmasi. */}
+          <SidebarAccount
+            t={t}
+            signedIn={!!sessionUserId || isSignedUp}
+            name={fullName(profile) || "Foydalanuvchi"}
+            role={sessionRole}
+            activeAvatar={coinsStore.activeAvatar}
+            heroEquip={coinsStore.heroEquip}
+            onOpenProfile={() => {
+              setShowOwner(false);
+              setShowPromo(false);
+              setShowLingohub(false);
+              setShowSettings(false);
+              setView("profile");
+            }}
+            onOpenSettings={() => {
+              setShowOwner(false);
+              setShowPromo(false);
+              setShowLingohub(false);
+              setShowSettings(true);
+            }}
+            onLogin={() => {
+              setShowSignUp(false);
+              setShowLogin(true);
+            }}
+            onLogout={async () => {
+              try {
+                const { signOutSupabase } = await import("./lib/supabaseService");
+                await signOutSupabase();
+              } catch {
+                // Oflayn bo'lsa ham lokal holatni tozalaymiz
+              }
+              setSessionUserId(null);
+              setSessionRole("user");
+              saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
+              // Chiqqandan keyin yana kirish/ro'yxatdan o'tish oynasi ochiladi
+              setSkipSignup(false);
+              setShowSettings(false);
+              setView("type");
+              setShowLogin(true);
+            }}
+          />
         </aside>
 
         {/* Main Content */}
@@ -1106,7 +1262,7 @@ export default function App() {
               activeAvatar={coinsStore.activeAvatar}
               profile={profile}
               heroEquip={coinsStore.heroEquip}
-              onEditProfile={() => setShowSignUp(true)}
+              onEditProfile={() => setView("profile_settings")}
             />
           ) : view === "history" ? (
             <HistoryView
@@ -1136,6 +1292,8 @@ export default function App() {
             <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "custom" ? (
             <CustomTextImport t={t} onClose={() => setView("type")} onImportText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
+          ) : view === "profile_settings" ? (
+            <ProfileSettingsView t={t} onClose={() => setView("type")} />
           ) : view === "mashq" ? (
             <MashqView t={t} lang={lang} onClose={() => setView("type")} onSelectText={(txt) => { newText(txt); setView("type"); }} />
           ) : view === "replay" ? (
@@ -1348,7 +1506,7 @@ export default function App() {
       {/* Sign up modal — birinchi kirishda majburiy emas, o'tkazib yuborish mumkin
           (login oynasi ochiq bo'lsa yashirinadi). Profil bor bo'lsa yoki
           tiklanayotgan bo'lsa modal ko'rinmaydi. */}
-      {!isSignedUp && !skipSignup && !showLogin && mounted && !restoringCloudProfile && (
+      {!isSignedUp && !skipSignup && !showLogin && mounted && !restoringCloudProfile && !isOAuthRedirect && (
         <SignUpModal
           t={t}
           lang={lang}
@@ -1382,7 +1540,7 @@ export default function App() {
         />
       )}
       {/* Login modal — Supabase orqali (email + parol) */}
-      {showLogin && (
+      {showLogin && !isOAuthRedirect && (
         <LoginModal
           t={t}
           lang={lang}
@@ -1445,25 +1603,6 @@ export default function App() {
         className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md pointer-events-none"
         style={{ background: t.surface + "cc", border: `1px solid ${t.accent}33` }}
       >
-        {/* Admin button (footer) — bosiladigan yagona qismi, sidebar bloklanmasligi uchun */}
-        <button
-          onClick={() => {
-            setShowLingohub(false);
-            setView(view === "admin" ? "type" : "admin");
-          }}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 mr-1 pointer-events-auto"
-          style={{
-            background: view === "admin" ? t.accent + "33" : "#ffffff0d",
-            color: view === "admin" ? t.accent : "#9ca3af",
-            border: `1px solid ${view === "admin" ? t.accent + "55" : "#ffffff14"}`,
-          }}
-          title="Admin Panel"
-        >
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <span className="hidden sm:block">{T("navbar.admin")}</span>
-        </button>
         {(() => {
           const av = getAvatarInfo(coinsStore.activeAvatar);
           return (

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { ThemeColors } from "../../types";
-import { FiEye, FiGift, FiTrash2, FiXCircle } from "react-icons/fi";
+import { FiEdit3, FiEye, FiGift, FiTrash2, FiXCircle } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa6";
 import { LANG_FLAGS } from "../../data/texts";
 import { Card, SectionHeader, Spinner, EmptyState, ErrorBox, SearchInput, Modal, ConfirmDialog, AvatarDot, RoleBadge, PrimaryBtn, GhostBtn, SmallBtn, Badge, timeAgo, fmtDateTime, TextArea, TextInput, Field } from "./adminUi";
 import { useSupabaseQuery } from "../../hooks/useSupabaseQuery";
-import { listAllProfiles, getProfileById, getUserResults, addCoins, logAdminAction, updateProfile } from "../../lib/db";
+import { listAllProfiles, getProfileById, getUserResults, addCoins, logAdminAction, updateProfile, adminUpdateProfile } from "../../lib/db";
 import type { ProfileRow, TypingResultRow } from "../../lib/db";
 import { supabase } from "../../lib/supabase";
 
@@ -17,6 +17,7 @@ export default function UsersSection({ t, myRole }: { t: ThemeColors; myRole: st
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [gift, setGift] = useState<ProfileRow | null>(null);
   const [confirm, setConfirm] = useState<null | { type: "ban" | "unban" | "delete"; user: ProfileRow }>(null);
+  const [editing, setEditing] = useState<ProfileRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -81,6 +82,9 @@ export default function UsersSection({ t, myRole }: { t: ThemeColors; myRole: st
                         <SmallBtn t={t} color={t.accent} onClick={() => setProfile(u)}>
                           <span className="flex items-center gap-1"><FiEye size={11} /> Profil</span>
                         </SmallBtn>
+                        <SmallBtn t={t} color="#38bdf8" onClick={() => setEditing(u)}>
+                          <span className="flex items-center gap-1"><FiEdit3 size={11} /> Tahrirlash</span>
+                        </SmallBtn>
                         <SmallBtn t={t} color="#f59e0b" onClick={() => setGift(u)}>
                           <span className="flex items-center gap-1"><FiGift size={11} /> Gift</span>
                         </SmallBtn>
@@ -111,6 +115,9 @@ export default function UsersSection({ t, myRole }: { t: ThemeColors; myRole: st
       {gift && (
         <GiftModal t={t} user={gift} onClose={() => { setGift(null); refetch(); }} />
       )}
+      {editing && (
+        <EditProfileModal t={t} user={editing} myRole={myRole} onClose={() => { setEditing(null); refetch(); }} />
+      )}
 
       {confirm && (
         <ConfirmDialog t={t} danger title={confirm.type === "ban" ? "Ban qilish" : "Ban bekor qilish"}
@@ -122,6 +129,105 @@ export default function UsersSection({ t, myRole }: { t: ThemeColors; myRole: st
           })} />
       )}
     </div>
+  );
+}
+
+function EditProfileModal({ t, user, myRole, onClose }: { t: ThemeColors; user: ProfileRow; myRole: string; onClose: () => void }) {
+  const [username, setUsername] = useState(user.username || "");
+  const [firstName, setFirstName] = useState(user.first_name || "");
+  const [lastName, setLastName] = useState(user.last_name || "");
+  const [role, setRole] = useState(user.role);
+  const [status, setStatus] = useState(user.status);
+  const [avatar, setAvatar] = useState(user.avatar || "avatar_default");
+  const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState("");
+  const [err, setErr] = useState("");
+  const isOwner = myRole === "owner";
+  const canChangeRole = isOwner && user.role !== "owner";
+
+  const AVATARS = ["avatar_default", "avatar_cat", "avatar_dog", "avatar_fox", "avatar_panda", "avatar_penguin", "avatar_robot", "avatar_unicorn"];
+
+  const submit = async () => {
+    setBusy(true); setErr(""); setOk("");
+    try {
+      const updates: Record<string, unknown> = {};
+      if (username.trim() !== (user.username || "")) updates.username = username.trim();
+      if (firstName.trim() !== (user.first_name || "")) updates.first_name = firstName.trim();
+      if (lastName.trim() !== (user.last_name || "")) updates.last_name = lastName.trim();
+      if (canChangeRole && role !== user.role) updates.role = role;
+      if (status !== user.status) updates.status = status;
+      if (avatar !== (user.avatar || "avatar_default")) { updates.avatar = avatar; updates.avatar_id = avatar; }
+      if (Object.keys(updates).length === 0) { setOk("O'zgarish yo'q"); setBusy(false); return; }
+      await adminUpdateProfile(user.id, updates);
+      setOk("✓ Profil yangilandi!");
+      window.setTimeout(onClose, 1200);
+    } catch (e) { setErr((e as Error)?.message || "Xatolik"); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <Modal t={t} title={`Tahrirlash — ${user.username || user.first_name || "?"}`} onClose={busy ? () => {} : onClose}>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Field t={t} label="Username">
+            <TextInput t={t} value={username} onChange={setUsername} placeholder="username" accent autoFocus />
+          </Field>
+          <Field t={t} label="Email">
+            <div className="text-xs text-gray-400 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5">{user.email || "—"}</div>
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field t={t} label="Ism">
+            <TextInput t={t} value={firstName} onChange={setFirstName} placeholder="Ism" accent />
+          </Field>
+          <Field t={t} label="Familiya">
+            <TextInput t={t} value={lastName} onChange={setLastName} placeholder="Familiya" accent />
+          </Field>
+        </div>
+        <div>
+          <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-2">Avatar</div>
+          <div className="flex flex-wrap gap-2">
+            {AVATARS.map((a) => (
+              <button key={a} onClick={() => setAvatar(a)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all hover:scale-110"
+                style={{
+                  background: avatar === a ? t.accent + "33" : "#ffffff08",
+                  border: `2px solid ${avatar === a ? t.accent : "transparent"}`,
+                }}>
+                {a === "avatar_default" ? "👤" : a.includes("cat") ? "🐱" : a.includes("dog") ? "🐶" : a.includes("fox") ? "🦊" : a.includes("panda") ? "🐼" : a.includes("penguin") ? "🐧" : a.includes("robot") ? "🤖" : "🦄"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {canChangeRole && (
+            <Field t={t} label="Rol">
+              <select value={role} onChange={(e) => setRole(e.target.value as typeof role)}
+                className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                style={{ background: "#ffffff08", border: `1px solid ${t.accent}44`, color: "#fff" }}>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+                {isOwner && <option value="owner">Owner</option>}
+              </select>
+            </Field>
+          )}
+          <Field t={t} label="Holat">
+            <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)}
+              className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+              style={{ background: "#ffffff08", border: `1px solid ${t.accent}44`, color: "#fff" }}>
+              <option value="active">Faol</option>
+              <option value="blocked">Bloklangan</option>
+            </select>
+          </Field>
+        </div>
+        {err && <div className="px-3 py-2 rounded-lg text-xs text-red-400 bg-red-500/10 border border-red-500/30 animate-pop-in">{err}</div>}
+        {ok && <div className="px-3 py-2 rounded-lg text-xs text-green-400 bg-green-500/10 border border-green-500/30 animate-pop-in">{ok}</div>}
+        <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+          <GhostBtn t={t} onClick={onClose} disabled={busy}>Yopish</GhostBtn>
+          <PrimaryBtn t={t} onClick={submit} disabled={busy}>{busy ? "..." : "Saqlash"}</PrimaryBtn>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

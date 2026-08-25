@@ -35,7 +35,7 @@ export function useDailyReward(): DailyReturn {
       try {
         const settings = await getMySettings();
         if (settings.dailyState && Object.keys(settings.dailyState).length > 0) {
-          setState(settings.dailyState as DailyState);
+          setState(settings.dailyState as unknown as DailyState);
         }
       } catch {}
       loadedRef.current = true;

@@ -1,54 +1,40 @@
-const CACHE_NAME = "typeuz-v3";
-const ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon-192.svg",
-  "/icon-512.svg",
-  "/favicon.svg",
-  "/favicon-16.png",
-  "/favicon-32.png",
-  "/favicon-48.png",
-  "/favicon.png",
-];
+/**
+ * O'Z-O'ZINI O'CHIRUVCHI SERVICE WORKER.
+ *
+ * Eski versiyada bu fayl "cache-first" strategiya bilan ishlardi va `/` ni
+ * ham cache'ga solardi. Oqibati:
+ *   - dev (localhost:3000) — Next eski build ID'ni ko'rib sahifani
+ *     to'xtovsiz qayta yuklardi (cheksiz refresh halqasi);
+ *   - prod — foydalanuvchi saytning eski nusxasida qotib qolardi.
+ *
+ * Hozir ilovada hech qayerda `serviceWorker.register()` chaqirilmaydi, ya'ni
+ * bu worker faqat eski tashriflardan qolgan. Shuning uchun u endi hech narsani
+ * cache qilmaydi: barcha cache'larni tozalaydi, o'zini ro'yxatdan chiqaradi va
+ * ochiq sahifalarni bir marta yangilaydi.
+ *
+ * PWA/oflayn rejim kerak bo'lsa — YANGI nom bilan (masalan `sw-v4.js`),
+ * network-first strategiya va aniq `register()` bilan yoziladi.
+ */
 
-// Install event - cache core assets
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-// Activate event - clean old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
+    (async () => {
+      // Barcha eski cache'larni o'chiramiz
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+      // O'zimizni ro'yxatdan chiqaramiz
+      await self.registration.unregister();
+      // Ochiq oynalarni bir marta yangilaymiz — endi ular workersiz ishlaydi
+      const clients = await self.clients.matchAll({ type: "window" });
+      for (const client of clients) {
+        client.navigate(client.url);
+      }
+    })(),
   );
-  self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        // Cache successful responses for future
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, clone);
-          });
-        }
-        return response;
-      });
-    })
-  );
-});
+// Hech narsa ushlanmaydi — barcha so'rovlar to'g'ridan-to'g'ri tarmoqqa ketadi.
