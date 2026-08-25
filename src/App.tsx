@@ -215,17 +215,27 @@ export default function App() {
         if (event === "SIGNED_IN" && session?.user) {
           const user = session.user;
           const md = (user.user_metadata || {}) as Record<string, string | undefined>;
-          const fullName = md.full_name || md.name || "";
-          const firstName = md.first_name || fullName.split(" ")[0] || user.email?.split("@")[0] || "User";
-          const lastName = md.last_name || fullName.split(" ").slice(1).join( "") || "";
+          const emailPrefix = (user.email || "").split("@")[0] || "user";
+          // Username — email prefix'dan yaratiladi (masalan: sardor@gmail.com → sardor)
+          const username = emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "");
           const avatarUrl = md.avatar_url || md.picture || "";
+          // Profilni saqlash — firstName = username (email prefix)
           saveProfile({
-            firstName,
-            lastName,
+            firstName: username,
+            lastName: "",
             photo: avatarUrl,
             avatarId: "avatar_default",
             signedUpAt: Date.now(),
           });
+          // Supabase profiles jadvaliga ham username yozish
+          void supabase!.from("profiles").update({
+            username,
+            first_name: username,
+            last_name: "",
+            email: user.email,
+            avatar: avatarUrl || "avatar_default",
+            avatar_id: avatarUrl || "avatar_default",
+          }).eq("id", user.id);
           // last_login yangilash
           void supabase!.from("profiles").update({
             last_login: new Date().toISOString(),
