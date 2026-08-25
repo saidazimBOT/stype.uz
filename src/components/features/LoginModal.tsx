@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiLock, FiLogIn, FiMail, FiShield, FiX } from "react-icons/fi";
 import type { ThemeColors } from "../../types";
 import { getT } from "../../data/i18n";
@@ -37,6 +37,18 @@ function readLocalProfile(): UserProfile | null {
  */
 export default function LoginModal({ t, lang, onSuccess, onSignUpRequest, onClose }: LoginModalProps) {
   const T = getT(lang);
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+    };
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -75,9 +87,10 @@ export default function LoginModal({ t, lang, onSuccess, onSignUpRequest, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-3xl overflow-hidden animate-pop-in"
+        className="w-full max-w-md my-auto rounded-3xl overflow-hidden animate-pop-in"
+        onClick={(e) => e.stopPropagation()}
         style={{
           background: t.surface,
           border: `1px solid ${t.accent}44`,
