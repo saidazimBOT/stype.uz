@@ -64,6 +64,18 @@ export async function signOutSupabase() {
   await supabase.auth.signOut();
 }
 
+/** Google orqali kirish — Supabase OAuth */
+export async function signInWithGoogle() {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin,
+    },
+  });
+  if (error) throw error;
+}
+
 /** Joriy Supabase foydalanuvchisi (agar kirgan bo'lsa) */
 export async function getSupabaseUser() {
   if (!supabase) return null;
