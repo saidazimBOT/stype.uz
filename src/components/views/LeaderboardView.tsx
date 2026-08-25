@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FaMedal, FaTrophy, FaCrown, FaShield } from "react-icons/fa6";
-import { fetchLeaderboard } from "../../data/leaderboard";
+import { fetchLeaderboard, fetchLeaderboardLangs } from "../../data/leaderboard";
 import { LANG_FLAGS } from "../../data/texts";
 import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../data/shop";
 import HeroAvatar from "../features/HeroAvatar";
@@ -18,6 +18,7 @@ interface LeaderboardViewProps {
 export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_default", heroEquip }: LeaderboardViewProps) {
   const [filter, setFilter] = useState("all");
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [langs, setLangs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const medalColors = ["#fbbf24", "#cbd5e1", "#d97706"];
 
@@ -29,7 +30,15 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
       .finally(() => setLoading(false));
   }, [filter]);
 
-  const langFilters = ["all", ...new Set(entries.map((p) => p.lang))];
+  // Til chip'lari filtrdan mustaqil yuklanadi — bir marta, ochilishda
+  useEffect(() => {
+    fetchLeaderboardLangs()
+      .then(setLangs)
+      .catch(() => setLangs([]));
+  }, []);
+
+  // Tanlangan til ro'yxatda bo'lmasa ham chip'i yo'qolib qolmasin
+  const langFilters = ["all", ...new Set(filter === "all" ? langs : [...langs, filter])];
 
   return (
     <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full overflow-y-auto">

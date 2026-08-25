@@ -118,6 +118,28 @@ export async function fetchLeaderboard(lang?: string): Promise<LeaderboardEntry[
     });
 }
 
+/**
+ * Leaderboard'da mavjud tillar ro'yxati (chip'lar uchun).
+ *
+ * Ataylab tanlangan filtrdan MUSTAQIL: avval chip'lar ko'rinib turgan
+ * natijalardan yasalardi, shuning uchun bitta tilni tanlash bilanoq qolgan
+ * chip'lar yo'q bo'lib, boshqa tilga to'g'ridan-to'g'ri o'tib bo'lmasdi.
+ * Ro'yxat bo'sh bo'lsa esa faqat "All" qolib ketardi.
+ */
+export async function fetchLeaderboardLangs(): Promise<string[]> {
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from('typing_results')
+    .select('lang')
+    .not('lang', 'is', null)
+    .limit(2000);
+  const langs = new Set<string>();
+  for (const row of (data ?? []) as { lang: string | null }[]) {
+    if (row.lang) langs.add(row.lang);
+  }
+  return [...langs].sort();
+}
+
 // Country ranking from real data
 export async function fetchCountryRanking(): Promise<{ country: string; flag: string; avgWpm: number; players: number }[]> {
   if (!supabase) return [];
