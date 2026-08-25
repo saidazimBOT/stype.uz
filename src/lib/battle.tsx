@@ -1,27 +1,18 @@
-"use client";
+/**
+ * Battle lib — Convex o'chirildi, hozircha placeholder.
+ * Multiplayer tizimi Supabase Realtime ga o'tkazilganda qayta yoziladi.
+ */
 
-import { type ReactNode } from "react";
-import { ConvexReactClient } from "convex/react";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
+// Placeholder — BattleHub import qiladi
+export const CONVEX_URL = "";
 
-export const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || "";
-
-let client: ConvexReactClient | null = null;
-
-export function getConvexClient(): ConvexReactClient | null {
-  if (!CONVEX_URL) return null;
-  if (!client) client = new ConvexReactClient(CONVEX_URL);
-  return client;
+export function getConvexClient(): null {
+  return null;
 }
 
-/**
- * Multiplayer konfiguratsiya qilingan bo'lsa ConvexAuthProvider bilan,
- * aks holda oddiy children qaytaradi (saytning qolgan qismi buzilmaydi).
- */
-export function ConvexClientProvider({ children }: { children: ReactNode }) {
-  const c = getConvexClient();
-  if (!c) return <>{children}</>;
-  return <ConvexAuthProvider client={c}>{children}</ConvexAuthProvider>;
+/** ConvexClientProvider o'rniga — faqat children qaytaradi */
+export function ConvexClientProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
 
 export const USERNAME_KEY = "typeuz_username";

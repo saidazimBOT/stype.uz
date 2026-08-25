@@ -6,48 +6,12 @@ import type { IconType } from "react-icons";
 import type { ThemeColors } from "../../types";
 
 const CATEGORIES: { id: string; icon: IconType; label: string; desc: string }[] = [
-  { id: "punctuation", icon: FiEdit3, label: "Punctuation", desc: "Practice commas, quotes, and more" },
-  { id: "numbers", icon: FiHash, label: "Numbers", desc: "Type numbers and symbols" },
-  { id: "code", icon: FiCode, label: "Code", desc: "Practice coding syntax" },
-  { id: "hard", icon: FiZap, label: "Hard Words", desc: "Long and complex words" },
-  { id: "reverse", icon: FiRefreshCw, label: "Reverse Text", desc: "Type text backwards" },
+  { id: "punctuation", icon: FiEdit3, label: "Punctuation", desc: "Commas, quotes, and more" },
+  { id: "numbers", icon: FiHash, label: "Numbers", desc: "Numbers and symbols" },
+  { id: "code", icon: FiCode, label: "Code", desc: "Coding syntax" },
+  { id: "hard", icon: FiZap, label: "Hard Words", desc: "Long complex words" },
+  { id: "reverse", icon: FiRefreshCw, label: "Reverse", desc: "Text backwards" },
 ];
-
-const EXERCISE_TEMPLATES: Record<string, string[]> = {
-  punctuation: [
-    "Hello, world! How are you today? I'm doing great, thanks!",
-    "She said, 'Come here,' but he didn't move. What happened next?",
-    "The store has: apples, bananas, oranges, and grapes. Yum!",
-    "Dear Sir, I am writing to inform you that... Sincerely, John.",
-    "Wait! Don't go! I need to tell you something important!",
-  ],
-  numbers: [
-    "My zip code is 10001 and my phone is 555-0123.",
-    "The 3rd place winner scored 95.5 out of 100 points.",
-    "In 2024, the population reached 8,123,456,789 people.",
-    "I bought 2 apples for $1.50 each, totaling $3.00.",
-    "Room 404 on the 12th floor has a great view of 5th Avenue.",
-  ],
-  code: [
-    "function hello() { console.log('Hello, World!'); return true; }",
-    'const users = [{id: 1, name: "John"}, {id: 2, name: "Jane"}];',
-    "for (let i = 0; i < 10; i++) { if (i % 2 === 0) console.log(i); }",
-    "import React, { useState, useEffect } from 'react';",
-    "const doubleAll = arr => arr.map(n => n * 2).filter(n => n > 10);",
-  ],
-  hard: [
-    "Extraordinary circumstances require exceptional measures and unwavering determination to succeed against all odds.",
-    "The pharmaceutical industry's groundbreaking research has revolutionized modern medicine and saved millions of lives worldwide.",
-    "Incomprehensible as it may seem, the archaeological discovery fundamentally transformed our understanding of ancient civilizations.",
-    "Simultaneously, the meteorological phenomenon created unprecedented atmospheric conditions across the entire hemisphere.",
-  ],
-  reverse: [
-    ".stay gnidaer rof yrros ma I ,olleh",
-    "!namuh saw ti esuaceb epoh tsum ew",
-    ".dnik siht fo lufplep yllautca si tahw",
-    "!deificeps era skraep sih taht osla nac uoy",
-  ],
-};
 
 const DIFFICULTIES = [
   { id: "easy", label: "Easy", color: "#22c55e" },
@@ -55,22 +19,71 @@ const DIFFICULTIES = [
   { id: "hard", label: "Hard", color: "#ef4444" },
 ];
 
+// Fallback templates — API ishlamasa
+const FALLBACK: Record<string, string[]> = {
+  punctuation: [
+    "hello, world! how are you today? i'm doing great, thanks!",
+    "she said, 'come here,' but he didn't move. what happened next?",
+    "the store has: apples, bananas, oranges, and grapes. yum!",
+  ],
+  numbers: [
+    "my zip code is 10001 and my phone is 555-0123.",
+    "the 3rd place winner scored 95.5 out of 100 points.",
+    "in 2024, the population reached 8,123,456,789 people.",
+  ],
+  code: [
+    "function hello() { console.log('hello, world!'); return true; }",
+    "const users = [{id: 1, name: 'john'}, {id: 2, name: 'jane'}];",
+    "for (let i = 0; i < 10; i++) { if (i % 2 === 0) console.log(i); }",
+  ],
+  hard: [
+    "extraordinary circumstances require exceptional measures and unwavering determination to succeed against all odds.",
+    "the pharmaceutical industry's groundbreaking research has revolutionized modern medicine and saved millions of lives worldwide.",
+  ],
+  reverse: [
+    ".stay gnidaer rof yrros ma i ,olleh",
+    "!namuh saw ti esuaceb epoh tsum ew",
+  ],
+};
+
 interface AIExercisesProps {
   t: ThemeColors;
   onClose: () => void;
   onSelectText: (text: string) => void;
+  lang?: string;
 }
 
-export default function AIExercises({ t, onClose, onSelectText }: AIExercisesProps) {
+export default function AIExercises({ t, onClose, onSelectText, lang }: AIExercisesProps) {
   const [category, setCategory] = useState("punctuation");
   const [difficulty, setDifficulty] = useState("medium");
+  const [generating, setGenerating] = useState(false);
+  const [lastGenerated, setLastGenerated] = useState("");
 
-  const generateExercise = () => {
-    const pool = EXERCISE_TEMPLATES[category] || EXERCISE_TEMPLATES.punctuation;
-    const texts = difficulty === "easy" ? pool.slice(0, 2) :
-      difficulty === "hard" ? pool.slice(-2) : pool;
-    const text = texts[Math.floor(Math.random() * texts.length)];
+  const generateExercise = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/ai-exercises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category, difficulty, lang: lang || "english" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.text) {
+          setLastGenerated(data.text);
+          onSelectText(data.text);
+          return;
+        }
+      }
+    } catch {
+      // API ishlamayapti — fallback ishlatamiz
+    }
+    // Fallback
+    const pool = FALLBACK[category] || FALLBACK.punctuation;
+    const text = pool[Math.floor(Math.random() * pool.length)];
+    setLastGenerated(text);
     onSelectText(text);
+    setGenerating(false);
   };
 
   return (
@@ -81,48 +94,37 @@ export default function AIExercises({ t, onClose, onSelectText }: AIExercisesPro
             <FiCpu />
             AI Exercises
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">Practice specific skills</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {generating ? "Generating with AI..." : "AI-powered typing practice"}
+          </p>
         </div>
         <button onClick={onClose} className="px-4 py-1.5 rounded-lg text-sm hover:bg-white/10 text-gray-400">
           ← Back
         </button>
       </div>
 
-      {/* Difficulty selector */}
+      {/* Difficulty */}
       <div className="mb-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">Difficulty</div>
         <div className="flex gap-2">
           {DIFFICULTIES.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => setDifficulty(d.id)}
+            <button key={d.id} onClick={() => setDifficulty(d.id)}
               className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: difficulty === d.id ? d.color + "22" : "transparent",
-                color: difficulty === d.id ? d.color : "#6b7280",
-                border: `1px solid ${difficulty === d.id ? d.color + "44" : "#ffffff0a"}`,
-              }}
-            >
+              style={{ background: difficulty === d.id ? d.color + "22" : "transparent", color: difficulty === d.id ? d.color : "#6b7280", border: `1px solid ${difficulty === d.id ? d.color + "44" : "#ffffff0a"}` }}>
               {d.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Category selector */}
+      {/* Category */}
       <div className="mb-6">
         <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">Focus Area</div>
         <div className="grid grid-cols-2 gap-2">
           {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setCategory(c.id)}
+            <button key={c.id} onClick={() => setCategory(c.id)}
               className="p-4 rounded-xl text-left transition-all hover:scale-[1.02]"
-              style={{
-                background: category === c.id ? t.accent + "22" : t.surface,
-                border: `1px solid ${category === c.id ? t.accent + "44" : "transparent"}`,
-              }}
-            >
+              style={{ background: category === c.id ? t.accent + "22" : t.surface, border: `1px solid ${category === c.id ? t.accent + "44" : "transparent"}` }}>
               <div className="flex items-center gap-2 mb-1">
                 <c.icon size={18} style={{ color: t.accent }} />
                 <span className="text-sm font-medium text-white">{c.label}</span>
@@ -134,17 +136,24 @@ export default function AIExercises({ t, onClose, onSelectText }: AIExercisesPro
       </div>
 
       {/* Generate */}
-      <button
-        onClick={generateExercise}
-        className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-        style={{ background: t.accent, color: "#000" }}
-      >
-        <FiCpu size={16} />
-        Generate Exercise
+      <button onClick={() => void generateExercise()} disabled={generating}
+        className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-50"
+        style={{ background: t.accent, color: "#000" }}>
+        {generating ? (
+          <><span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" /> Generating...</>
+        ) : (
+          <><FiCpu size={16} /> Generate Exercise</>
+        )}
       </button>
 
+      {lastGenerated && (
+        <div className="mt-4 p-3 rounded-xl text-xs text-gray-400" style={{ background: t.surface, border: `1px solid ${t.accent}22` }}>
+          <span className="text-gray-600">Generated:</span> {lastGenerated.slice(0, 80)}...
+        </div>
+      )}
+
       <p className="text-xs text-gray-600 text-center mt-3">
-        Click generate to create a custom exercise and start typing!
+        Click generate to create a custom exercise with AI!
       </p>
     </div>
   );

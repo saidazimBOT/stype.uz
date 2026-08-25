@@ -1,32 +1,40 @@
+/**
+ * useBattleProfile — foydalanuvchi profilini Supabase'dan oladi.
+ * Avval Convex useQuery/api.users.me ishlatgan, endi Supabase.
+ */
 "use client";
 
-import { useEffect } from "react";
-import { useQuery, useMutation, useConvexAuth } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
-import { api } from "../../convex/_generated/api";
+import { useSupabaseQuery } from "./useSupabaseQuery";
+import { getMyProfile, updateProfile } from "../lib/db";
+import type { ProfileRow } from "../lib/db";
 
-/**
- * Battle uchun profil: avtomatik anonim kirish + Convex'dagi user profili.
- */
 export function useBattleProfile() {
-  const { isLoading, isAuthenticated } = useConvexAuth();
-  const { signIn } = useAuthActions();
-  const me = useQuery(api.users.me);
-  const setUsername = useMutation(api.users.setUsername);
+  const { data: me, loading, refetch } = useSupabaseQuery(() => getMyProfile());
 
-  // Anonim tarzda avtomatik kirish (har bir brauzer uchun barqaror identifikator)
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      signIn("anonymous").catch(() => {
-        /* offlayn yoki backend sozlanmagan */
-      });
-    }
-  }, [isLoading, isAuthenticated, signIn]);
+  const setUsername = async (updates: {
+    username: string;
+    avatar?: string;
+    firstName?: string;
+    lastName?: string;
+    signedUpAt?: number;
+    coins?: number;
+    xp?: number;
+  }) => {
+    await updateProfile({
+      username: updates.username,
+      avatar: updates.avatar,
+      first_name: updates.firstName,
+      last_name: updates.lastName,
+      coins: updates.coins,
+      xp: updates.xp,
+    });
+    refetch();
+  };
 
   return {
-    authLoading: isLoading,
-    isAuthenticated,
-    me,
+    me: me as ProfileRow | null | undefined,
+    isLoading: loading,
     setUsername,
+    refetch,
   };
 }

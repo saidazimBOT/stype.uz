@@ -75,7 +75,7 @@ export interface AchievementItem {
   _id: string;
   key: string;
   title: string;
-  desc: string;
+  description: string;
   icon: string;
   color: string;
   reqType: ReqType;
