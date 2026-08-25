@@ -1,9 +1,15 @@
 "use client";
 import type { ThemeColors } from "../../types";
+import type { HeroEquip } from "../../data/shop";
 import { FiMessageCircle } from "react-icons/fi";
 
 /** Chat — vaqtincha o'chirilgan (Convex real-time chat Supabase Realtime ga o'tkazilmoqda) */
-export default function Chat({ t }: { t: ThemeColors }) {
+export default function Chat({ t, onClose, activeAvatar, heroEquip }: {
+  t: ThemeColors;
+  onClose?: () => void;
+  activeAvatar?: string;
+  heroEquip?: HeroEquip;
+}) {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="text-center animate-fade-in">
@@ -15,6 +21,11 @@ export default function Chat({ t }: { t: ThemeColors }) {
         <p className="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
           Chat tizimi yangilanmoqda. Tez orada Supabase Realtime orqali ishga tushadi.
         </p>
+        {onClose && (
+          <button onClick={onClose} className="mt-4 px-4 py-2 rounded-lg text-sm hover:bg-white/10 text-gray-400">
+            ← Back
+          </button>
+        )}
       </div>
     </div>
   );

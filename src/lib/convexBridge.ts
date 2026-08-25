@@ -20,7 +20,8 @@ type Recorder = (args: RecordTypingArgs) => Promise<unknown>;
 /** Typing recorder funksiyasini olish (SiteOverlays o'rnatadi) */
 export function getTypingRecorder(): Recorder | null {
   try {
-    return (window as Record<string, unknown>).__typingRecorder as Recorder | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (window as any).__typingRecorder as Recorder | null;
   } catch {
     return null;
   }
@@ -29,7 +30,8 @@ export function getTypingRecorder(): Recorder | null {
 /** Joriy foydalanuvchining ID si (Supabase Auth) */
 export function getUserToken(): string | null {
   try {
-    return (window as Record<string, unknown>).__userToken as string | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (window as any).__userToken as string | null;
   } catch {
     return null;
   }

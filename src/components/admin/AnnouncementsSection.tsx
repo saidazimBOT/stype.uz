@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { ThemeColors } from "../../types";
 import { FiBell, FiPlus, FiTrash2 } from "react-icons/fi";
-import { Card, SectionHeader, Spinner, EmptyState, PrimaryBtn, GhostBtn, TextInput, TextArea, Field, Toggle, Modal, ConfirmDialog, timeAgo } from "./adminUi";
+import { Card, SectionHeader, Spinner, EmptyState, PrimaryBtn, GhostBtn, TextInput, TextArea, Field, Toggle, Modal, ConfirmDialog, timeAgo, Badge } from "./adminUi";
 import { useSupabaseQuery } from "../../hooks/useSupabaseQuery";
 import { listAnnouncements, saveAnnouncement, deleteAnnouncement } from "../../lib/db";
 import type { AnnouncementRow } from "../../lib/db";

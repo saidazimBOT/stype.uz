@@ -51,7 +51,7 @@ export function useCoins(): CoinsReturn {
           purchased: cosmetics.purchased,
           activeEffects: cosmetics.activeEffects,
           activeAvatar: cosmetics.activeAvatar,
-          heroEquip: { ...DEFAULT_HERO_EQUIP, ...(cosmetics.heroEquip as Record<string, string>) },
+          heroEquip: { ...DEFAULT_HERO_EQUIP, ...(cosmetics.heroEquip as unknown as HeroEquip) },
         });
       } catch {}
       loadedRef.current = true;
@@ -67,7 +67,7 @@ export function useCoins(): CoinsReturn {
         purchased: state.purchased,
         activeEffects: state.activeEffects,
         activeAvatar: state.activeAvatar,
-        heroEquip: state.heroEquip,
+        heroEquip: state.heroEquip as unknown as Record<string, string>,
       }).catch(() => {});
     }, 500);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
