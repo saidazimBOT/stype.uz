@@ -5,28 +5,40 @@ import type { LeaderboardEntry } from '../types';
 export async function fetchLeaderboard(lang?: string): Promise<LeaderboardEntry[]> {
   if (!supabase) return [];
 
+  // Current user ID to mark "you"
+  const { data: { user } } = await supabase.auth.getUser();
+  const myId = user?.id ?? null;
+
   const { data, error } = await supabase
     .from('profiles')
-    .select('username, best_wpm, xp, role')
-    .eq('status', 'active')
-    .eq('banned', false)
+    .select('id, username, first_name, best_wpm, xp, role, avatar')
     .not('best_wpm', 'is', null)
     .order('best_wpm', { ascending: false })
-    .limit(50);
+    .limit(100);
 
   if (error || !data) return [];
 
-  return data.map((p: { username: string | null; best_wpm: number | null; xp: number | null; role: string }, i: number) => ({
-    rank: i + 1,
-    name: p.username || 'Anonymous',
-    country: '🌍',
-    countryName: 'Global',
-    wpm: p.best_wpm || 0,
-    acc: 95,
-    lang: lang || 'all',
-    avatar: (p.username || 'A').slice(0, 2).toUpperCase(),
-    color: ['#a78bfa', '#22c55e', '#f59e0b', '#38bdf8', '#ec4899', '#f97316'][i % 6],
-  }));
+  // Filter banned users
+  const active = (data as { id: string; username: string | null; first_name: string | null; best_wpm: number | null; xp: number | null; role: string; avatar: string | null }[])
+    .filter((p) => p.best_wpm && p.best_wpm > 0);
+
+  return active.map((p, i) => {
+    const isAdmin = p.role === 'admin' || p.role === 'owner';
+    return {
+      rank: i + 1,
+      name: p.username || p.first_name || 'Anonymous',
+      country: '🌍',
+      countryName: 'Global',
+      wpm: p.best_wpm || 0,
+      acc: 95,
+      lang: lang || 'all',
+      avatar: (p.username || 'A').slice(0, 2).toUpperCase(),
+      color: isAdmin ? '#f59e0b' : ['#a78bfa', '#22c55e', '#38bdf8', '#ec4899', '#f97316'][i % 5],
+      isMe: p.id === myId,
+      role: p.role,
+      id: p.id,
+    };
+  });
 }
 
 // Country ranking from real data

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FaMedal, FaTrophy } from "react-icons/fa6";
+import { FaMedal, FaTrophy, FaCrown, FaShield } from "react-icons/fa6";
 import { fetchLeaderboard } from "../../data/leaderboard";
 import { LANG_FLAGS } from "../../data/texts";
 import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../data/shop";
@@ -63,7 +63,7 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
         ))}
       </div>
 
-      <div className="grid grid-cols-[28px_1fr_48px_48px_40px] sm:grid-cols-[36px_1fr_70px_70px_60px] gap-1.5 sm:gap-2 px-3 pb-2 text-[10px] sm:text-xs text-gray-600 uppercase tracking-widest">
+      <div className="grid grid-cols-[28px_1fr_48px_48px_40px] sm:grid-cols-[36px_1fr_70px_70px_60px] gap-1.5 sm:gap-2 px-3 pb-2 text-[10px] sm:text-[11px] text-gray-600 uppercase tracking-widest">
         <span />
         <span />
         <span className="text-right">WPM</span>
@@ -79,7 +79,7 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
         <div className="flex flex-col gap-1">
           {entries.map((p, i) => (
             <div
-              key={p.rank}
+              key={`${p.rank}-${p.id || i}`}
               className="grid grid-cols-[28px_1fr_48px_48px_40px] sm:grid-cols-[36px_1fr_70px_70px_60px] gap-1.5 sm:gap-2 items-center px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all"
               style={{
                 background: i < 3 ? t.surface : "transparent",
@@ -112,6 +112,16 @@ export default function LeaderboardView({ t, onClose, activeAvatar = "avatar_def
                 <div>
                   <div className="text-sm font-medium text-white flex items-center gap-1.5">
                     {p.name}
+                    {p.role === 'owner' && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-0.5" style={{ background: '#f59e0b22', color: '#fbbf24' }}>
+                        <FaCrown size={9} /> Owner
+                      </span>
+                    )}
+                    {p.role === 'admin' && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full flex items-center gap-0.5" style={{ background: '#38bdf822', color: '#38bdf8' }}>
+                        <FaShield size={9} /> Admin
+                      </span>
+                    )}
                     {p.isMe && (
                       <span
                         className="text-xs px-1.5 py-0.5 rounded-full"

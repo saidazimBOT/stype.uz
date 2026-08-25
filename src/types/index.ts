@@ -40,6 +40,8 @@ export interface LeaderboardEntry {
   avatar: string;
   color: string;
   isMe?: boolean;
+  role?: string;
+  id?: string;
 }
 
 export interface CountryStats {
