@@ -25,3 +25,9 @@ dist-ssr
 .next/
 .next/
 .next/
+
+# Build output
+out/
+
+# Environment variables
+.env.local

@@ -1,17 +1,14 @@
 /**
- * App.tsx (provider tashqarisida) Convex'ga natija yozish uchun ko'prik.
- * SiteOverlays ichidagi TypingRecorderBridge komponenti ro'yxatga olish
- * funksiyasini shu yerga ulaydi — Convex sozlanmagan bo'lsa hech narsa qilmaydi.
+ * App.tsx uchun typing recorder ko'prigi.
+ * SiteOverlays ichidagi TypingRecorderBridge komponenti
+ * recordTypingResult funksiyasini window ga o'rnatadi.
  */
 export interface RecordTypingArgs {
   wpm: number;
   accuracy: number;
   errors: number;
-  /** To'g'ri yozilgan belgilar soni */
   correct?: number;
-  /** Jami bosilgan belgilar (xatolar bilan) */
   total?: number;
-  /** Test davomiyligi — soniyalarda */
   time?: number;
   lang: string;
   duration: number;
@@ -20,22 +17,20 @@ export interface RecordTypingArgs {
 
 type Recorder = (args: RecordTypingArgs) => Promise<unknown>;
 
-let recorder: Recorder | null = null;
-let userToken: string | null = null;
-
-export function setTypingRecorder(fn: Recorder | null): void {
-  recorder = fn;
-}
-
+/** Typing recorder funksiyasini olish (SiteOverlays o'rnatadi) */
 export function getTypingRecorder(): Recorder | null {
-  return recorder;
+  try {
+    return (window as Record<string, unknown>).__typingRecorder as Recorder | null;
+  } catch {
+    return null;
+  }
 }
 
-/** Joriy foydalanuvchining token ID si (Convex orqali, login qilingan bo'lsa). */
-export function setUserToken(t: string | null): void {
-  userToken = t;
-}
-
+/** Joriy foydalanuvchining ID si (Supabase Auth) */
 export function getUserToken(): string | null {
-  return userToken;
+  try {
+    return (window as Record<string, unknown>).__userToken as string | null;
+  } catch {
+    return null;
+  }
 }

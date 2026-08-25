@@ -9,6 +9,7 @@ import { createAudioController } from "./utils/audio";
 import { charsEqual } from "./utils/typingChars";
 import { nextLiveWpm } from "./utils/wpm";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import { useSyncedSettings } from "./hooks/useUserSettings";
 import { useDailyReward } from "./components/features/DailyLogin";
 import { useProfile, fullName } from "./hooks/useProfile";
 import SignUpModal from "./components/features/SignUpModal";
@@ -38,7 +39,7 @@ import ProgressDashboard from "./components/features/ProgressDashboard";
 import CountryRanking from "./components/features/CountryRanking";
 import KeyboardVisualizer from "./components/features/KeyboardVisualizer";
 import BattleHub from "./components/features/Battle/BattleHub";
-import { ConvexClientProvider, getConvexClient } from "./lib/battle";
+// Convex removed — Supabase ishlatilmoqda
 import FriendSystem from "./components/features/FriendSystem";
 import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
@@ -91,17 +92,17 @@ try {
 // ── APP ──────────────────────────────────────────────────────────────────
 export default function App() {
   // Core state
-  const [theme, setTheme] = useLocalStorage("typeuz_theme", "blue");
-  const [lang, setLang] = useLocalStorage("typeuz_lang", "en");
-  const [duration, setDuration] = useLocalStorage<number | string>("typeuz_duration", 15);
-  const [fontSize, setFontSize] = useLocalStorage("typeuz_fontsize", "md");
+  const [theme, setTheme] = useSyncedSettings("theme", "blue");
+  const [lang, setLang] = useSyncedSettings("lang", "en");
+  const [duration, setDuration] = useSyncedSettings<number | string>("duration", 15);
+  const [fontSize, setFontSize] = useSyncedSettings("fontSize", "md");
   const [view, setView] = useLocalStorage("typeuz_view", "type");
-  const [soundEnabled, setSoundEnabled] = useLocalStorage("typeuz_sound", true);
-  const [showKeyboard, setShowKeyboard] = useLocalStorage("typeuz_showkb", false);
-  const [showHeatmap, setShowHeatmap] = useLocalStorage("typeuz_heatmap", false);
-  const [fingerGuide, setFingerGuide] = useLocalStorage("typeuz_finger", true);
-  const [bgImage, setBgImage] = useLocalStorage("typeuz_bgimage", "");
-  const [bgDim, setBgDim] = useLocalStorage("typeuz_bgdim", 0.55);
+  const [soundEnabled, setSoundEnabled] = useSyncedSettings("soundEnabled", true);
+  const [showKeyboard, setShowKeyboard] = useSyncedSettings("showKeyboard", false);
+  const [showHeatmap, setShowHeatmap] = useSyncedSettings("showHeatmap", false);
+  const [fingerGuide, setFingerGuide] = useSyncedSettings("fingerGuide", true);
+  const [bgImage, setBgImage] = useSyncedSettings("bgImage", "");
+  const [bgDim, setBgDim] = useSyncedSettings("bgDim", 0.55);
   const [showSettings, setShowSettings] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [promoNotice, setPromoNotice] = useState(false);
@@ -153,7 +154,7 @@ export default function App() {
   const [accuracy, setAccuracy] = useState(100);
   const [errors, setErrors] = useState(0);
   const [totalKs, setTotalKs] = useState(0);
-  const [history, setHistory] = useLocalStorage<TestResult[]>("typeuz_history", []);
+  const [history, setHistory] = useLocalStorage<TestResult[]>("typeuz_history", []); // History localStorage'da qoladi — typing_results jadvalida serverda ham saqlanadi
   const [cursor, setCursor] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
@@ -164,8 +165,8 @@ export default function App() {
   // Xato kiritilganda qizil ko'rsatiladigan harf holati (faqat o'sha harf)
   const [wordErr, setWordErr] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
-  const [favorites, setFavorites] = useLocalStorage<string[]>("typeuz_favorites", []);
-  const [usedLangs, setUsedLangs] = useLocalStorage<string[]>("typeuz_usedlangs", []);
+  const [favorites, setFavorites] = useSyncedSettings<string[]>("favorites", []);
+  const [usedLangs, setUsedLangs] = useSyncedSettings<string[]>("usedLangs", []);
   const cursorRef = useRef(0);
   // Faqat TO'G'RI yozilgan belgilar soni (xato harflar kirmaydi) — WPM shu qiymatga asoslanadi
   const correctCharsRef = useRef(0);
@@ -719,9 +720,7 @@ export default function App() {
 
   // ── RENDER ──────────────────────────────────────────────────────────
   return (
-    <ConvexClientProvider>
-    {/* Convex sozlanmagan bo'lsa ko'prikni render qilmaymiz — hooks provider tashqarisida ishlamaydi */}
-    {getConvexClient() && <TypingRecorderBridge />}
+    <>
     <AccountSyncBridge />
     <SupabaseCoinSync />
     <div
@@ -1555,6 +1554,6 @@ export default function App() {
         </div>
       )}
     </div>
-    </ConvexClientProvider>
+    </>
   );
 }
