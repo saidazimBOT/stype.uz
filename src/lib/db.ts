@@ -192,11 +192,23 @@ export async function listAllProfiles(search?: string): Promise<ProfileRow[]> {
   return (data ?? []) as ProfileRow[];
 }
 
-/** Profilni yangilash */
+/** O'z profilini yangilash (oddiy foydalanuvchi) */
 export async function updateProfile(updates: Record<string, unknown>) {
   const uid = await getCurrentUserId();
   if (!uid) return;
   await supabase!.from("profiles").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", uid);
+}
+
+/** Admin boshqa foydalanuvchining profilini yangilash */
+export async function adminUpdateProfile(userId: string, updates: Record<string, unknown>) {
+  if (!isSupabaseConfigured()) return;
+  await supabase!.from("profiles").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", userId);
+  await logAdminAction("profile_update", userId, Object.keys(updates).join(", "));
+}
+
+/** O'z profil to'liq ma'lumotlarini olish */
+export async function getFullProfile(): Promise<ProfileRow | null> {
+  return getMyProfile();
 }
 
 /** Heartbeat — last_seen yangilash */

@@ -31,6 +31,7 @@ import HistoryView from "./components/views/HistoryView";
 import AboutView from "./components/views/AboutView";
 import GamesView from "./components/views/GamesView";
 import ShopView from "./components/views/ShopView";
+import ProfileSettingsView from "./components/views/ProfileSettingsView";
 
 // Features
 import DailyLoginView from "./components/features/DailyLoginView";
@@ -757,7 +758,7 @@ export default function App() {
   // O'chirilgan sahifalar (masalan "tutor") localStorage da qolgan bo'lsa — blank o'rniga "type" ochiladi.
   // "admin" navItems'da yo'q (maxsus view) — guard uni "type"ga qaytarib yubormasligi uchun qo'shilgan.
   useEffect(() => {
-    const valid = new Set([...navItems.map((n) => n.id), "admin"]);
+    const valid = new Set([...navItems.map((n) => n.id), "admin", "profile_settings"]);
     if (!valid.has(view)) setView("type");
   }, [view]);
 
@@ -1149,7 +1150,7 @@ export default function App() {
               activeAvatar={coinsStore.activeAvatar}
               profile={profile}
               heroEquip={coinsStore.heroEquip}
-              onEditProfile={() => setShowSignUp(true)}
+              onEditProfile={() => setView("profile_settings")}
             />
           ) : view === "history" ? (
             <HistoryView
@@ -1179,6 +1180,8 @@ export default function App() {
             <AIExercises t={t} onClose={() => setView("type")} onSelectText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
           ) : view === "custom" ? (
             <CustomTextImport t={t} onClose={() => setView("type")} onImportText={(txt) => { setText(txt.toLowerCase()); setView("type"); }} />
+          ) : view === "profile_settings" ? (
+            <ProfileSettingsView t={t} onClose={() => setView("type")} />
           ) : view === "mashq" ? (
             <MashqView t={t} lang={lang} onClose={() => setView("type")} onSelectText={(txt) => { newText(txt); setView("type"); }} />
           ) : view === "replay" ? (
