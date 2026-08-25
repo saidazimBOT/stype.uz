@@ -206,10 +206,15 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-gray-400 hover:bg-white/5 transition-all">
             <FiRefreshCw size={14} /> Yangilash
           </button>
-          <button onClick={() => { setLoggedIn(false); onClose(); }}
+          <button onClick={async () => {
+            try { const { signOutSupabase } = await import("../../lib/supabaseService"); await signOutSupabase(); } catch {}
+            localStorage.removeItem("typeuz_signup_skipped");
+            setLoggedIn(false);
+            onClose();
+          }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
             style={{ color: t.accent }}>
-            <FiLogOut size={14} /> Chiqish
+            <FiLogOut size={14} /> Chiqish (Logout)
           </button>
           <button onClick={onClose}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-gray-500 hover:bg-white/5 transition-all">

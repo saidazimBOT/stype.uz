@@ -70,7 +70,7 @@ import ResultsChart, { type WpmSample } from "./components/features/ResultsChart
 // SVG icons (stiker/emoji o'rniga)
 import {
   FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGift, FiGrid, FiHeart, FiInfo, FiList,
-  FiLogIn, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
+  FiLogIn, FiLogOut, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
 import { FaDna, FaInstagram, FaKeyboard, FaMedal, FaPalette, FaTelegram, FaTrophy } from "react-icons/fa6";
@@ -91,13 +91,18 @@ try {
 } catch {}
 
 // ── APP ──────────────────────────────────────────────────────────────────
-export default function App() {
+export default function App({ initialView }: { initialView?: string } = {}) {
   // Core state
   const [theme, setTheme] = useSyncedSettings("theme", "blue");
   const [lang, setLang] = useSyncedSettings("lang", "en");
   const [duration, setDuration] = useSyncedSettings<number | string>("duration", 15);
   const [fontSize, setFontSize] = useSyncedSettings("fontSize", "md");
   const [view, setView] = useLocalStorage("typeuz_view", "type");
+
+  // /admin page'dan kelganda avtomatik admin view'ni ochish
+  useEffect(() => {
+    if (initialView && view !== initialView) setView(initialView);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [soundEnabled, setSoundEnabled] = useSyncedSettings("soundEnabled", true);
   const [showKeyboard, setShowKeyboard] = useSyncedSettings("showKeyboard", false);
   const [showHeatmap, setShowHeatmap] = useSyncedSettings("showHeatmap", false);
@@ -1098,6 +1103,48 @@ export default function App() {
               <span className="hidden md:block">{item.label}</span>
             </button>
           ))}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Admin panel tugmasi */}
+          <button
+            onClick={() => {
+              setShowLingohub(false);
+              setView(view === "admin" ? "type" : "admin");
+            }}
+            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 mt-2"
+            style={{
+              color: view === "admin" ? t.accent : "#6b7280",
+              background: view === "admin" ? t.accent + "11" : "transparent",
+            }}
+            title="Admin Panel"
+          >
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span className="hidden md:block">Admin</span>
+          </button>
+
+          {/* Logout tugmasi (faqat kirgan foydalanuvchilar uchun) */}
+          {isSignedUp && (
+            <button
+              onClick={async () => {
+                try {
+                  const { signOutSupabase } = await import("./lib/supabaseService");
+                  await signOutSupabase();
+                } catch {}
+                saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
+                localStorage.removeItem("typeuz_signup_skipped");
+                setView("type");
+              }}
+              className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 text-red-400/70 hover:text-red-400 mb-2"
+              title="Chiqish (Logout)"
+            >
+              <FiLogOut size={16} className="flex-shrink-0" />
+              <span className="hidden md:block">Chiqish</span>
+            </button>
+          )}
         </aside>
 
         {/* Main Content */}
@@ -1491,25 +1538,6 @@ export default function App() {
         className="fixed bottom-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl text-xs z-30 backdrop-blur-md pointer-events-none"
         style={{ background: t.surface + "cc", border: `1px solid ${t.accent}33` }}
       >
-        {/* Admin button (footer) — bosiladigan yagona qismi, sidebar bloklanmasligi uchun */}
-        <button
-          onClick={() => {
-            setShowLingohub(false);
-            setView(view === "admin" ? "type" : "admin");
-          }}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 mr-1 pointer-events-auto"
-          style={{
-            background: view === "admin" ? t.accent + "33" : "#ffffff0d",
-            color: view === "admin" ? t.accent : "#9ca3af",
-            border: `1px solid ${view === "admin" ? t.accent + "55" : "#ffffff14"}`,
-          }}
-          title="Admin Panel"
-        >
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <span className="hidden sm:block">{T("navbar.admin")}</span>
-        </button>
         {(() => {
           const av = getAvatarInfo(coinsStore.activeAvatar);
           return (
