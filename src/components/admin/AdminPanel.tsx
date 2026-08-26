@@ -6,11 +6,10 @@ import {
   FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUserPlus, FiUsers, FiZap,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
 import useAdminProfile from "./useAdminProfile";
 import type { ThemeColors, TestResult } from "../../types";
 import { isSupabaseConfigured } from "../../lib/supabase";
-import { getMyProfile, signInWithEmail, signUpWithEmail } from "../../lib/supabaseService";
+import { getMyProfile, signInWithEmail } from "../../lib/supabaseService";
 import GscDashboard from "./GscDashboard";
 import DashboardSection from "./DashboardSection";
 import UsersSection from "./UsersSection";
@@ -27,8 +26,6 @@ import VisitorsSection from "./VisitorsSection";
 import { Spinner } from "./adminUi";
 
 const ADMIN_TELEGRAM_URL = "https://t.me/said_khujayev";
-const ADMIN_PASSWORD = "admin0550";
-const SESSION_KEY = "typeuz_admin_session";
 
 interface AdminPanelProps {
   t: ThemeColors;
@@ -108,13 +105,76 @@ export default function AdminPanel(props: AdminPanelProps) {
 }
 
 function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
-  const [loggedIn, setLoggedIn] = useLocalStorage(SESSION_KEY, false);
   const { me, isLoading, refetch } = useAdminProfile();
   const [tab, setTab] = useState<TabId>("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
+  // Faqat Supabase auth orqali kirilgan admin/owner kirishi mumkin
+  const [authenticated, setAuthenticated] = useState(false);
 
   const isServerAdmin = me?.role === "admin" || me?.role === "owner";
   const serverAdmin = isSupabaseConfigured() && isServerAdmin;
+
+  // Supabase sozlanmagan bo'lsa — kirishga ruxsat yo'q
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
+        <div className="text-center max-w-sm animate-pop-in">
+          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4"
+            style={{ background: "#ef444422", color: "#f87171", border: "1px solid #ef444444" }}>
+            <FiLock size={30} />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Admin Panel bloklangan</h2>
+          <p className="text-xs text-gray-500 mb-5">Supabase sozlanmagan. Admin panel faqat Supabase orqali ishlaydi.</p>
+          <button onClick={onClose}
+            className="px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
+            style={{ background: t.accent, color: "#000" }}>
+            ← Saytga qaytish
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Yuklanmoqda
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Spinner t={t} label="Tekshirilmoqda..." />
+      </div>
+    );
+  }
+
+  // Admin emas yoki hali kirmagan — login ekranini ko'rsatish
+  if (!authenticated && !isServerAdmin) {
+    return (
+      <AdminLoginScreen
+        t={t} onClose={onClose}
+        onLogin={() => setAuthenticated(true)}
+        onServerLogin={refetch}
+      />
+    );
+  }
+
+  // Admin emas — ruxsat yo'q
+  if (!isServerAdmin) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
+        <div className="text-center max-w-sm animate-pop-in">
+          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4"
+            style={{ background: "#ef444422", color: "#f87171", border: "1px solid #ef444444" }}>
+            <FiShield size={30} />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Ruxsat yo'q</h2>
+          <p className="text-xs text-gray-500 mb-5">Faqat admin va owner ro'lidagi foydalanuvchilar kirishi mumkin.</p>
+          <button onClick={onClose}
+            className="px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
+            style={{ background: t.accent, color: "#000" }}>
+            ← Saytga qaytish
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = ALL_TABS.filter(
     (tb) => (!tb.server || serverAdmin) && (!tb.supabase || isSupabaseConfigured())
@@ -125,25 +185,6 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
     const iv = window.setInterval(() => setRefreshKey((k) => k + 1), 30_000);
     return () => window.clearInterval(iv);
   }, []);
-
-  // Login qilinmagan bo'lsa — login ekranini ko'rsatish
-  if (!loggedIn && !isServerAdmin) {
-    return (
-      <AdminLoginScreen
-        t={t} onClose={onClose}
-        onLogin={() => setLoggedIn(true)}
-        onServerLogin={refetch}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Spinner t={t} label="Yuklanmoqda..." />
-      </div>
-    );
-  }
 
   const renderTab = () => {
     switch (active) {
@@ -208,8 +249,7 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
           </button>
           <button onClick={async () => {
             try { const { signOutSupabase } = await import("../../lib/supabaseService"); await signOutSupabase(); } catch {}
-            localStorage.removeItem("typeuz_signup_skipped");
-            setLoggedIn(false);
+            setAuthenticated(false);
             onClose();
           }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
@@ -266,29 +306,19 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
   );
 }
 
-// ── Login Screen ──────────────────────────────────────────────────────
+// ── Login Screen — FAQAT Supabase auth ────────────────────────────────
 function AdminLoginScreen({
   t, onClose, onLogin, onServerLogin,
 }: {
   t: ThemeColors; onClose: () => void; onLogin: () => void; onServerLogin: () => void;
 }) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSupabaseLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setError("");
-      setPassword("");
-      onLogin();
-    } else {
-      setError("Parol noto'g'ri!");
-    }
-  };
-
-  const handleSupabaseLogin = async () => {
     if (!email || !password) return;
     setBusy(true);
     setError("");
@@ -300,7 +330,7 @@ function AdminLoginScreen({
           onLogin();
           onServerLogin();
         } else {
-          setError("Sizda admin roli yo'q. Ro'yxatdan o'tgan email bilan kiring.");
+          setError("Sizda admin roli yo'q. Faqat admin/owner kirishi mumkin.");
         }
       }
     } catch (e) {
@@ -313,7 +343,7 @@ function AdminLoginScreen({
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 py-10 overflow-y-auto admin-shell">
-      <form onSubmit={handleLogin}
+      <form onSubmit={handleSupabaseLogin}
         className="w-full max-w-sm p-8 rounded-3xl animate-pop-in"
         style={{ background: t.surface, border: `1px solid ${t.accent}33`, boxShadow: `0 0 60px ${t.accent}22` }}>
         <div className="flex flex-col items-center mb-8">
@@ -324,6 +354,12 @@ function AdminLoginScreen({
           <h2 className="text-xl font-bold text-white">Admin Panel</h2>
           <p className="text-xs text-gray-500 mt-1">Faqat administratorlar uchun</p>
         </div>
+
+        <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+          placeholder="admin@domain.com" required autoFocus
+          className="w-full px-4 py-2.5 rounded-xl text-sm mb-4 outline-none transition-all"
+          style={{ background: "#ffffff08", border: `1px solid ${email ? t.accent + "55" : "transparent"}`, color: "#fff" }} />
 
         <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1.5">Parol</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
@@ -337,27 +373,11 @@ function AdminLoginScreen({
           </div>
         )}
 
-        <button type="submit"
-          className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+        <button type="submit" disabled={busy}
+          className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
           style={{ background: t.accent, color: "#000" }}>
-          <FiLock size={14} /> Kirish
+          <FiLock size={14} /> {busy ? "Tekshirilmoqda..." : "Kirish"}
         </button>
-
-        {isSupabaseConfigured() && (
-          <>
-            <div className="my-4 flex items-center gap-3 text-[10px] text-gray-600">
-              <div className="flex-1 h-px bg-white/5" /> Supabase bilan <div className="flex-1 h-px bg-white/5" />
-            </div>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email" className="w-full px-4 py-2 rounded-xl text-xs mb-2 outline-none"
-              style={{ background: "#ffffff08", border: "1px solid #ffffff14", color: "#fff" }} />
-            <button type="button" onClick={() => void handleSupabaseLogin()} disabled={busy}
-              className="w-full py-2 rounded-xl text-xs font-medium transition-all hover:bg-white/5 flex items-center justify-center gap-2"
-              style={{ border: `1px solid ${t.accent}44`, color: t.accent }}>
-              <FiZap size={12} /> {busy ? "Tekshirilmoqda..." : "Supabase admin kirish"}
-            </button>
-          </>
-        )}
 
         <button type="button" onClick={onClose}
           className="w-full mt-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
