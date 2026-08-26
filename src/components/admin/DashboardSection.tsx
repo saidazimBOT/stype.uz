@@ -31,9 +31,14 @@ export default function DashboardSection({ t, serverAdmin, history, xp }: Props)
     read();
   }, []);
 
-  const addMyCoins = (amount: number) => {
+  const addMyCoins = async (amount: number) => {
     if (!amount || amount <= 0) return;
     const total = myCoins + amount;
+    // Serverga ham yozamiz — aks holda reload'da yo'qoladi
+    try {
+      const { setMyCoins: saveServerCoins } = await import("../../lib/supabaseService");
+      await saveServerCoins(total);
+    } catch {}
     localStorage.setItem("typeuz_coins", String(total));
     window.dispatchEvent(new CustomEvent("typeuz-coins-sync", { detail: total }));
     setMyCoins(total);
