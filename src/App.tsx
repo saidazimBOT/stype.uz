@@ -185,7 +185,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const correctCharsRef = useRef(0);
 
   // Foydalanuvchi profili (ism, familiya, rasm)
-  const { profile, saveProfile, isSignedUp } = useProfile();
+  const { profile, saveProfile, setProfileLocal, isSignedUp } = useProfile();
 
   // Hydration tugagach mounted bo'ladi — shundan keyingina modal haqida qaror qilamiz.
   useEffect(() => {
@@ -245,67 +245,40 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     const { data: { subscription } } = supabase!.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
-          // URL'dagi access_token/to'larni tozalamiz — loopni oldini oladi
           if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
             window.history.replaceState({}, "", window.location.pathname);
           }
-          // Auth modalni yopamiz
           setShowAuthModal(false);
           setSessionUserId(session.user.id);
           const user = session.user;
           const md = (user.user_metadata || {}) as Record<string, string | undefined>;
           const avatarUrl = md.avatar_url || md.picture || "";
-          // Profilni Supabase'dan o'qiymiz — username mavjudligini tekshiramiz
-          const profile = await getMyProfile();
-          if (profile) {
-            setSessionRole(profile.role);
-            // Mavjud profil bor — username yo'qmi?
-            const hasUsername = profile.username && profile.username.length >= 2 && !profile.username.startsWith("user");
-            if (!hasUsername) {
-              // Username yo'q — modal ko'rsatamiz
-              saveProfile({
-                firstName: "",
-                lastName: "",
-                photo: avatarUrl,
-                avatarId: profile.avatar_id || "avatar_default",
-                signedUpAt: new Date(profile.created_at).getTime(),
-              });
-              setShowUsernameModal(true);
-            } else {
-              // Username bor — to'g'ri kirib keldi
-              saveProfile({
-                firstName: profile.first_name || profile.username || "",
-                lastName: profile.last_name || "",
-                photo: avatarUrl,
-                avatarId: profile.avatar_id || "avatar_default",
-                signedUpAt: new Date(profile.created_at).getTime(),
-              });
-            }
-          } else {
-            // Yangi foydalanuvchi — profile yo'q, username kerak
-            const emailPrefix = (user.email || "").split("@")[0] || "user";
-            const defaultUsername = emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "");
-            // Profil yaratamiz (username bilan)
-            void supabase!.from("profiles").update({
-              username: defaultUsername,
-              first_name: defaultUsername,
-              email: user.email,
-              avatar: avatarUrl || "avatar_default",
-              avatar_id: avatarUrl || "avatar_default",
-            }).eq("id", user.id);
-            saveProfile({
-              firstName: defaultUsername,
-              lastName: "",
-              photo: avatarUrl,
-              avatarId: "avatar_default",
-              signedUpAt: Date.now(),
-            });
-          }
-          // last_login yangilash
-          void supabase!.from("profiles").update({
-            last_login: new Date().toISOString(),
-            email: user.email,
-          }).eq("id", user.id);
+          // Profilni o'qiymiz — setTimeout bilan render siklini oldini olamiz
+          setTimeout(async () => {
+            try {
+              const p = await getMyProfile();
+              if (p) {
+                setSessionRole(p.role);
+                const hasUsername = p.username && p.username.length >= 2 && !p.username.startsWith("user");
+                if (!hasUsername) {
+                  setShowUsernameModal(true);
+                }
+                setProfileLocal({
+                  firstName: p.first_name || p.username || "",
+                  lastName: p.last_name || "",
+                  photo: avatarUrl,
+                  avatarId: p.avatar_id || "avatar_default",
+                  signedUpAt: new Date(p.created_at).getTime(),
+                });
+              } else {
+                const emailPrefix = (user.email || "").split("@")[0] || "user";
+                const uname = emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "");
+                void supabase!.from("profiles").update({ username: uname, first_name: uname, email: user.email, avatar: avatarUrl || "avatar_default", avatar_id: avatarUrl || "avatar_default" }).eq("id", user.id);
+                setProfileLocal({ firstName: uname, lastName: "", photo: avatarUrl, avatarId: "avatar_default", signedUpAt: Date.now() })
+              }
+              void supabase!.from("profiles").update({ last_login: new Date().toISOString(), email: user.email }).eq("id", user.id);
+            } catch {}
+          }, 0);
         }
         if (event === "SIGNED_OUT") {
           setSessionUserId(null);

@@ -82,5 +82,11 @@ export function useProfile() {
 
   const clearProfile = () => setProfile(null);
 
-  return { profile, saveProfile, clearProfile, isSignedUp: !!profile };
+  // Local state ni yangilash — Supabase'ga yozmasdan (auth handler uchun)
+  const setProfileLocal = (p: UserProfile | null) => {
+    setProfile(p);
+    try { if (p) window.localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch {}
+  };
+
+  return { profile, saveProfile, setProfileLocal, clearProfile, isSignedUp: !!profile };
 }
