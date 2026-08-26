@@ -1100,17 +1100,15 @@ export default function App({ initialView }: { initialView?: string } = {}) {
                   >
                     <FiSettings size={14} /> Sozlamalar
                   </button>
-                  {(sessionRole === "admin" || sessionRole === "owner") && (
-                    <button
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        setView("admin");
-                      }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"
-                    >
-                      <FiShield size={14} /> Admin Panel
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setView("admin");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                  >
+                    <FiShield size={14} /> Admin Panel
+                  </button>
                 </div>
 
                 {/* Chiqish */}
@@ -1243,13 +1241,12 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Admin panel tugmasi — faqat admin/owner ko'rishi mumkin */}
-          {(sessionRole === "admin" || sessionRole === "owner") && (
-            <button
-              onClick={() => {
-                setShowLingohub(false);
-                setView(view === "admin" ? "type" : "admin");
-              }}
+          {/* Admin panel tugmasi — barcha foydalanuvchilar uchun */}
+          <button
+            onClick={() => {
+              setShowLingohub(false);
+              setView(view === "admin" ? "type" : "admin");
+            }}
               className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 mt-2"
               style={{
                 color: view === "admin" ? t.accent : "#6b7280",
@@ -1262,7 +1259,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
               </svg>
               <span className="hidden md:block">Admin</span>
             </button>
-          )}
 
         </aside>
 

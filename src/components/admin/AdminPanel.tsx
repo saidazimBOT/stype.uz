@@ -3,13 +3,12 @@
 import { Component, useEffect, useState, type ReactNode } from "react";
 import {
   FiAward, FiBarChart2, FiBell, FiDatabase, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
-  FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUserPlus, FiUsers, FiZap,
+  FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUserPlus, FiUsers,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import useAdminProfile from "./useAdminProfile";
 import type { ThemeColors, TestResult } from "../../types";
 import { isSupabaseConfigured } from "../../lib/supabase";
-import { getMyProfile } from "../../lib/supabaseService";
 import GscDashboard from "./GscDashboard";
 import DashboardSection from "./DashboardSection";
 import UsersSection from "./UsersSection";
@@ -104,13 +103,17 @@ export default function AdminPanel(props: AdminPanelProps) {
   );
 }
 
+const ADMIN_PASSWORD = "admin0550";
+
 function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
-  const { me, isLoading, refetch } = useAdminProfile();
   const [tab, setTab] = useState<TabId>("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
-  // Faqat Supabase auth orqali kirilgan admin/owner kirishi mumkin
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(() => {
+    try { return sessionStorage.getItem("admin_authed") === "1"; } catch { return false; }
+  });
 
+  // Server-side admin panel uchun Supabase profil (serverga yozish kerak bo'lsa)
+  const { me } = useAdminProfile();
   const isServerAdmin = me?.role === "admin" || me?.role === "owner";
   const serverAdmin = isSupabaseConfigured() && isServerAdmin;
 
@@ -120,65 +123,16 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
     return () => window.clearInterval(iv);
   }, []);
 
-  // Supabase sozlanmagan bo'lsa — kirishga ruxsat yo'q
-  if (!isSupabaseConfigured()) {
-    return (
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="text-center max-w-sm animate-pop-in">
-          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4"
-            style={{ background: "#ef444422", color: "#f87171", border: "1px solid #ef444444" }}>
-            <FiLock size={30} />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Admin Panel bloklangan</h2>
-          <p className="text-xs text-gray-500 mb-5">Supabase sozlanmagan. Admin panel faqat Supabase orqali ishlaydi.</p>
-          <button onClick={onClose}
-            className="px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
-            style={{ background: t.accent, color: "#000" }}>
-            ← Saytga qaytish
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Yuklanmoqda
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Spinner t={t} label="Tekshirilmoqda..." />
-      </div>
-    );
-  }
-
-  // Admin emas yoki hali kirmagan — login ekranini ko'rsatish
-  if (!authenticated && !isServerAdmin) {
+  // Parol tekshirilmagan — login ekranini ko'rsatish
+  if (!authenticated) {
     return (
       <AdminLoginScreen
         t={t} onClose={onClose}
-        onLogin={() => setAuthenticated(true)}
-        onServerLogin={refetch}
+        onLogin={() => {
+          setAuthenticated(true);
+          try { sessionStorage.setItem("admin_authed", "1"); } catch {}
+        }}
       />
-    );
-  }
-
-  // Admin emas — ruxsat yo'q
-  if (!isServerAdmin) {
-    return (
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="text-center max-w-sm animate-pop-in">
-          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4"
-            style={{ background: "#ef444422", color: "#f87171", border: "1px solid #ef444444" }}>
-            <FiShield size={30} />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Ruxsat yo'q</h2>
-          <p className="text-xs text-gray-500 mb-5">Faqat admin va owner ro'lidagi foydalanuvchilar kirishi mumkin.</p>
-          <button onClick={onClose}
-            className="px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
-            style={{ background: t.accent, color: "#000" }}>
-            ← Saytga qaytish
-          </button>
-        </div>
-      </div>
     );
   }
 
@@ -307,27 +261,22 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
   );
 }
 
-// ── Login Screen — FAQAT Supabase auth ────────────────────────────────
+// ── Login Screen — Parol bilan kirish ────────────────────────────────
 function AdminLoginScreen({
-  t, onClose, onLogin, onServerLogin,
+  t, onClose, onLogin,
 }: {
-  t: ThemeColors; onClose: () => void; onLogin: () => void; onServerLogin: () => void;
+  t: ThemeColors; onClose: () => void; onLogin: () => void;
 }) {
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  const handleGoogleLogin = async () => {
-    setBusy(true);
-    setError("");
-    try {
-      const { signInWithGoogle } = await import("../../lib/supabaseService");
-      await signInWithGoogle();
-      // Google redirect dan keyin onAuthStateChange ishlaydi,
-      // lekin admin panel uchun qo'shimcha tekshiruv kerak
-      // SIGNED_IN handler'da role tekshiriladi
-    } catch {
-      setError("Google bilan kirishda xatolik yuz berdi");
-      setBusy(false);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      onLogin();
+    } else {
+      setError("Noto'g'ri parol!");
+      setPassword("");
     }
   };
 
@@ -342,43 +291,40 @@ function AdminLoginScreen({
             <FiShield size={30} />
           </div>
           <h2 className="text-xl font-bold text-white">Admin Panel</h2>
-          <p className="text-xs text-gray-500 mt-1">Google orqali kiring — admin/owner roli kerak</p>
+          <p className="text-xs text-gray-500 mt-1">Admin parolni kiriting</p>
         </div>
 
-        <button onClick={() => void handleGoogleLogin()} disabled={busy}
-          className="w-full py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-          style={{ background: "#ffffff0d", color: "#fff", border: "1px solid #ffffff22" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          {busy ? "Yuklanmoqda..." : "Continue with Google"}
-        </button>
-
-        {error && (
-          <div className="mt-4 px-3 py-2 rounded-lg text-xs text-red-400 bg-red-500/10 border border-red-500/30 animate-pop-in">
-            {error}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 mb-1 block">Parol</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              placeholder="••••••••"
+              autoFocus
+              className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none transition-all focus:ring-2"
+              style={{ background: "#ffffff0d", border: `1px solid ${error ? "#ef4444" : "#ffffff22"}`, color: "#fff" }}
+            />
           </div>
-        )}
 
-        <p className="text-center text-[10px] text-gray-600 mt-4 leading-relaxed">
-          Faqat admin yoki owner ro'lidagi foydalanuvchilar kirishi mumkin.
-          Agar sizda admin roli yo'q bo'lsa, kirish imkonsiz.
-        </p>
+          {error && (
+            <div className="px-3 py-2 rounded-lg text-xs text-red-400 bg-red-500/10 border border-red-500/30 animate-pop-in">
+              {error}
+            </div>
+          )}
+
+          <button type="submit"
+            className="w-full py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
+            style={{ background: t.accent, color: "#000" }}>
+            Kirish
+          </button>
+        </form>
 
         <button type="button" onClick={onClose}
           className="w-full mt-4 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
           ← Saytga qaytish
         </button>
-
-        <a href={ADMIN_TELEGRAM_URL} target="_blank" rel="noopener noreferrer"
-          className="mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs transition-all hover:scale-[1.02]"
-          style={{ background: "#229ed918", border: "1px solid #229ed933", color: "#5fb8e8" }}>
-          <FiZap size={13} />
-          <span>Admin bo'lishni xohlaysizmi? <strong>Telegram</strong></span>
-        </a>
       </div>
     </div>
   );
