@@ -117,18 +117,16 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [showLingohub, setShowLingohub] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
-  const [showSignUp, setShowSignUp] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  // Auth modallari — faqat Google orqali kirish
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   // Supabase sessiyasi — sidebar'dagi akkaunt bloki shunga qarab ko'rinadi.
   // Lokal profil yo'qolgan bo'lsa ham chiqish tugmasi mavjud bo'lishi kerak.
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [sessionRole, setSessionRole] = useState<string>("user");
-  // Birinchi kirishda majburiy ro'yxatdan o'tish oynasini o'tkazib yuborish
-  // (skip) — sayt tugmalari bloklanib qolmasligi uchun. Keyingi safar qayta
-  // ko'rsatilmaydi, navbar'dagi "Sign up" tugmasi orqali ochish mumkin.
-  const [skipSignup, setSkipSignup] = useLocalStorage("typeuz_signup_skipped", false);
+
   // Hydration tugaguncha majburiy modal ko'rsatilmaydi — aks holda
   // localStorage'da profil bor bo'lsa ham har kirishda qisqa "ro'yxatdan o'tish"
   // oynasi ko'rinib qolardi.
@@ -252,34 +250,58 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           if (window.location.hash.includes("access_token") || window.location.search.includes("code=")) {
             window.history.replaceState({}, "", window.location.pathname);
           }
-          // Popup orqali kirishda sahifa yangilanmaydi — modallarni o'zimiz yopamiz
-          setShowLogin(false);
-          setSkipSignup(true);
+          // Auth modalni yopamiz
+          setShowAuthModal(false);
           setSessionUserId(session.user.id);
-          void getMyProfile().then((p) => { if (p) setSessionRole(p.role); });
           const user = session.user;
           const md = (user.user_metadata || {}) as Record<string, string | undefined>;
-          const emailPrefix = (user.email || "").split("@")[0] || "user";
-          // Username — email prefix'dan yaratiladi (masalan: sardor@gmail.com → sardor)
-          const username = emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "");
           const avatarUrl = md.avatar_url || md.picture || "";
-          // Profilni saqlash — firstName = username (email prefix)
-          saveProfile({
-            firstName: username,
-            lastName: "",
-            photo: avatarUrl,
-            avatarId: "avatar_default",
-            signedUpAt: Date.now(),
-          });
-          // Supabase profiles jadvaliga ham username yozish
-          void supabase!.from("profiles").update({
-            username,
-            first_name: username,
-            last_name: "",
-            email: user.email,
-            avatar: avatarUrl || "avatar_default",
-            avatar_id: avatarUrl || "avatar_default",
-          }).eq("id", user.id);
+          // Profilni Supabase'dan o'qiymiz — username mavjudligini tekshiramiz
+          const profile = await getMyProfile();
+          if (profile) {
+            setSessionRole(profile.role);
+            // Mavjud profil bor — username yo'qmi?
+            const hasUsername = profile.username && profile.username.length >= 2 && !profile.username.startsWith("user");
+            if (!hasUsername) {
+              // Username yo'q — modal ko'rsatamiz
+              saveProfile({
+                firstName: "",
+                lastName: "",
+                photo: avatarUrl,
+                avatarId: profile.avatar_id || "avatar_default",
+                signedUpAt: new Date(profile.created_at).getTime(),
+              });
+              setShowUsernameModal(true);
+            } else {
+              // Username bor — to'g'ri kirib keldi
+              saveProfile({
+                firstName: profile.first_name || profile.username || "",
+                lastName: profile.last_name || "",
+                photo: avatarUrl,
+                avatarId: profile.avatar_id || "avatar_default",
+                signedUpAt: new Date(profile.created_at).getTime(),
+              });
+            }
+          } else {
+            // Yangi foydalanuvchi — profile yo'q, username kerak
+            const emailPrefix = (user.email || "").split("@")[0] || "user";
+            const defaultUsername = emailPrefix.toLowerCase().replace(/[^a-z0-9_]/g, "");
+            // Profil yaratamiz (username bilan)
+            void supabase!.from("profiles").update({
+              username: defaultUsername,
+              first_name: defaultUsername,
+              email: user.email,
+              avatar: avatarUrl || "avatar_default",
+              avatar_id: avatarUrl || "avatar_default",
+            }).eq("id", user.id);
+            saveProfile({
+              firstName: defaultUsername,
+              lastName: "",
+              photo: avatarUrl,
+              avatarId: "avatar_default",
+              signedUpAt: Date.now(),
+            });
+          }
           // last_login yangilash
           void supabase!.from("profiles").update({
             last_login: new Date().toISOString(),
@@ -290,11 +312,12 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           setSessionUserId(null);
           setSessionRole("user");
           saveProfile({ firstName: "", lastName: "", photo: "", avatarId: "avatar_default", signedUpAt: 0 });
+          setShowAuthModal(true);
         }
       }
     );
     return () => subscription.unsubscribe();
-  }, [cloudEnabled, saveProfile, setSkipSignup]);
+  }, [cloudEnabled, saveProfile]);
 
   // Feature hooks
   const daily = useDailyReward();
@@ -1010,7 +1033,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           {cloudEnabled && !isSignedUp && (
             <button
               onClick={() => {
-                setShowLogin(true);
+                setShowAuthModal(true);
                 setShowPromo(false);
                 setShowSettings(false);
                 setShowOwner(false);
@@ -1029,7 +1052,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <button
               onClick={() => {
                 if (!isSignedUp) {
-                  setShowSignUp(true);
+                  setShowAuthModal(true);
                 } else {
                   setShowProfileMenu((s) => !s);
                 }
@@ -1130,10 +1153,9 @@ export default function App({ initialView }: { initialView?: string } = {}) {
                       setSessionUserId(null);
                       setSessionRole("user");
                       saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
-                      setSkipSignup(false);
                       setShowSettings(false);
                       setView("type");
-                      setShowLogin(true);
+                      setShowAuthModal(true);
                     }}
                     className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-400/80 hover:text-red-400 hover:bg-white/5 transition-colors"
                   >
@@ -1563,26 +1585,17 @@ export default function App({ initialView }: { initialView?: string } = {}) {
         </div>
       </div>
 
-      {/* Sign up modal — birinchi kirishda majburiy emas, o'tkazib yuborish mumkin
-          (login oynasi ochiq bo'lsa yashirinadi). Profil bor bo'lsa yoki
-          tiklanayotgan bo'lsa modal ko'rinmaydi. */}
-      {!isSignedUp && !skipSignup && !showLogin && mounted && !restoringCloudProfile && !isOAuthRedirect && (
-        <SignUpModal
+      {/* Auth modal — faqat Google orqali kirish. Guest kirish yo'q. */}
+      {showAuthModal && !isOAuthRedirect && (
+        <LoginModal
           t={t}
           lang={lang}
-          required
-          onSave={(p) => {
-            saveProfile(p);
-            setShowSignUp(false);
-          }}
-          onClose={() => setSkipSignup(true)}
-          onLoginRequest={() => {
-            setShowSignUp(false);
-            setShowLogin(true);
-          }}
+          onClose={() => setShowAuthModal(false)}
         />
       )}
-      {isSignedUp && showSignUp && (
+
+      {/* Username modal — Google kirgandan keyin username talab qilinadi */}
+      {showUsernameModal && (
         <SignUpModal
           t={t}
           lang={lang}
@@ -1590,29 +1603,9 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           required={false}
           onSave={(p) => {
             saveProfile(p);
-            setShowSignUp(false);
+            setShowUsernameModal(false);
           }}
-          onClose={() => setShowSignUp(false)}
-          onLoginRequest={() => {
-            setShowSignUp(false);
-            setShowLogin(true);
-          }}
-        />
-      )}
-      {/* Login modal — Supabase orqali (email + parol) */}
-      {showLogin && !isOAuthRedirect && (
-        <LoginModal
-          t={t}
-          lang={lang}
-          onSuccess={(p) => {
-            saveProfile(p);
-            setShowLogin(false);
-          }}
-          onSignUpRequest={() => {
-            setShowLogin(false);
-            setShowSignUp(true);
-          }}
-          onClose={() => setShowLogin(false)}
+          onClose={() => setShowUsernameModal(false)}
         />
       )}
 

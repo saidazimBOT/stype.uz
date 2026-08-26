@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { FiCamera, FiCheck, FiImage, FiLock, FiMail, FiSmile, FiUser, FiX } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiCheck, FiSmile, FiUser, FiX } from "react-icons/fi";
 import type { ThemeColors } from "../../types";
 import { AVATAR_SHOP, getAvatarInfo } from "../../data/shop";
 import { getT } from "../../data/i18n";
 import type { IconType } from "react-icons";
 import ProfileAvatar from "./ProfileAvatar";
-import { isSupabaseConfigured } from "../../lib/supabase";
-import { signUpWithEmail, signInWithGoogle } from "../../lib/supabaseService";
+import { signInWithGoogle } from "../../lib/supabaseService";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 
 interface SignUpModalProps {
   t: ThemeColors;
@@ -28,17 +28,14 @@ interface SignUpModalProps {
     signedUpAt: number;
   }) => void;
   onClose?: () => void;
-  /** Kirish oynasiga o'tish (Supabase sozlangan bo'lsa) */
-  onLoginRequest?: () => void;
-  /** Birinchi kirishda majburiy bo'lsa close tugmasi yashiriladi */
   required?: boolean;
 }
 
 /**
- * Sign up oynasi — ism, familiya va profil rasmi so'raydi.
- * Rasmni qurilmadan yuklash (galereya) yoki tayyor avatar tanlash mumkin.
+ * Ro'yxatdan o'tish oynasi — faqat Google OAuth + unikal username.
+ * Email + parol bilan ro'yxatdan o'tish o'chirildi.
  */
-export default function SignUpModal({ t, lang, initial, onSave, onClose, onLoginRequest, required = true }: SignUpModalProps) {
+export default function SignUpModal({ t, lang, initial, onSave, onClose, required = true }: SignUpModalProps) {
   const T = getT(lang);
 
   // Body scroll lock
@@ -52,116 +49,77 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
       document.body.style.width = "";
     };
   }, []);
-  const cloud = isSupabaseConfigured();
-  const registering = !initial;
+
   const [firstName, setFirstName] = useState(initial?.firstName || "");
   const [lastName, setLastName] = useState(initial?.lastName || "");
   const [photo, setPhoto] = useState(initial?.photo || "");
   const [avatarId, setAvatarId] = useState(initial?.avatarId || "avatar_default");
-  const [tab, setTab] = useState<"photo" | "avatar">(initial?.photo ? "photo" : "avatar");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [tab, setTab] = useState<"photo" | "avatar">("avatar");
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
 
   const firstNameValid = firstName.trim().length >= 2;
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const passwordValid = password.length >= 6;
 
-  // Supabase'da ro'yxatdan o'tish (register) — email + parol bilan
-  const registerCloud = async (): Promise<string | null> => {
-    if (!emailValid) return T("signup.errEmail");
-    if (!passwordValid) return T("signup.errPassword");
+  // Username tekshirish — Supabase'da mavjudligini check qilish
+  const checkUsername = async (name: string) => {
+    if (!supabase || !isSupabaseConfigured()) return;
+    const clean = name.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (clean.length < 2) {
+      setUsernameAvailable(null);
+      return;
+    }
+    setCheckingUsername(true);
     try {
-      const res = await signUpWithEmail(
-        email.trim(),
-        password,
-        {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          photo,
-          avatarId,
-          signedUpAt: initial?.signedUpAt ?? Date.now(),
-        }
-      );
-      // Email tasdiqlash yoqilgan bo'lsa session bo'lmaydi — foydalanuvchiga aytamiz
-      if (res.user && !res.session) {
-        setInfo(T("signup.confirmEmail"));
-      }
-      return null;
-    } catch (e) {
-      const msg = (e as Error)?.message?.toLowerCase() || "";
-      if (msg.includes("already")) return T("signup.errAuth");
-      if (msg.includes("network") || msg.includes("fetch") || msg.includes("failed")) {
-        return T("signup.errNetwork");
-      }
-      return `${T("signup.errAuth")}${(e as Error)?.message ? ` — ${(e as Error).message}` : ""}`;
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", clean)
+        .maybeSingle();
+      setUsernameAvailable(!data);
+    } catch {
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
     }
   };
 
-  // Rasmni yuklash + kichiklashtirish (localStorage uchun) → data URL
-  const handleFile = (file: File | undefined) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError(T("signup.errPhotoType"));
+  // Username o'zgarganda tekshirish (debounce)
+  useEffect(() => {
+    if (!firstName.trim()) {
+      setUsernameAvailable(null);
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError(T("signup.errPhotoSize"));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        // 256px gacha kichiklashtiramiz (localStorage chegarasi uchun)
-        const max = 256;
-        const scale = Math.min(1, max / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        try {
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-          setPhoto(dataUrl);
-          setError(null);
-        } catch {
-          setError(T("signup.errProcess"));
-        }
-      };
-      img.onerror = () => setError(T("signup.errRead"));
-      img.src = String(reader.result);
-    };
-    reader.onerror = () => setError(T("signup.errFile"));
-    reader.readAsDataURL(file);
-  };
+    const timeout = setTimeout(() => void checkUsername(firstName), 400);
+    return () => clearTimeout(timeout);
+  }, [firstName]);
 
-  const save = async () => {
-    if (!firstNameValid) {
-      setError(T("signup.errName"));
-      return;
-    }
-    // Ro'yxatdan o'tishda Supabase'ga ham yozamiz (email + parol bilan)
-    if (cloud && registering) {
-      setBusy(true);
-      setError(null);
-      const err = await registerCloud();
+  const handleGoogle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch {
+      setError("Google bilan kirishda xatolik yuz berdi");
       setBusy(false);
-      if (err) {
-        setError(err);
-        return;
-      }
+    }
+  };
+
+  const save = () => {
+    if (!firstNameValid) {
+      setError("Ism kamida 2 ta belgi bo'lishi kerak");
+      return;
+    }
+    if (usernameAvailable === false) {
+      setError("Bu username allaqachon band boshqasini kiriting");
+      return;
     }
     onSave({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       photo,
       avatarId,
-      // Tahrirlashda "member since" sanasi saqlanadi (qayta yozilmaydi)
       signedUpAt: initial?.signedUpAt ?? Date.now(),
     });
   };
@@ -187,8 +145,7 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
             <button
               onClick={onClose}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/10 transition-all"
-              aria-label={T("signup.close")}
-              title={T("signup.close")}
+              aria-label="Yopish"
             >
               <FiX size={18} className="text-gray-400" />
             </button>
@@ -199,178 +156,85 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
           >
             <FiUser size={30} />
           </div>
-          <h2 className="text-xl font-bold text-white">{T("signup.header")}</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            {T("signup.subtitle")}
-          </p>
+          <h2 className="text-xl font-bold text-white">STypeUz ga qo'shilish</h2>
+          <p className="text-xs text-gray-500 mt-1">Google orqali kiring, username tanlang</p>
         </div>
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
-          {/* Ism / Familiya */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Google Sign-In — birinchi qadam */}
+          <button
+            onClick={() => void handleGoogle()}
+            disabled={busy}
+            className="w-full px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
+            style={{ background: "#ffffff0d", color: "#fff", border: "1px solid #ffffff22" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            {busy ? "Yuklanmoqda..." : "Continue with Google"}
+          </button>
+
+          {/* Ikkinchi qadam — username + avatar (faqat Google kirgan bo'lsa) */}
+          <div className="pt-2 border-t border-white/5 space-y-4">
+            <div className="text-[10px] text-gray-500 uppercase tracking-widest text-center">
+              2-qadam: Username tanlang
+            </div>
+
+            {/* Username */}
             <div>
               <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                {T("signup.firstName")}
+                Username *
               </label>
-              <input
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder={T("signup.fnPlaceholder")}
-                maxLength={30}
-                autoFocus={!initial}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                style={{
-                  background: "#ffffff0d",
-                  border: `1px solid ${firstNameValid ? t.accent + "55" : "#ffffff14"}`,
-                  color: "#fff",
-                }}
-                onFocus={(e) => (e.target.style.boxShadow = `0 0 0 3px ${t.accent}22`)}
-                onBlur={(e) => (e.target.style.boxShadow = "")}
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                {T("signup.lastName")}
-              </label>
-              <input
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder={T("signup.lnPlaceholder")}
-                maxLength={30}
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: "#ffffff0d", border: "1px solid #ffffff14", color: "#fff" }}
-              />
-            </div>
-          </div>
-
-          {/* Account (Supabase sozlangan bo'lsa — email + parol) */}
-          {cloud && registering && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest">
-                  {T("signup.accountSection")}
-                </span>
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                  {T("signup.email")} *
-                </label>
-                <div className="relative">
-                  <FiMail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={T("signup.emailPlaceholder")}
-                    autoComplete="email"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                    style={{
-                      background: "#ffffff0d",
-                      border: `1px solid ${emailValid || email === "" ? t.accent + "55" : "#f8717144"}`,
-                      color: "#fff",
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-                  {T("signup.password")} *
-                </label>
-                <div className="relative">
-                  <FiLock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={T("signup.passwordPlaceholder")}
-                    autoComplete="new-password"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                    style={{
-                      background: "#ffffff0d",
-                      border: `1px solid ${passwordValid || password === "" ? t.accent + "55" : "#f8717144"}`,
-                      color: "#fff",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Rasm / Avatar tabs */}
-          <div>
-            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
-              {T("signup.profilePhoto")}
-            </label>
-            <div className="flex gap-2 mb-3">
-              <button
-                onClick={() => setTab("photo")}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all"
-                style={{
-                  background: tab === "photo" ? `${t.accent}22` : "#ffffff0d",
-                  color: tab === "photo" ? t.accent : "#9ca3af",
-                  border: `1px solid ${tab === "photo" ? t.accent + "55" : "#ffffff14"}`,
-                }}
-              >
-                <FiCamera size={13} /> {T("signup.uploadPhoto")}
-              </button>
-              <button
-                onClick={() => setTab("avatar")}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all"
-                style={{
-                  background: tab === "avatar" ? `${t.accent}22` : "#ffffff0d",
-                  color: tab === "avatar" ? t.accent : "#9ca3af",
-                  border: `1px solid ${tab === "avatar" ? t.accent + "55" : "#ffffff14"}`,
-                }}
-              >
-                <FiSmile size={13} /> {T("signup.chooseAvatar")}
-              </button>
-            </div>
-
-            {/* Preview */}
-            <div className="flex items-center gap-4 mb-3">
-              <div className="flex-shrink-0">
-                {tab === "photo" && photo ? (
-                  <img
-                    src={photo}
-                    alt={T("signup.photoAlt")}
-                    width={72}
-                    height={72}
-                    className="rounded-full object-cover"
-                    style={{ width: 72, height: 72, border: `2px solid ${t.accent}` }}
-                  />
-                ) : (
-                  <ProfileAvatar
-                    profile={{ firstName, lastName, photo: "", avatarId, signedUpAt: 0 }}
-                    size={72}
-                  />
+              <div className="relative">
+                <input
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="masalan: sardor"
+                  maxLength={20}
+                  autoFocus
+                  className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
+                  style={{
+                    background: "#ffffff0d",
+                    border: `1px solid ${
+                      usernameAvailable === false ? "#f8717144" :
+                      usernameAvailable === true ? "#22c55e44" :
+                      firstNameValid ? t.accent + "55" : "#ffffff14"
+                    }`,
+                    color: "#fff",
+                  }}
+                />
+                {checkingUsername && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 rounded-full border-2 border-gray-600 border-t-gray-400 animate-spin" />
+                  </div>
+                )}
+                {!checkingUsername && usernameAvailable === true && (
+                  <FiCheck size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400" />
+                )}
+                {!checkingUsername && usernameAvailable === false && (
+                  <FiX size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400" />
                 )}
               </div>
-              {tab === "photo" ? (
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  className="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-                  style={{ background: `${t.accent}22`, border: `1px solid ${t.accent}55`, color: t.accent }}
-                >
-                  <FiImage size={14} />
-                  {photo ? T("signup.changePhoto") : T("signup.selectPhoto")}
-                </button>
-              ) : (
-                <div className="flex-1 text-xs text-gray-500">
-                  {T("signup.avatarHint")}
-                </div>
+              {usernameAvailable === false && (
+                <div className="text-[10px] text-red-400 mt-1">Bu username band — boshqasini kiriting</div>
               )}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0])}
-              />
+              {usernameAvailable === true && (
+                <div className="text-[10px] text-green-400 mt-1">Username mavjud!</div>
+              )}
             </div>
 
-            {/* Avatar grid */}
-            {tab === "avatar" && (
+            {/* Avatar tanlash */}
+            <div>
+              <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">
+                Avatar
+              </label>
               <div className="grid grid-cols-6 gap-2">
                 {AVATAR_SHOP.map((a) => {
                   const info = getAvatarInfo(a.id);
@@ -401,77 +265,33 @@ export default function SignUpModal({ t, lang, initial, onSave, onClose, onLogin
                   );
                 })}
               </div>
-            )}
+            </div>
           </div>
-
-          {/* Google Sign-In */}
-          {cloud && registering && (
-            <>
-              <button
-                onClick={() => void signInWithGoogle().catch(() => setError(T("signup.errAuth")))}
-                disabled={busy}
-                className="w-full px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
-                style={{ background: "#ffffff0d", color: "#fff", border: "1px solid #ffffff22" }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-[10px] text-gray-600">OR</span>
-                <div className="flex-1 h-px bg-white/10" />
-              </div>
-            </>
-          )}
 
           {/* Error */}
           {error && (
-            <div className="text-xs text-red-400 animate-pop-in px-1">{error}</div>
-          )}
-          {/* Info (masalan: email tasdiqlash kerak) */}
-          {info && (
-            <div
-              className="text-xs animate-pop-in px-3 py-2.5 rounded-xl"
-              style={{ background: "#22c55e11", border: "1px solid #22c55e33", color: "#4ade80" }}
-            >
-              {info}
-            </div>
+            <div className="text-xs text-red-400 animate-pop-in px-1 text-center">{error}</div>
           )}
 
           {/* Submit */}
           <button
             onClick={() => void save()}
-            disabled={!firstNameValid || (cloud && registering ? !emailValid || !passwordValid || busy : false)}
+            disabled={!firstNameValid || usernameAvailable === false || busy}
             className="w-full px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
             style={{ background: t.accent, color: "#000" }}
           >
-            {busy ? (
-              <>
-                <span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                ...
-              </>
-            ) : (
-              <>
-                <FiCheck size={15} />
-                {initial ? T("signup.save") : T("signup.register")}
-              </>
-            )}
+            <FiCheck size={15} />
+            {initial ? "Saqlash" : "Ro'yxatdan o'tish"}
           </button>
+
           <p className="text-center text-[10px] text-gray-600">
-            {cloud && registering ? T("signup.accountNote") : T("signup.footerNote")}
+            Google orqali kirib, username tanlang — shu bilan akkaunt yaratiladi
           </p>
-          {cloud && registering && onLoginRequest && (
-            <button
-              onClick={onLoginRequest}
-              className="w-full text-center text-xs font-medium transition-all hover:opacity-80"
-              style={{ color: t.accent }}
-            >
-              {T("signup.haveAccount")}
+
+          {onClose && (
+            <button type="button" onClick={onClose}
+              className="w-full text-center text-xs text-gray-500 hover:text-gray-300 transition-all">
+              ← Orqaga
             </button>
           )}
         </div>
