@@ -62,7 +62,20 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signOutSupabase() {
   if (!supabase) return;
-  await supabase.auth.signOut();
+  // scope: 'local' — faqat local session'ni tozalaydi, serverga redirect qilmaydi.
+  // Bu 404 xatosini va qayta avtomatik kirishni oldini oladi.
+  await supabase.auth.signOut({ scope: 'local' });
+  // Supabase session'ni localStorage'dan ham majburiy o'chiramiz.
+  // Ba'zan signOut() token'ni to'liq o'chirmaydi — reload'da qaytadan kirib kelish
+  // muammosini oldini oladi.
+  try {
+    const keys = Object.keys(localStorage);
+    for (const k of keys) {
+      if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {}
 }
 
 /**

@@ -66,13 +66,12 @@ import { setSid as setGscSid } from "./lib/gscApi";
 import { getUserToken } from "./lib/convexBridge";
 import { TypingRecorderBridge } from "./components/features/SiteOverlays";
 import { recordTypingResult, getCurrentUserId, getMyProfile } from "./lib/db";
-import SidebarAccount from "./components/features/SidebarAccount";
 import ResultsChart, { type WpmSample } from "./components/features/ResultsChart";
 
 // SVG icons (stiker/emoji o'rniga)
 import {
   FiActivity, FiAward, FiBookOpen, FiCpu, FiEdit3, FiGift, FiGrid, FiHeart, FiInfo, FiList,
-  FiLogIn, FiLogOut, FiMap, FiMessageCircle, FiSend, FiShoppingBag, FiStar, FiThumbsUp,
+  FiLogIn, FiLogOut, FiMap, FiMessageCircle, FiSend, FiSettings, FiShield, FiShoppingBag, FiStar, FiThumbsUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
 import { FaDna, FaInstagram, FaKeyboard, FaMedal, FaPalette, FaTelegram, FaTrophy } from "react-icons/fa6";
@@ -120,6 +119,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   // Supabase sessiyasi — sidebar'dagi akkaunt bloki shunga qarab ko'rinadi.
   // Lokal profil yo'qolgan bo'lsa ham chiqish tugmasi mavjud bo'lishi kerak.
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
@@ -361,6 +362,18 @@ export default function App({ initialView }: { initialView?: string } = {}) {
       clearTimeout(t2);
     };
   }, []);
+
+  // Profile dropdown — tashqariga bosilsa yopiladi
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showProfileMenu]);
 
   // Auto Dark/Light Mode
   const [autoTheme, setAutoTheme] = useState(false);
@@ -1011,37 +1024,125 @@ export default function App({ initialView }: { initialView?: string } = {}) {
               <span className="hidden sm:inline">{T("navbar.login")}</span>
             </button>
           )}
-          {/* Sign up / Profil */}
-          <button
-            onClick={() => {
-              setShowSignUp(true);
-              setShowPromo(false);
-              setShowSettings(false);
-              setShowOwner(false);
-              setShowLingohub(false);
-            }}
-            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
-            title={isSignedUp ? T("navbar.editProfileTitle") : T("navbar.signupTitle")}
-            style={{
-              background: isSignedUp ? "#ffffff0d" : t.accent + "22",
-              color: isSignedUp ? "#9ca3af" : t.accent,
-              border: `1px solid ${isSignedUp ? "#ffffff14" : t.accent + "55"}`,
-            }}
-          >
-            {isSignedUp ? (
-              <>
-                <ProfileAvatar profile={profile} size={18} heroEquip={coinsStore.heroEquip} />
-                <span className="hidden sm:inline max-w-[70px] truncate">
-                  {fullName(profile)?.split(" ")[0] || T("nav.profile")}
-                </span>
-              </>
-            ) : (
-              <>
-                <FiUser size={13} />
-                <span className="hidden sm:inline">{T("navbar.signup")}</span>
-              </>
+          {/* Profile dropdown */}
+          <div ref={profileMenuRef} className="relative">
+            <button
+              onClick={() => {
+                if (!isSignedUp) {
+                  setShowSignUp(true);
+                } else {
+                  setShowProfileMenu((s) => !s);
+                }
+                setShowPromo(false);
+                setShowSettings(false);
+                setShowOwner(false);
+                setShowLingohub(false);
+              }}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105"
+              title={isSignedUp ? T("navbar.editProfileTitle") : T("navbar.signupTitle")}
+              style={{
+                background: showProfileMenu ? t.accent + "22" : isSignedUp ? "#ffffff0d" : t.accent + "22",
+                color: isSignedUp ? "#e5e7eb" : t.accent,
+                border: `1px solid ${showProfileMenu ? t.accent + "55" : isSignedUp ? "#ffffff14" : t.accent + "55"}`,
+              }}
+            >
+              {isSignedUp ? (
+                <>
+                  <ProfileAvatar profile={profile} size={18} heroEquip={coinsStore.heroEquip} />
+                  <span className="hidden sm:inline max-w-[70px] truncate">
+                    {fullName(profile)?.split(" ")[0] || T("nav.profile")}
+                  </span>
+                  <svg className={`w-3 h-3 transition-transform ${showProfileMenu ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </>
+              ) : (
+                <>
+                  <FiUser size={13} />
+                  <span className="hidden sm:inline">{T("navbar.signup")}</span>
+                </>
+              )}
+            </button>
+
+            {/* Dropdown menyu */}
+            {showProfileMenu && isSignedUp && (
+              <div
+                className="absolute right-0 top-full mt-2 w-48 rounded-xl overflow-hidden z-50 shadow-xl animate-fade-in"
+                style={{ background: t.surface, border: `1px solid ${t.accent}33` }}
+              >
+                {/* Profil info */}
+                <div className="px-4 py-3 border-b border-white/5">
+                  <div className="flex items-center gap-2.5">
+                    <ProfileAvatar profile={profile} size={32} heroEquip={coinsStore.heroEquip} />
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-white truncate">
+                        {fullName(profile) || "Foydalanuvchi"}
+                      </div>
+                      <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                        <CoinIcon size={10} /> {formatCoin(coinsStore.coins)} coins
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menyu itemlari */}
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setView("profile");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                  >
+                    <FiUser size={14} /> Profil
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setShowSettings(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                  >
+                    <FiSettings size={14} /> Sozlamalar
+                  </button>
+                  {(sessionRole === "admin" || sessionRole === "owner") && (
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        setView("admin");
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    >
+                      <FiShield size={14} /> Admin Panel
+                    </button>
+                  )}
+                </div>
+
+                {/* Chiqish */}
+                <div className="border-t border-white/5 py-1">
+                  <button
+                    onClick={async () => {
+                      setShowProfileMenu(false);
+                      try {
+                        const { signOutSupabase } = await import("./lib/supabaseService");
+                        await signOutSupabase();
+                      } catch {}
+                      setSessionUserId(null);
+                      setSessionRole("user");
+                      saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
+                      setSkipSignup(false);
+                      setShowSettings(false);
+                      setView("type");
+                      setShowLogin(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-400/80 hover:text-red-400 hover:bg-white/5 transition-colors"
+                  >
+                    <FiLogOut size={14} /> Chiqish
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
           {/* Telegram kanal — t.me/khoja_akbar */}
           <a
             href="https://t.me/khoja_akbar"
@@ -1167,49 +1268,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <span className="hidden md:block">Admin</span>
           </button>
 
-          {/* Akkaunt bloki — pastki chap burchak. Bosilsa Profil / Sozlamalar /
-              Chiqish menyusi ochiladi. Kirmagan bo'lsa "Kirish" tugmasi. */}
-          <SidebarAccount
-            t={t}
-            signedIn={!!sessionUserId || isSignedUp}
-            name={fullName(profile) || "Foydalanuvchi"}
-            role={sessionRole}
-            activeAvatar={coinsStore.activeAvatar}
-            heroEquip={coinsStore.heroEquip}
-            onOpenProfile={() => {
-              setShowOwner(false);
-              setShowPromo(false);
-              setShowLingohub(false);
-              setShowSettings(false);
-              setView("profile");
-            }}
-            onOpenSettings={() => {
-              setShowOwner(false);
-              setShowPromo(false);
-              setShowLingohub(false);
-              setShowSettings(true);
-            }}
-            onLogin={() => {
-              setShowSignUp(false);
-              setShowLogin(true);
-            }}
-            onLogout={async () => {
-              try {
-                const { signOutSupabase } = await import("./lib/supabaseService");
-                await signOutSupabase();
-              } catch {
-                // Oflayn bo'lsa ham lokal holatni tozalaymiz
-              }
-              setSessionUserId(null);
-              setSessionRole("user");
-              saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
-              // Chiqqandan keyin yana kirish/ro'yxatdan o'tish oynasi ochiladi
-              setSkipSignup(false);
-              setShowSettings(false);
-              setView("type");
-              setShowLogin(true);
-            }}
-          />
         </aside>
 
         {/* Main Content */}
