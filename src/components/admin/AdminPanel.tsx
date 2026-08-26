@@ -114,6 +114,12 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
   const isServerAdmin = me?.role === "admin" || me?.role === "owner";
   const serverAdmin = isSupabaseConfigured() && isServerAdmin;
 
+  // Refresh interval — hook'larni shartlardan oldin chaqiramiz
+  useEffect(() => {
+    const iv = window.setInterval(() => setRefreshKey((k) => k + 1), 30_000);
+    return () => window.clearInterval(iv);
+  }, []);
+
   // Supabase sozlanmagan bo'lsa — kirishga ruxsat yo'q
   if (!isSupabaseConfigured()) {
     return (
@@ -180,11 +186,6 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
     (tb) => (!tb.server || serverAdmin) && (!tb.supabase || isSupabaseConfigured())
   );
   const active = tabs.some((tb) => tb.id === tab) ? tab : "dashboard";
-
-  useEffect(() => {
-    const iv = window.setInterval(() => setRefreshKey((k) => k + 1), 30_000);
-    return () => window.clearInterval(iv);
-  }, []);
 
   const renderTab = () => {
     switch (active) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { getMyProfile, updateProfile, getCurrentUserId } from "../lib/db";
 
@@ -62,7 +62,8 @@ export function useProfile() {
     })();
   }, []);
 
-  const saveProfile = async (p: UserProfile) => {
+  // saveProfile — useCallback bilan quritilgan, useEffect deps'da ishlatilsa sikl bo'lmasin
+  const saveProfile = useCallback(async (p: UserProfile) => {
     setProfile(p);
     // Supabase'ga saqlash
     if (isSupabaseConfigured()) {
@@ -78,15 +79,16 @@ export function useProfile() {
     }
     // Lokalga ham saqlash (fallback)
     try { window.localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch {}
-  };
+  }, []);
 
-  const clearProfile = () => setProfile(null);
+  const clearProfile = useCallback(() => setProfile(null), []);
 
   // Local state ni yangilash — Supabase'ga yozmasdan (auth handler uchun)
-  const setProfileLocal = (p: UserProfile | null) => {
+  // useCallback bilan quritilgan — render siklini oldini oladi
+  const setProfileLocal = useCallback((p: UserProfile | null) => {
     setProfile(p);
     try { if (p) window.localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch {}
-  };
+  }, []);
 
   return { profile, saveProfile, setProfileLocal, clearProfile, isSignedUp: !!profile };
 }
