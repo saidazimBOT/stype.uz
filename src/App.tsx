@@ -122,8 +122,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  // Supabase sessiyasi — sidebar'dagi akkaunt bloki shunga qarab ko'rinadi.
-  // Lokal profil yo'qolgan bo'lsa ham chiqish tugmasi mavjud bo'lishi kerak.
+  // Supabase sessiyasi — auth holati va role
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [sessionRole, setSessionRole] = useState<string>("user");
 
@@ -193,7 +192,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     setMounted(true);
   }, []);
 
-  // Sahifa ochilganda mavjud Supabase sessiyasini o'qiymiz (sidebar akkaunt bloki uchun)
+  // Sahifa ochilganda mavjud Supabase sessiyasini o'qiymiz
   useEffect(() => {
     if (!cloudEnabled) return;
     let alive = true;
