@@ -276,6 +276,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="STypeUz" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/* MS Tile */}
         <meta name="msapplication-TileColor" content="#a78bfa" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
@@ -283,6 +284,21 @@ export default function RootLayout({
         <meta name="google-site-verification" content="Ry5FFibofm-2BLNxqvFV5Tq9THHJudeYjy9sqqRtJuM" />
         {/* Yandex Webmaster verification */}
         {/* <meta name="yandex-verification" content="YOUR_YANDEX_CODE" /> */}
+        {/* PWA Service Worker registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    (reg) => console.log('SW registered:', reg.scope),
+                    (err) => console.log('SW registration failed:', err)
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className="antialiased" style={{ backgroundColor: "#090f15" }}>
         {children}

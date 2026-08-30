@@ -3,11 +3,20 @@
   "short_name": "STypeUz",
   "description": "Test your typing speed with 20+ languages, 25+ themes, and compete globally! Free online typing practice in Uzbek, Russian, English and more.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#090f15",
   "theme_color": "#090f15",
   "orientation": "any",
+  "id": "/",
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.svg",
       "sizes": "192x192",
@@ -19,8 +28,49 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "STypeUz — 20+ tillarda tezlik testi"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "STypeUz — Mobil tezlik testi"
     }
   ],
   "categories": ["productivity", "utilities", "education"],
-  "lang": "en"
+  "lang": "en",
+  "dir": "ltr",
+  "iarc_rating_id": "",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "Tezlik Testi",
+      "short_name": "Test",
+      "url": "/",
+      "description": "Yangi tezlik testini boshlash"
+    },
+    {
+      "name": "Reyting",
+      "short_name": "Reyting",
+      "url": "/",
+      "description": "Eng tez yozuvchilar ro'yxati"
+    }
+  ]
 }
