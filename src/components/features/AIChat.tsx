@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FiCpu, FiSend, FiTrash2, FiArrowLeft } from "react-icons/fi";
 import type { ThemeColors } from "../../types";
+import { supabase } from "../../lib/supabase";
 
 interface Message {
   role: "user" | "assistant";
@@ -79,9 +80,20 @@ export default function AIChat({ t, onClose }: AIChatProps) {
 
     try {
       abortRef.current = new AbortController();
+
+      // Supabase session token olish — shaxsiy ma'lumot uchun
+      let authToken = "";
+      try {
+        const { data } = await supabase?.auth.getSession() ?? { data: null };
+        authToken = data?.session?.access_token || "";
+      } catch {}
+
       const res = await fetch("/api/ai-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify({ messages: newMessages }),
         signal: abortRef.current.signal,
       });
