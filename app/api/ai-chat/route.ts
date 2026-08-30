@@ -6,19 +6,19 @@ const GEMINI_MODEL = "gemini-2.0-flash";
 export async function POST(req: NextRequest) {
   try {
     if (!GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not configured" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "GEMINI_API_KEY is not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "messages array is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "messages array is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     // Build Gemini contents from messages
@@ -27,9 +27,8 @@ export async function POST(req: NextRequest) {
       parts: [{ text: m.content }],
     }));
 
-    // Use streaming endpoint
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,86 +54,24 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errText = await res.text();
       console.error("Gemini API error:", res.status, errText);
-      return new Response(JSON.stringify({ error: `Gemini API error: ${res.status}` }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: `Gemini API error: ${res.status}` }),
+        { status: 502, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    // Forward the SSE stream to the client
-    const reader = res.body!.getReader();
-    const decoder = new TextDecoder();
+    const data = await res.json();
+    const text =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text || "Javob topilmadi";
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          let buffer = "";
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-
-            // Parse SSE events from Gemini
-            const lines = buffer.split("\n");
-            // Keep the last potentially incomplete line in the buffer
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                try {
-                  const json = JSON.parse(line.slice(6));
-                  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-                  if (text) {
-                    // Send each chunk as SSE
-                    controller.enqueue(
-                      new TextEncoder().encode(`data: ${JSON.stringify({ text })}\n\n`)
-                    );
-                  }
-                } catch {
-                  // Not valid JSON, skip
-                }
-              }
-            }
-          }
-
-          // Process remaining buffer
-          if (buffer.startsWith("data: ")) {
-            try {
-              const json = JSON.parse(buffer.slice(6));
-              const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (text) {
-                controller.enqueue(
-                  new TextEncoder().encode(`data: ${JSON.stringify({ text })}\n\n`)
-                );
-              }
-            } catch {
-              // skip
-            }
-          }
-
-          // Send end event
-          controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-          controller.close();
-        } catch (err) {
-          console.error("Stream error:", err);
-          controller.error(err);
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
+    return new Response(JSON.stringify({ text }), {
+      headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("AI chat error:", err);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

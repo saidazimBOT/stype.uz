@@ -19,70 +19,58 @@ export default function AIChat({ t, onClose }: AIChatProps) {
     {
       role: "assistant",
       content:
-        "Salom! 👋 Men STypeUz AI yordamchisiman. Menga har qanday savol bering — men sizga yordam beraman! Qaysi tilda yozsangiz, o'sha tilda javob beraman.",
+        "Salom! 👋 Men STypeUz AI yordamchisiman. Menga har qanday savol bering — men sizga yordam beraman!",
     },
   ]);
   const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const [streamText, setStreamText] = useState("");
-  const [displayText, setDisplayText] = useState("");
+  const [loading, setLoading] = useState(false);
+  // Typing animation state
+  const [typingText, setTypingText] = useState("");
+  const [fullResponse, setFullResponse] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const charIndexRef = useRef(0);
 
-  // Scroll to bottom when new message arrives
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming, displayText]);
+  }, [messages, loading, typingText]);
 
-  // Typing effect: reveal characters one by one from streamText
+  // Client-side typing animation
   useEffect(() => {
-    if (!streaming || !streamText) return;
+    if (!fullResponse || !loading) return;
 
-    const interval = setInterval(() => {
-      charIndexRef.current += 1;
-      const idx = charIndexRef.current;
-
-      if (idx >= streamText.length) {
-        clearInterval(interval);
-        return;
-      }
-
-      // Reveal characters in chunks for speed (2-4 chars at a time)
-      const chunkSize = streamText[idx] === " " ? 3 : 2;
-      setDisplayText(streamText.slice(0, Math.min(idx + chunkSize, streamText.length)));
-    }, 18);
-
-    return () => clearInterval(interval);
-  }, [streaming, streamText]);
-
-  // When streaming ends, finalize the message
-  useEffect(() => {
-    if (!streaming && streamText && charIndexRef.current >= streamText.length) {
-      setMessages((prev) => [...prev, { role: "assistant", content: streamText }]);
-      setStreamText("");
-      setDisplayText("");
-      charIndexRef.current = 0;
-      setTimeout(() => {
-        setStreaming(false);
-        inputRef.current?.focus();
-      }, 100);
+    if (typingText.length < fullResponse.length) {
+      const timer = setTimeout(() => {
+        // Reveal 1-3 chars at a time for natural feel
+        const nextLen = Math.min(
+          typingText.length + (fullResponse[typingText.length] === " " ? 2 : 1),
+          fullResponse.length
+        );
+        setTypingText(fullResponse.slice(0, nextLen));
+      }, 12); // ~80 chars per second
+      return () => clearTimeout(timer);
+    } else {
+      // Animation done — finalize message
+      setMessages((prev) => [...prev, { role: "assistant", content: fullResponse }]);
+      setFullResponse("");
+      setTypingText("");
+      setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [streaming, streamText]);
+  }, [typingText, fullResponse, loading]);
 
   const sendMessage = useCallback(async () => {
     const text = input.trim();
-    if (!text || streaming) return;
+    if (!text || loading) return;
 
     const userMessage: Message = { role: "user", content: text };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
-    setStreaming(true);
-    setStreamText("");
-    setDisplayText("");
-    charIndexRef.current = 0;
+    setLoading(true);
+    setTypingText("");
+    setFullResponse("");
 
     // Reset textarea height
     if (inputRef.current) {
@@ -98,81 +86,45 @@ export default function AIChat({ t, onClose }: AIChatProps) {
         signal: abortRef.current.signal,
       });
 
-      if (!res.ok) {
+      const data = await res.json();
+
+      if (res.ok && data.text) {
+        setFullResponse(data.text);
+        // Typing animation will start via useEffect
+      } else {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring yoki API keyni tekshiring.",
+            content: "❌ Xatolik yuz berdi. Qayta urinib ko'ring.",
           },
         ]);
-        setStreaming(false);
-        return;
+        setLoading(false);
+        setTimeout(() => inputRef.current?.focus(), 100);
       }
-
-      // Read SSE stream
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let fullText = "";
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6).trim();
-            if (data === "[DONE]") {
-              break;
-            }
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.text) {
-                fullText += parsed.text;
-                setStreamText(fullText);
-              }
-            } catch {
-              // skip invalid JSON
-            }
-          }
-        }
-      }
-
-      // Streaming complete
-      if (fullText) {
-        // Trigger finalization
-        charIndexRef.current = fullText.length;
-        setDisplayText(fullText);
-      }
-      setStreaming(false);
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: "🌐 Internetga ulanib bo'lmadi. Iltimos, ulanishingizni tekshiring.",
+            content: "🌐 Internetga ulanib bo'lmadi.",
           },
         ]);
       }
-      setStreaming(false);
+      setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [input, streaming, messages]);
+  }, [input, loading, messages]);
 
-  const stopStreaming = () => {
+  const stopAnimation = () => {
     abortRef.current?.abort();
-    if (streamText) {
-      setMessages((prev) => [...prev, { role: "assistant", content: streamText }]);
-      setStreamText("");
-      setDisplayText("");
-      charIndexRef.current = 0;
+    if (fullResponse) {
+      setMessages((prev) => [...prev, { role: "assistant", content: fullResponse }]);
+      setFullResponse("");
+      setTypingText("");
     }
-    setStreaming(false);
+    setLoading(false);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
@@ -184,23 +136,22 @@ export default function AIChat({ t, onClose }: AIChatProps) {
         content: "Chat tozalandi! 🧹 Yangi savol bering.",
       },
     ]);
-    setStreamText("");
-    setDisplayText("");
-    setStreaming(false);
+    setFullResponse("");
+    setTypingText("");
+    setLoading(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (streaming) {
-        stopStreaming();
+      if (loading) {
+        stopAnimation();
       } else {
         sendMessage();
       }
     }
   };
 
-  // Auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     const el = e.target;
@@ -208,10 +159,15 @@ export default function AIChat({ t, onClose }: AIChatProps) {
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   };
 
-  // Blinking cursor component
+  // Blinking cursor
   const Cursor = () => (
-    <span className="inline-block w-[2px] h-[14px] ml-[1px] animate-pulse" style={{ background: "#4285f4", verticalAlign: "text-bottom" }} />
+    <span
+      className="inline-block w-[2px] h-[14px] ml-[1px] animate-pulse"
+      style={{ background: "#4285f4", verticalAlign: "text-bottom" }}
+    />
   );
+
+  const isAnimating = loading && fullResponse;
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -279,7 +235,9 @@ export default function AIChat({ t, onClose }: AIChatProps) {
               }`}
               style={{
                 background:
-                  msg.role === "user" ? t.accent + "22" : t.surface || "#1a1a2e",
+                  msg.role === "user"
+                    ? t.accent + "22"
+                    : t.surface || "#1a1a2e",
                 color: msg.role === "user" ? "#e5e7eb" : "#d1d5db",
                 border:
                   msg.role === "user"
@@ -305,8 +263,8 @@ export default function AIChat({ t, onClose }: AIChatProps) {
           </div>
         ))}
 
-        {/* Streaming message — types out character by character */}
-        {streaming && streamText && (
+        {/* Typing animation — shows current message being typed */}
+        {isAnimating && (
           <div className="flex justify-start">
             <div
               className="max-w-[80%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl rounded-bl-md text-sm leading-relaxed"
@@ -326,15 +284,15 @@ export default function AIChat({ t, onClose }: AIChatProps) {
                 </span>
               </div>
               <div className="whitespace-pre-wrap break-words">
-                {displayText}
-                {displayText.length < streamText.length && <Cursor />}
+                {typingText}
+                {typingText.length < fullResponse.length && <Cursor />}
               </div>
             </div>
           </div>
         )}
 
-        {/* Loading dots before first token arrives */}
-        {streaming && !streamText && (
+        {/* Loading dots — before API responds */}
+        {loading && !fullResponse && (
           <div className="flex justify-start">
             <div
               className="px-4 py-3 rounded-2xl rounded-bl-md text-sm"
@@ -391,19 +349,28 @@ export default function AIChat({ t, onClose }: AIChatProps) {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={streaming ? "Javob kutilmoqda..." : "Savolingizni yozing..."}
+            placeholder={
+              loading
+                ? "Javob kutilmoqda..."
+                : "Savolingizni yozing..."
+            }
             rows={1}
-            disabled={streaming}
+            disabled={loading}
             className="flex-1 bg-transparent text-white text-sm px-2 py-1.5 outline-none resize-none placeholder:text-gray-600 max-h-[120px]"
           />
-          {streaming ? (
+          {loading ? (
             <button
-              onClick={stopStreaming}
+              onClick={stopAnimation}
               className="p-2 rounded-lg transition-all hover:scale-105 active:scale-95 flex-shrink-0"
               style={{ background: "#ef4444", color: "#fff" }}
-              title="Javobni to'xtatish"
+              title="To'xtatish"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
                 <rect x="3" y="3" width="10" height="10" rx="1" />
               </svg>
             </button>
@@ -422,7 +389,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
           )}
         </div>
         <p className="text-[9px] text-gray-600 text-center mt-1.5">
-          {streaming
+          {loading
             ? "Yozilmoqda... To'xtatish uchun ⏹ bosing"
             : "Powered by Google Gemini AI · Enter yuborish"}
         </p>
