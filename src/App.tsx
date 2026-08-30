@@ -31,6 +31,7 @@ import HistoryView from "./components/views/HistoryView";
 import AboutView from "./components/views/AboutView";
 import GamesView from "./components/views/GamesView";
 import ShopView from "./components/views/ShopView";
+import AIChat from "./components/features/AIChat";
 import ProfileSettingsView from "./components/views/ProfileSettingsView";
 
 // Features
@@ -74,7 +75,7 @@ import {
   FiLogIn, FiLogOut, FiMap, FiMessageCircle, FiSend, FiSettings, FiShield, FiShoppingBag, FiStar, FiThumbsUp,
   FiType, FiUser, FiUsers, FiVideo, FiZap,
 } from "react-icons/fi";
-import { FaDna, FaInstagram, FaKeyboard, FaMedal, FaPalette, FaTelegram, FaTrophy } from "react-icons/fa6";
+import { FaDna, FaInstagram, FaKeyboard, FaMedal, FaPalette, FaRobot, FaTelegram, FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 // ── MODULE-LEVEL: Eski light temani localStorage dan tozalaymiz ────────
@@ -800,6 +801,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     { id: "replay", icon: FiVideo, label: T("nav.replay") },
     { id: "games", icon: FiGrid, label: T("nav.games") },
     { id: "shop", icon: FiShoppingBag, label: T("nav.shop") },
+    { id: "aichat", icon: FaRobot, label: "AI Chat" },
     { id: "about", icon: FiInfo, label: T("nav.about") },
   ];
 
@@ -1347,6 +1349,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <TypingReplayView t={t} onClose={() => setView("type")} recordings={recordings} />
           ) : view === "games" ? (
             <GamesView t={t} onClose={() => setView("type")} onCoinEarned={(amt) => { coinsStore.addCoins(amt); showCoinNotif(amt, "game"); }} />
+          ) : view === "aichat" ? (
+            <AIChat t={t} onClose={() => setView("type")} />
           ) : view === "shop" ? (
             <ShopView
               t={t}

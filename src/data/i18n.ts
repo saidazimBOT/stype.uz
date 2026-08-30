@@ -173,6 +173,14 @@ const en: Dict = {
   "owner.captionTeam": "{name} — coding group team photo, STypeUz",
   "owner.captionMentor": "{name} — my mentor, STypeUz",
 
+  // ── AI CHAT ──
+  "aichat.title": "AI Chat",
+  "aichat.subtitle": "Powered by Gemini AI",
+  "aichat.placeholder": "Type your message...",
+  "aichat.clear": "Clear chat",
+  "aichat.send": "Send",
+  "aichat.greeting": "Hello! 👋 I'm the STypeUz AI assistant. Ask me anything — I'm here to help!",
+
   // ── TYPING DNA ──
   "dna.tests": "Tests",
   "dna.avgWpm": "Avg WPM",
@@ -463,6 +471,14 @@ const uz: Dict = {
   "login.noAccount": "Hisobingiz yo'qmi? Ro'yxatdan o'ting",
   "login.footerNote": "Hisobingiz serverda saqlanadi — istalgan qurilmada mavjud",
 
+  // ── AI CHAT ──
+  "aichat.title": "AI Chat",
+  "aichat.subtitle": "Gemini AI orqali",
+  "aichat.placeholder": "Xabaringizni yozing...",
+  "aichat.clear": "Chatni tozalash",
+  "aichat.send": "Yuborish",
+  "aichat.greeting": "Salom! 👋 Men STypeUz AI yordamchisiman. Menga har qanday savol bering!",
+
   // ── TYPING DNA ──
   "dna.tests": "Testlar",
   "dna.avgWpm": "O'rtacha WPM",
@@ -703,6 +719,14 @@ const ru: Dict = {
   "login.errGeneric": "Ошибка входа — попробуйте ещё раз",
   "login.noAccount": "Нет аккаунта? Зарегистрируйтесь",
   "login.footerNote": "Аккаунт сохраняется на сервере — доступен на любом устройстве",
+
+  // ── AI CHAT ──
+  "aichat.title": "AI Чат",
+  "aichat.subtitle": "На базе Gemini AI",
+  "aichat.placeholder": "Напишите сообщение...",
+  "aichat.clear": "Очистить чат",
+  "aichat.send": "Отправить",
+  "aichat.greeting": "Привет! 👋 Я AI-ассистент STypeUz. Задавайте любые вопросы!",
 
   // ── TYPING DNA ──
   "dna.tests": "Тесты",
