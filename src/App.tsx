@@ -63,6 +63,7 @@ import CoinIcon from "./components/CoinIcon";
 import { formatCoin } from "./utils/formatCoin";
 import GiftIcon from "./components/GiftIcon";
 import AdminPanel from "./components/admin/AdminPanel";
+import PremiumView from "./components/views/PremiumView";
 import { useVisitTracker, recordTyping } from "./hooks/useVisitTracker";
 import { setSid as setGscSid } from "./lib/gscApi";
 import { getUserToken } from "./lib/convexBridge";
@@ -1001,8 +1002,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <GiftIcon size={16} />
             <span className="hidden sm:inline">{T("navbar.promoBadge")}</span>
           </button>
-          {/* Premium tugma — Narxlar modalini ochadi */}
-          <PremiumButton />
+          {/* Premium tugma — PremiumView sahifasini ochadi */}
+          <PremiumButton onClick={() => setView("premium")} />
           {/* Kirish (Supabase sozlangan bo'lsa) */}
           {cloudEnabled && !isSignedUp && (
             <button
@@ -1387,6 +1388,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <TypingChallenge t={t} onClose={() => setView("type")} />
           ) : view === "admin" ? (
             <AdminPanel t={t} onClose={() => setView("type")} history={history} xp={xp} />
+          ) : view === "premium" ? (
+            <PremiumView onClose={() => setView("type")} />
           ) : view === "type" ? (
             // ── MAIN TYPING VIEW ─────────────────────────────────────────
             <main className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-6 gap-6 overflow-y-auto">
