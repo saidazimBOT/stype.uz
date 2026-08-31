@@ -811,7 +811,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   // O'chirilgan sahifalar (masalan "tutor") localStorage da qolgan bo'lsa — blank o'rniga "type" ochiladi.
   // "admin" navItems'da yo'q (maxsus view) — guard uni "type"ga qaytarib yubormasligi uchun qo'shilgan.
   useEffect(() => {
-    const valid = new Set([...navItems.map((n) => n.id), "admin", "profile_settings"]);
+    const valid = new Set([...navItems.map((n) => n.id), "admin", "profile_settings", "premium"]);
     if (!valid.has(view)) setView("type");
   }, [view]);
 
