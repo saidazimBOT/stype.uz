@@ -15,7 +15,7 @@ import { useProfile, fullName } from "./hooks/useProfile";
 import SignUpModal from "./components/features/SignUpModal";
 import LoginModal from "./components/features/LoginModal";
 import { supabase, isSupabaseConfigured } from "./lib/supabase";
-import { getSupabaseUser, type SupabaseProfileRow } from "./lib/supabaseService";
+import { getSupabaseUser } from "./lib/supabaseService";
 import ProfileAvatar from "./components/features/ProfileAvatar";
 import { useMissions } from "./components/features/WeeklyMissions";
 import { useReplay } from "./components/features/TypingReplay";
@@ -117,7 +117,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [promoNotice, setPromoNotice] = useState(false);
   const [showOwner, setShowOwner] = useState(false);
   const [showLingohub, setShowLingohub] = useState(false);
-  const [showPremium, setShowPremium] = useState(false);
   const [themePanel, setThemePanel] = useState(false);
   const [coinNotifs, setCoinNotifs] = useState<CoinNotif[]>([]);
   // Auth modallari — faqat Google orqali kirish
@@ -128,7 +127,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   // Supabase sessiyasi — auth holati va role
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [sessionRole, setSessionRole] = useState<string>("user");
-  const [sessionProfile, setSessionProfile] = useState<SupabaseProfileRow | null>(null);
 
   // Hydration tugaguncha majburiy modal ko'rsatilmaydi — aks holda
   // localStorage'da profil bor bo'lsa ham har kirishda qisqa "ro'yxatdan o'tish"
@@ -206,7 +204,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
       setSessionUserId(uid);
       if (!uid) return;
       const p = await getMyProfile();
-      if (alive && p) { setSessionRole(p.role); setSessionProfile(p); }
+      if (alive && p) setSessionRole(p.role);
     })();
     return () => { alive = false; };
   }, [cloudEnabled]);
@@ -263,7 +261,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
               const p = await getMyProfile();
               if (p) {
                 setSessionRole(p.role);
-                setSessionProfile(p);
                 const hasUsername = p.username && p.username.length >= 2 && !p.username.startsWith("user");
                 if (!hasUsername) {
                   setShowUsernameModal(true);
@@ -288,7 +285,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
         if (event === "SIGNED_OUT") {
           setSessionUserId(null);
           setSessionRole("user");
-          setSessionProfile(null);
           saveProfile({ firstName: "", lastName: "", photo: "", avatarId: "avatar_default", signedUpAt: 0 });
           setShowAuthModal(true);
         }
@@ -1005,16 +1001,15 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <GiftIcon size={16} />
             <span className="hidden sm:inline">{T("navbar.promoBadge")}</span>
           </button>
-          {/* Premium tugma — Admin bo'ling! */}            <PremiumButton
-            isOpen={showPremium}
-            onToggle={() => {
-              setShowPremium((s) => !s);
+          {/* Premium tugma — Admin panelga o'tish */}
+          <PremiumButton
+            onClick={() => {
+              setView("admin");
               setShowPromo(false);
               setShowSettings(false);
               setShowOwner(false);
               setShowLingohub(false);
             }}
-            userProfile={sessionProfile}
           />
           {/* Kirish (Supabase sozlangan bo'lsa) */}
           {cloudEnabled && !isSignedUp && (
@@ -1137,7 +1132,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
                       } catch {}
                       setSessionUserId(null);
       setSessionRole("user");
-      setSessionProfile(null);
           saveProfile({ signedUpAt: 0, firstName: "", lastName: "", photo: "", avatarId: "avatar_default" });
                       setShowSettings(false);
                       setView("type");
