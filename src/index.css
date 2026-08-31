@@ -122,6 +122,44 @@ main.overflow-y-auto {
 }
 .row-in { animation: rowIn 0.35s ease-out both; }
 
+/* ── Premium button animations ──────────────────────────────────────── */
+@keyframes premiumPulse {
+  0%, 100% { box-shadow: 0 0 6px #fbbf2444; }
+  50% { box-shadow: 0 0 20px #fbbf2488, 0 0 40px #fbbf2433; }
+}
+@keyframes premiumShine {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+@keyframes premiumIconSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(10deg) scale(1.15); }
+  50% { transform: rotate(0deg) scale(1); }
+  75% { transform: rotate(-10deg) scale(1.15); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.premium-pulse {
+  background: linear-gradient(90deg, #fbbf2433, #f59e0baa, #fbbf2433);
+  background-size: 200%;
+  border: 1px solid #fbbf2466;
+  color: #fde68a;
+  animation: premiumShine 2.5s linear infinite, premiumPulse 2s ease-in-out infinite;
+}
+.premium-pulse:hover {
+  border-color: #fbbf24;
+  color: #fff;
+}
+.premium-icon-spin {
+  animation: premiumIconSpin 3s ease-in-out infinite;
+}
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ── Telegram Premium promo animations ──────────────────────────────── */
 @keyframes promoShine {
   0% { background-position: -150% 0; }

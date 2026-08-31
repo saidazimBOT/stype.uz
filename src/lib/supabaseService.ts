@@ -22,6 +22,8 @@ export interface SupabaseProfileRow {
   coins?: number;
   role: "user" | "admin" | "owner";
   status: "active" | "blocked";
+  premium_until: string | null;
+  premium_plan: string | null;
   created_at: string;
   last_login: string | null;
   updated_at: string;
@@ -238,4 +240,61 @@ export async function fetchAdminUsers(search?: string): Promise<SupabaseProfileR
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as SupabaseProfileRow[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PREMIUM — Telegram orqali to'lov qilgan foydalanuvchilarni admin qilish
+// ═══════════════════════════════════════════════════════════════════════
+
+export type PremiumPlan = "1month" | "2month" | "1year";
+
+/** Premium reja muddatini oy soniga aylantirish */
+export function planToMonths(plan: PremiumPlan): number {
+  switch (plan) {
+    case "1month": return 1;
+    case "2month": return 2;
+    case "1year": return 12;
+  }
+}
+
+/** Foydalanuvchini Premium (admin) qilish — RPC orqali */
+export async function activatePremium(targetId: string, plan: PremiumPlan): Promise<void> {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { error } = await supabase.rpc("admin_activate_premium", {
+    target_id: targetId,
+    plan,
+    months: planToMonths(plan),
+  });
+  if (error) throw error;
+}
+
+/** Premiumni bekor qilish — RPC orqali */
+export async function revokePremium(targetId: string): Promise<void> {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { error } = await supabase.rpc("admin_revoke_premium", {
+    target_id: targetId,
+  });
+  if (error) throw error;
+}
+
+/** Premium muddati tugagan foydalanuvchilarni avtomatik bekor qilish */
+export async function expirePremiumUsers(): Promise<number> {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { data, error } = await supabase.rpc("expire_premium_users");
+  if (error) throw error;
+  return data as number;
+}
+
+/** Joriy foydalanuvchining premium holatini tekshirish */
+export function isPremiumActive(profile: SupabaseProfileRow): boolean {
+  if (profile.role !== "admin" && profile.role !== "owner") return false;
+  if (!profile.premium_until) return false;
+  return new Date(profile.premium_until) > new Date();
+}
+
+/** Premium muddatini formatlangan holda qaytarish */
+export function formatPremiumUntil(isoDate: string | null): string {
+  if (!isoDate) return "Cheksiz";
+  const d = new Date(isoDate);
+  return d.toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
 }

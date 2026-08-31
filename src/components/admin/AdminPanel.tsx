@@ -22,6 +22,7 @@ import AnnouncementsSection from "./AnnouncementsSection";
 import LogsSection from "./LogsSection";
 import SettingsSection from "./SettingsSection";
 import VisitorsSection from "./VisitorsSection";
+import PremiumSection from "./PremiumSection";
 import { Spinner } from "./adminUi";
 
 const ADMIN_TELEGRAM_URL = "https://t.me/said_khujayev";
@@ -35,7 +36,7 @@ interface AdminPanelProps {
 
 type TabId =
   | "dashboard" | "users" | "registered" | "supabase" | "texts" | "economy"
-  | "achievements" | "reports" | "announcements" | "logs" | "settings" | "visitors" | "gsc";
+  | "achievements" | "reports" | "announcements" | "logs" | "settings" | "visitors" | "gsc" | "premium";
 
 interface TabDef {
   id: TabId;
@@ -59,6 +60,7 @@ const ALL_TABS: TabDef[] = [
   { id: "settings", label: "Settings", icon: FiSettings, server: true },
   { id: "visitors", label: "Visitors", icon: FiEye },
   { id: "gsc", label: "Google Search", icon: FiSearch },
+  { id: "premium", label: "👑 Premium", icon: FiAward },
 ];
 
 // ── Error Boundary ───────────────────────────────────────────────────
@@ -156,6 +158,7 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
       case "settings": return <SettingsSection t={t} />;
       case "visitors": return <VisitorsSection t={t} refreshKey={refreshKey} onRefresh={() => setRefreshKey((k) => k + 1)} />;
       case "gsc": return <GscDashboard t={t} />;
+      case "premium": return <PremiumSection t={t} />;
       default: return null;
     }
   };

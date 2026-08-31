@@ -27,6 +27,8 @@ export interface ProfileRow {
   best_wpm: number | null;
   role: "user" | "admin" | "owner";
   status: "active" | "blocked";
+  premium_until: string | null;
+  premium_plan: string | null;
   banned: boolean;
   banned_reason: string | null;
   last_seen: number;
