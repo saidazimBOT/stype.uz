@@ -1001,16 +1001,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <GiftIcon size={16} />
             <span className="hidden sm:inline">{T("navbar.promoBadge")}</span>
           </button>
-          {/* Premium tugma — Admin panelga o'tish */}
-          <PremiumButton
-            onClick={() => {
-              setView("admin");
-              setShowPromo(false);
-              setShowSettings(false);
-              setShowOwner(false);
-              setShowLingohub(false);
-            }}
-          />
+          {/* Premium tugma — Narxlar modalini ochadi */}
+          <PremiumButton />
           {/* Kirish (Supabase sozlangan bo'lsa) */}
           {cloudEnabled && !isSignedUp && (
             <button
