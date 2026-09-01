@@ -9,8 +9,9 @@ interface TetrisGameProps {
   onCoinEarned?: (amount: number) => void;
 }
 
-const TC = 26, TW = 10, TH = 18;
-const W = TW * TC, H = TH * TC;
+const TC = 28, TW = 10, TH = 18;
+const W = TW * TC + 120;
+const H = TH * TC + 60;
 const T_SHAPES: number[][][] = [
   [[1, 1, 1, 1]],
   [[1, 1], [1, 1]],
@@ -38,6 +39,88 @@ interface GameState {
   started: boolean;
 }
 
+function hex2rgb(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+}
+
+// Draw a 3D isometric-style block with top/left/right faces
+function draw3DBlock(ctx: CanvasRenderingContext2D, bx: number, by: number, color: string, size: number, alpha = 1) {
+  const d = 5; // depth
+  const c = hex2rgb(color);
+  ctx.globalAlpha = alpha;
+
+  // Right face (darkest)
+  ctx.fillStyle = `rgb(${Math.max(0, c.r - 65)},${Math.max(0, c.g - 65)},${Math.max(0, c.b - 65)})`;
+  ctx.beginPath();
+  ctx.moveTo(bx + size, by);
+  ctx.lineTo(bx + size + d, by - d);
+  ctx.lineTo(bx + size + d, by + size - d);
+  ctx.lineTo(bx + size, by + size);
+  ctx.closePath();
+  ctx.fill();
+
+  // Left face (medium dark)
+  ctx.fillStyle = `rgb(${Math.max(0, c.r - 35)},${Math.max(0, c.g - 35)},${Math.max(0, c.b - 35)})`;
+  ctx.beginPath();
+  ctx.moveTo(bx, by + size);
+  ctx.lineTo(bx + d, by + size - d);
+  ctx.lineTo(bx + size + d, by + size - d);
+  ctx.lineTo(bx + size, by + size);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face (brightest)
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, size, size, 3);
+  ctx.fill();
+
+  // Top highlight gradient
+  const tg = ctx.createLinearGradient(bx, by, bx + size, by + size);
+  tg.addColorStop(0, "rgba(255,255,255,0.32)");
+  tg.addColorStop(0.3, "rgba(255,255,255,0.08)");
+  tg.addColorStop(1, "rgba(0,0,0,0.12)");
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, size, size, 3);
+  ctx.fill();
+
+  // Inner shine
+  ctx.fillStyle = "rgba(255,255,255,0.1)";
+  ctx.beginPath();
+  ctx.roundRect(bx + 2, by + 1, size - 6, size / 2 - 2, 2);
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = "rgba(255,255,255,0.1)";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, size, size, 3);
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+}
+
+// Draw empty cell with 3D inset effect
+function drawEmptyCell(ctx: CanvasRenderingContext2D, bx: number, by: number, size: number) {
+  ctx.fillStyle = "#0e1422";
+  ctx.beginPath();
+  ctx.roundRect(bx, by, size, size, 3);
+  ctx.fill();
+  // Inner shadow (inset look)
+  ctx.strokeStyle = "#080c18";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(bx + 0.5, by + 0.5, size - 1, size - 1, 3);
+  ctx.stroke();
+  // Subtle top highlight
+  ctx.fillStyle = "rgba(255,255,255,0.02)";
+  ctx.fillRect(bx + 2, by + 1, size - 4, 1);
+}
+
 export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
   const cvs = useRef<HTMLCanvasElement>(null);
   const G = useRef<GameState | null>(null);
@@ -58,113 +141,158 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
         if (!v) return true;
         const nx = piece.x + col + dx, ny = piece.y + r + dy;
         return nx >= 0 && nx < TW && ny >= 0 && ny < TH && !board[ny][nx];
-      })
+      }),
     );
   };
 
   const initBoard = (): (string | null)[][] => Array.from({ length: TH }, () => Array(TW).fill(null));
 
-  // 3D beveled block
-  const drawBlock = useCallback((ctx: CanvasRenderingContext2D, bx: number, by: number, color: string, alpha = 1) => {
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.roundRect(bx + 1, by + 1, TC - 2, TC - 2, 4);
-    ctx.fill();
-    const g = ctx.createLinearGradient(bx + 1, by + 1, bx + 1, by + TC - 2);
-    g.addColorStop(0, "rgba(255,255,255,0.35)");
-    g.addColorStop(0.4, "rgba(255,255,255,0.05)");
-    g.addColorStop(1, "rgba(0,0,0,0.3)");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.roundRect(bx + 1, by + 1, TC - 2, TC - 2, 4);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }, []);
-
   const draw = useCallback(() => {
     const c = cvs.current;
     if (!c) return;
     const ctx = c.getContext("2d")!;
+    const g = G.current;
 
-    // background
+    // Deep space background
     const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, "#0c1424");
-    bg.addColorStop(0.6, "#0e1120");
-    bg.addColorStop(1, "#0b0d15");
+    bg.addColorStop(0, "#060a18");
+    bg.addColorStop(0.4, "#080e20");
+    bg.addColorStop(1, "#050810");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // subtle grid
-    ctx.strokeStyle = "#ffffff06";
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= TW; x++) {
-      ctx.beginPath(); ctx.moveTo(x * TC, 0); ctx.lineTo(x * TC, H); ctx.stroke();
+    // Stars
+    for (let i = 0; i < 40; i++) {
+      const sx2 = (i * 83 + i * 17) % W;
+      const sy2 = (i * 113 + i * 23) % H;
+      ctx.globalAlpha = 0.06 + (i % 4) * 0.03;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(sx2, sy2, 0.7, 0, Math.PI * 2);
+      ctx.fill();
     }
-    for (let y = 0; y <= TH; y++) {
-      ctx.beginPath(); ctx.moveTo(0, y * TC); ctx.lineTo(W, y * TC); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    const boardX = 36;
+    const boardY = 20;
+
+    // Board background with 3D border
+    ctx.fillStyle = "#0a0f1a";
+    ctx.beginPath();
+    ctx.roundRect(boardX - 4, boardY - 4, TW * TC + 8, TH * TC + 8, 6);
+    ctx.fill();
+    // 3D border (top-left bright, bottom-right dark)
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(boardX - 4, boardY - 4, TW * TC + 8, TH * TC + 8, 6);
+    ctx.stroke();
+    // Right edge 3D
+    ctx.fillStyle = "#0d1222";
+    ctx.fillRect(boardX + TW * TC + 4, boardY - 4, 6, TH * TC + 8);
+    // Bottom edge 3D
+    ctx.fillStyle = "#0d1222";
+    ctx.fillRect(boardX - 4, boardY + TH * TC + 4, TW * TC + 14, 6);
+
+    // Empty grid cells
+    for (let r = 0; r < TH; r++) {
+      for (let c2 = 0; c2 < TW; c2++) {
+        drawEmptyCell(ctx, boardX + c2 * TC, boardY + r * TC, TC);
+      }
     }
 
-    const g = G.current;
     if (g) {
-      // settled blocks
+      // Settled blocks
       g.board.forEach((row, r) =>
         row.forEach((col, c2) => {
-          if (col) drawBlock(ctx, c2 * TC, r * TC, col);
-        })
+          if (col) draw3DBlock(ctx, boardX + c2 * TC, boardY + r * TC, col, TC);
+        }),
       );
 
       if (g.piece) {
-        // ghost piece
+        // Ghost piece
         let gy = 0;
         while (fits(g.board, g.piece, 0, gy + 1)) gy++;
-        ctx.save();
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = g.piece.c + "99";
-        ctx.lineWidth = 1.5;
         g.piece.s.forEach((row, r) =>
           row.forEach((v, col) => {
-            if (v) ctx.strokeRect((g.piece.x + col) * TC + 3, (g.piece.y + r + gy) * TC + 3, TC - 6, TC - 6);
-          })
+            if (v) {
+              const gx = boardX + (g.piece.x + col) * TC;
+              const gyy = boardY + (g.piece.y + r + gy) * TC;
+              ctx.globalAlpha = 0.18;
+              ctx.fillStyle = g.piece.c;
+              ctx.beginPath();
+              ctx.roundRect(gx, gyy, TC, TC, 3);
+              ctx.fill();
+              ctx.setLineDash([3, 3]);
+              ctx.strokeStyle = g.piece.c + "88";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.roundRect(gx + 1, gyy + 1, TC - 2, TC - 2, 3);
+              ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.globalAlpha = 1;
+            }
+          }),
         );
-        ctx.restore();
-        // ghost fill (light)
+
+        // Active piece
         g.piece.s.forEach((row, r) =>
           row.forEach((v, col) => {
-            if (v) drawBlock(ctx, (g.piece.x + col) * TC, (g.piece.y + r + gy) * TC, g.piece.c, 0.18);
-          })
+            if (v) draw3DBlock(ctx, boardX + (g.piece.x + col) * TC, boardY + (g.piece.y + r) * TC, g.piece.c, TC);
+          }),
         );
-        // active piece
-        g.piece.s.forEach((row, r) =>
+      }
+
+      // Next piece preview
+      const previewX = boardX + TW * TC + 20;
+      const previewY = boardY + 10;
+      ctx.fillStyle = "#0e1422";
+      ctx.beginPath();
+      ctx.roundRect(previewX, previewY, 80, 80, 8);
+      ctx.fill();
+      ctx.strokeStyle = t.accent + "33";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(previewX, previewY, 80, 80, 8);
+      ctx.stroke();
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "11px Inter";
+      ctx.textAlign = "center";
+      ctx.fillText("NEXT", previewX + 40, previewY - 4);
+      if (g.next) {
+        const pSize = 16;
+        const pOffX = previewX + (80 - g.next.s[0].length * pSize) / 2;
+        const pOffY = previewY + (80 - g.next.s.length * pSize) / 2;
+        g.next.s.forEach((row, r) =>
           row.forEach((v, col) => {
-            if (v) drawBlock(ctx, (g.piece.x + col) * TC, (g.piece.y + r) * TC, g.piece.c);
-          })
+            if (v) draw3DBlock(ctx, pOffX + col * pSize, pOffY + r * pSize, g.next.c, pSize);
+          }),
         );
       }
     }
 
-    // line-clear flash
+    // Line-clear flash
     if (flash.current && flash.current.t > 0) {
-      ctx.fillStyle = `rgba(255,255,255,${(flash.current.t / 8) * 0.35})`;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = `rgba(255,255,255,${(flash.current.t / 8) * 0.3})`;
+      ctx.fillRect(boardX, boardY, TW * TC, TH * TC);
     }
 
     if (!g || !g.started) {
-      ctx.fillStyle = "rgba(8,10,16,0.78)";
+      ctx.fillStyle = "rgba(6,10,24,0.85)";
       ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#151a24";
+      ctx.fillStyle = "#111827";
       ctx.beginPath();
-      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.roundRect(W / 2 - 130, H / 2 - 70, 260, 140, 18);
       ctx.fill();
-      ctx.strokeStyle = t.accent + "66";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = t.accent + "55";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.roundRect(W / 2 - 130, H / 2 - 70, 260, 140, 18);
       ctx.stroke();
       ctx.fillStyle = t.accent;
-      ctx.font = "bold 24px Inter";
+      ctx.font = "bold 28px Inter";
       ctx.textAlign = "center";
-      ctx.fillText("TETRIS", W / 2, H / 2 - 24);
+      ctx.fillText("TETRIS 3D", W / 2, H / 2 - 26);
       ctx.fillStyle = "#9ca3af";
       ctx.font = "13px Inter";
       ctx.fillText("Clear lines before they stack up!", W / 2, H / 2 + 2);
@@ -172,24 +300,24 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
       ctx.font = "bold 14px Inter";
       ctx.fillText("Press SPACE or click to start", W / 2, H / 2 + 30);
     } else if (g && !g.alive) {
-      ctx.fillStyle = "rgba(8,10,16,0.8)";
+      ctx.fillStyle = "rgba(6,10,24,0.85)";
       ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#151a24";
+      ctx.fillStyle = "#111827";
       ctx.beginPath();
-      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.roundRect(W / 2 - 130, H / 2 - 70, 260, 140, 18);
       ctx.fill();
-      ctx.strokeStyle = t.accent + "66";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = t.accent + "55";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(W / 2 - 115, H / 2 - 62, 230, 124, 16);
+      ctx.roundRect(W / 2 - 130, H / 2 - 70, 260, 140, 18);
       ctx.stroke();
       ctx.fillStyle = t.accent;
-      ctx.font = "bold 26px Inter";
+      ctx.font = "bold 28px Inter";
       ctx.textAlign = "center";
-      ctx.fillText("Game Over", W / 2, H / 2 - 22);
+      ctx.fillText("Game Over", W / 2, H / 2 - 26);
       ctx.fillStyle = "#fff";
-      ctx.font = "bold 16px Inter";
-      ctx.fillText("Score: " + g.score, W / 2, H / 2 + 6);
+      ctx.font = "bold 18px Inter";
+      ctx.fillText(`Score: ${g.score}`, W / 2, H / 2 + 4);
       ctx.fillStyle = t.accent;
       ctx.font = "bold 14px Inter";
       ctx.fillText("SPACE / click to restart", W / 2, H / 2 + 34);
@@ -209,11 +337,15 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
             g.piece.s.forEach((row, r) =>
               row.forEach((v, col) => {
                 if (v && g.piece.y + r >= 0) g.board[g.piece.y + r][g.piece.x + col] = g.piece.c;
-              })
+              }),
             );
             let cleared = 0;
             for (let r = TH - 1; r >= 0; ) {
-              if (g.board[r].every((c) => c)) { g.board.splice(r, 1); g.board.unshift(Array(TW).fill(null)); cleared++; } else r--;
+              if (g.board[r].every((c) => c)) {
+                g.board.splice(r, 1);
+                g.board.unshift(Array(TW).fill(null));
+                cleared++;
+              } else r--;
             }
             if (cleared > 0) flash.current = { t: 8 };
             g.score += cleared === 1 ? 100 : cleared === 2 ? 300 : cleared === 3 ? 500 : cleared === 4 ? 800 : 0;
@@ -222,9 +354,7 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
             g.next = mkPiece();
             if (!fits(g.board, g.piece)) {
               g.alive = false;
-              if (g.score > 0 && onCoinEarned) {
-                onCoinEarned(Math.round(g.score / 10));
-              }
+              if (g.score > 0 && onCoinEarned) onCoinEarned(Math.round(g.score / 10));
             }
           }
         }
@@ -233,7 +363,7 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
       draw();
       raf.current = requestAnimationFrame(loop);
     },
-    [draw, onCoinEarned]
+    [draw, onCoinEarned],
   );
 
   const startGame = useCallback(() => {
@@ -254,14 +384,16 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
     G.current = null;
     draw();
     raf.current = requestAnimationFrame(loop);
-    return () => {
-      if (raf.current) cancelAnimationFrame(raf.current);
-    };
+    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
   }, [loop, draw]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.code === "Space") { e.preventDefault(); const g = G.current; if (!g || !g.alive || !g.started) { startGame(); return; } }
+      if (e.code === "Space") {
+        e.preventDefault();
+        const g = G.current;
+        if (!g || !g.alive || !g.started) { startGame(); return; }
+      }
       const g = G.current;
       if (!g || !g.alive || !g.started) return;
       if (e.code === "ArrowLeft") { if (fits(g.board, g.piece, -1, 0)) g.piece.x--; e.preventDefault(); }
@@ -277,7 +409,9 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-center justify-between w-full max-w-full" style={{ maxWidth: W }}>
-        <span className="text-gray-400 text-sm flex items-center gap-1.5"><FaPuzzlePiece size={14} style={{ color: t.accent }} /> Tetris</span>
+        <span className="text-gray-400 text-sm flex items-center gap-1.5">
+          <FaPuzzlePiece size={14} style={{ color: t.accent }} /> Tetris 3D
+        </span>
         <span className="font-bold" style={{ color: t.accent }}>Score: {score}</span>
       </div>
       <canvas
@@ -285,7 +419,7 @@ export default function TetrisGame({ t, onCoinEarned }: TetrisGameProps) {
         width={W}
         height={H}
         className="rounded-xl cursor-pointer max-w-full h-auto"
-        style={{ border: `1px solid ${t.accent}33`, boxShadow: `0 0 24px ${t.accent}22` }}
+        style={{ border: `1px solid ${t.accent}33`, boxShadow: `0 0 32px ${t.accent}22` }}
         onClick={handleClick}
       />
       <p className="text-xs text-gray-600">← → move · ↑ rotate · ↓ drop · SPACE start/hard-drop</p>

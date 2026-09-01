@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import { FiGrid, FiPlay } from "react-icons/fi";
-import { FaCar, FaDove, FaPuzzlePiece } from "react-icons/fa6";
+import { FaCar, FaDove, FaHashtag, FaPuzzlePiece, FaRectangleList, FaRocket, FaTableTennisPaddleBall } from "react-icons/fa6";
 import { GiSnake } from "react-icons/gi";
 import type { IconType } from "react-icons";
 import SnakeGame from "../games/SnakeGame";
 import TetrisGame from "../games/TetrisGame";
 import FlappyBird from "../games/FlappyBird";
 import CarGame from "../games/CarGame";
+import BreakoutGame from "../games/BreakoutGame";
+import Game2048 from "../games/Game2048";
+import SpaceInvadersGame from "../games/SpaceInvadersGame";
+import PongGame from "../games/PongGame";
 import type { ThemeColors } from "../../types";
 
 interface GamesViewProps {
@@ -22,6 +26,10 @@ const GAMES: { id: string; icon: IconType; name: string; desc: string }[] = [
   { id: "tetris", icon: FaPuzzlePiece, name: "Tetris", desc: "Clear lines before they reach the top!" },
   { id: "flappy", icon: FaDove, name: "Flappy Bird", desc: "Tap to fly through the pipes!" },
   { id: "car", icon: FaCar, name: "Car Race", desc: "Dodge traffic and drive as far as you can!" },
+  { id: "breakout", icon: FaRectangleList, name: "Breakout", desc: "Break all the bricks with the ball!" },
+  { id: "2048", icon: FaHashtag, name: "2048", desc: "Slide and merge tiles to reach 2048!" },
+  { id: "invaders", icon: FaRocket, name: "Space Invaders", desc: "Defend Earth from alien invaders!" },
+  { id: "pong", icon: FaTableTennisPaddleBall, name: "Pong", desc: "Classic paddle game vs AI!" },
 ];
 
 export default function GamesView({ t, onClose, onCoinEarned }: GamesViewProps) {
@@ -66,6 +74,10 @@ export default function GamesView({ t, onClose, onCoinEarned }: GamesViewProps) 
           {game === "tetris" && <TetrisGame t={t} onCoinEarned={onCoinEarned} />}
           {game === "flappy" && <FlappyBird t={t} onCoinEarned={onCoinEarned} />}
           {game === "car" && <CarGame t={t} onCoinEarned={onCoinEarned} />}
+          {game === "breakout" && <BreakoutGame t={t} onCoinEarned={onCoinEarned} />}
+          {game === "2048" && <Game2048 t={t} onCoinEarned={onCoinEarned} />}
+          {game === "invaders" && <SpaceInvadersGame t={t} onCoinEarned={onCoinEarned} />}
+          {game === "pong" && <PongGame t={t} onCoinEarned={onCoinEarned} />}
         </div>
       )}
     </div>
