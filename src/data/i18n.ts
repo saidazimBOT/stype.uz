@@ -179,7 +179,7 @@ const en: Dict = {
   "aichat.placeholder": "Type your message...",
   "aichat.clear": "Clear chat",
   "aichat.send": "Send",
-  "aichat.greeting": "Hello! 👋 I'm the STypeUz AI assistant. Ask me anything — I'm here to help!",
+  "aichat.greeting": "Hello! 👋 I'm the STypeUz AI assistant. Ask me anything about the site!",
 
   // ── TYPING DNA ──
   "dna.tests": "Tests",
@@ -477,7 +477,7 @@ const uz: Dict = {
   "aichat.placeholder": "Xabaringizni yozing...",
   "aichat.clear": "Chatni tozalash",
   "aichat.send": "Yuborish",
-  "aichat.greeting": "Salom! 👋 Men STypeUz AI yordamchisiman. Menga har qanday savol bering!",
+  "aichat.greeting": "Salom! 👋 Men STypeUz AI yordamchisiman. Menga sayt haqida har qanday savol bering!",
 
   // ── TYPING DNA ──
   "dna.tests": "Testlar",
@@ -726,7 +726,7 @@ const ru: Dict = {
   "aichat.placeholder": "Напишите сообщение...",
   "aichat.clear": "Очистить чат",
   "aichat.send": "Отправить",
-  "aichat.greeting": "Привет! 👋 Я AI-ассистент STypeUz. Задавайте любые вопросы!",
+  "aichat.greeting": "Привет! 👋 Я AI-ассистент STypeUz. Задавайте любые вопросы о сайте!",
 
   // ── TYPING DNA ──
   "dna.tests": "Тесты",

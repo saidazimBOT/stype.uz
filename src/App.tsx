@@ -1353,8 +1353,6 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <TypingReplayView t={t} onClose={() => setView("type")} recordings={recordings} />
           ) : view === "games" ? (
             <GamesView t={t} onClose={() => setView("type")} onCoinEarned={(amt) => { coinsStore.addCoins(amt); showCoinNotif(amt, "game"); }} />
-          ) : view === "aichat" ? (
-            <AIChat t={t} onClose={() => setView("type")} />
           ) : view === "shop" ? (
             <ShopView
               t={t}
@@ -1372,6 +1370,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
               onToggleEffect={coinsStore.toggleEffect}
               currentTheme={theme}
             />
+          ) : view === "aichat" ? (
+            <AIChat t={t} onClose={() => setView("type")} />
           ) : view === "about" ? (
             <AboutView t={t} onClose={() => setView("type")} />
           ) : view === "dna" ? (

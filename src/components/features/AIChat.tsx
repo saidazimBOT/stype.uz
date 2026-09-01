@@ -20,12 +20,12 @@ export default function AIChat({ t, onClose }: AIChatProps) {
     {
       role: "assistant",
       content:
-        "Salom! 👋 Men STypeUz AI yordamchisiman. Menga har qanday savol bering — men sizga yordam beraman!",
+        "Salom! 👋 Men STypeUz AI yordamchisiman. Menga sayt haqida har qanday savol bering — men sizga yordam beraman!\n\n🔹 Sayt haqida\n🔹 Yaratuvchi haqida\n🔹 Xususiyatlar haqida\n🔹 Texnik ma'lumotlar",
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  // Typing animation state
+  // Typing animation
   const [typingText, setTypingText] = useState("");
   const [fullResponse, setFullResponse] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,16 +43,14 @@ export default function AIChat({ t, onClose }: AIChatProps) {
 
     if (typingText.length < fullResponse.length) {
       const timer = setTimeout(() => {
-        // Reveal 1-3 chars at a time for natural feel
         const nextLen = Math.min(
           typingText.length + (fullResponse[typingText.length] === " " ? 2 : 1),
           fullResponse.length
         );
         setTypingText(fullResponse.slice(0, nextLen));
-      }, 12); // ~80 chars per second
+      }, 12);
       return () => clearTimeout(timer);
     } else {
-      // Animation done — finalize message
       setMessages((prev) => [...prev, { role: "assistant", content: fullResponse }]);
       setFullResponse("");
       setTypingText("");
@@ -73,7 +71,6 @@ export default function AIChat({ t, onClose }: AIChatProps) {
     setTypingText("");
     setFullResponse("");
 
-    // Reset textarea height
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
     }
@@ -81,19 +78,9 @@ export default function AIChat({ t, onClose }: AIChatProps) {
     try {
       abortRef.current = new AbortController();
 
-      // Supabase session token olish — shaxsiy ma'lumot uchun
-      let authToken = "";
-      try {
-        const { data } = await supabase?.auth.getSession() ?? { data: null };
-        authToken = data?.session?.access_token || "";
-      } catch {}
-
       const res = await fetch("/api/ai-chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
         signal: abortRef.current.signal,
       });
@@ -102,7 +89,6 @@ export default function AIChat({ t, onClose }: AIChatProps) {
 
       if (res.ok && data.text) {
         setFullResponse(data.text);
-        // Typing animation will start via useEffect
       } else {
         setMessages((prev) => [
           ...prev,
@@ -171,7 +157,6 @@ export default function AIChat({ t, onClose }: AIChatProps) {
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   };
 
-  // Blinking cursor
   const Cursor = () => (
     <span
       className="inline-block w-[2px] h-[14px] ml-[1px] animate-pulse"
@@ -214,7 +199,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
                 GEMINI
               </span>
             </h2>
-            <p className="text-[10px] text-gray-500">Haqiqiy AI robot</p>
+            <p className="text-[10px] text-gray-500">STypeUz AI yordamchisi</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -264,7 +249,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
                     className="text-[10px] font-bold"
                     style={{ color: "#4285f4" }}
                   >
-                    Gemini AI
+                    STypeUz AI
                   </span>
                 </div>
               )}
@@ -275,7 +260,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
           </div>
         ))}
 
-        {/* Typing animation — shows current message being typed */}
+        {/* Typing animation */}
         {isAnimating && (
           <div className="flex justify-start">
             <div
@@ -292,7 +277,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
                   className="text-[10px] font-bold"
                   style={{ color: "#4285f4" }}
                 >
-                  Gemini AI
+                  STypeUz AI
                 </span>
               </div>
               <div className="whitespace-pre-wrap break-words">
@@ -303,7 +288,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
           </div>
         )}
 
-        {/* Loading dots — before API responds */}
+        {/* Loading dots */}
         {loading && !fullResponse && (
           <div className="flex justify-start">
             <div
@@ -319,7 +304,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
                   className="text-[10px] font-bold"
                   style={{ color: "#4285f4" }}
                 >
-                  Gemini AI
+                  STypeUz AI
                 </span>
               </div>
               <div className="flex gap-1.5 mt-1.5">
@@ -377,12 +362,7 @@ export default function AIChat({ t, onClose }: AIChatProps) {
               style={{ background: "#ef4444", color: "#fff" }}
               title="To'xtatish"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="3" y="3" width="10" height="10" rx="1" />
               </svg>
             </button>
