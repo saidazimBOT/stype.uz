@@ -1,21 +1,15 @@
 /**
  * STypeUz — Multiplayer Challenge Bridge
  *
- * Do'stlarni o'yinga chaqirish tizimi — Supabase Realtime channel orqali.
+ * Do'stlarni o'yinga chaqirish tizimi — database polling orqali.
  * Foydalanuvchi do'stiga challenge yuboradi, do'sti tepada bildirishnoma oladi,
  * qabul qilsa — bir xil matn bilan yozish boshlanadi.
+ *
+ * Realtime broadcast o'rniga POLLING ishlatiladi — bu ancha ishonchli.
  */
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { getCurrentUserId } from "./db";
 import type { ChallengeInvite, ChallengeStatus } from "../types";
-
-// ═══════════════════════════════════════════════════════════════════════
-// CHANNEL NOMI — har bir foydalanuvchi uchun noyob
-// ═══════════════════════════════════════════════════════════════════════
-
-function userChannelName(userId: string): string {
-  return `challenge:${userId}`;
-}
 
 // ═══════════════════════════════════════════════════════════════════════
 // HANDLER TYPELARI
@@ -24,17 +18,18 @@ function userChannelName(userId: string): string {
 type InviteHandler = (invite: ChallengeInvite) => void;
 type StatusHandler = (inviteId: string, status: ChallengeStatus, result?: { wpm: number; accuracy: number }) => void;
 
-let currentChannel: { unsubscribe: () => void } | null = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
 let inviteHandlers: InviteHandler[] = [];
 let statusHandlers: StatusHandler[] = [];
+let lastPollTime = 0;
 
 // ═══════════════════════════════════════════════════════════════════════
-// CHANNELNI IZLAGA QO'SHISH (Listening)
+// POLLING — Har 2 soniyada yangi invitation'larni tekshirish
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
- * Joriy foydalanuvchi uchun Realtime channel'ni ochadi.
- * Challenge invite kelganda handler'lar chaqiriladi.
+ * Joriy foydalanuvchi uchun challenge invitation'larni poll qiladi.
+ * Har 2 soniyada database'dan yangi invitation'lar tekshiriladi.
  */
 export function subscribeToChallenges(
   onInvite: InviteHandler,
@@ -42,39 +37,19 @@ export function subscribeToChallenges(
 ): () => void {
   if (!isSupabaseConfigured()) return () => {};
 
-  // Avvalgi channel'ni tozalaymiz
+  // Avvalgi polling'ni tozalaymiz
   unsubscribeFromChallenges();
 
   inviteHandlers.push(onInvite);
   statusHandlers.push(onStatus);
 
-  // Async ish — userId olish va channel ochish
-  void (async () => {
-    const uid = await getCurrentUserId();
-    if (!uid) return;
+  // Darhol bir marta tekshiramiz
+  void pollForInvites();
 
-    const channelName = userChannelName(uid);
-    const channel = supabase!.channel(channelName);
-
-    // Challenge invite qabul qilish
-    channel.on("broadcast", { event: "challenge_invite" }, ({ payload }) => {
-      const invite = payload as ChallengeInvite;
-      if (invite.toUserId === uid) {
-        inviteHandlers.forEach((h) => h(invite));
-      }
-    });
-
-    // Challenge status yangilanishi (qabul qildi / rad etdi / natija)
-    channel.on("broadcast", { event: "challenge_status" }, ({ payload }) => {
-      const data = payload as { inviteId: string; status: ChallengeStatus; result?: { wpm: number; accuracy: number }; fromUserId?: string };
-      if (data.fromUserId !== uid) {
-        statusHandlers.forEach((h) => h(data.inviteId, data.status, data.result));
-      }
-    });
-
-    channel.subscribe();
-    currentChannel = channel;
-  })();
+  // Har 2 soniyada polling
+  pollInterval = setInterval(() => {
+    void pollForInvites();
+  }, 2000);
 
   return () => {
     unsubscribeFromChallenges();
@@ -82,15 +57,76 @@ export function subscribeToChallenges(
 }
 
 /**
+ * Database'dan pending invitation'larni olish
+ */
+async function pollForInvites() {
+  if (!isSupabaseConfigured()) return;
+
+  const uid = await getCurrentUserId();
+  if (!uid) return;
+
+  try {
+    // O'zimga yuborilgan pending invitation'larni qidiramiz
+    const { data: invites } = await supabase!
+      .from("challenge_invites")
+      .select("*")
+      .eq("to_user_id", uid)
+      .eq("status", "pending")
+      .gt("created_at", Date.now() - 60000); // Faqat oxirgi 60 soniyadagilar
+
+    if (invites && invites.length > 0) {
+      for (const row of invites) {
+        const invite: ChallengeInvite = {
+          id: row.id,
+          fromUserId: row.from_user_id,
+          fromUsername: row.from_username || "Player",
+          toUserId: row.to_user_id,
+          toUsername: row.to_username || "Player",
+          status: row.status,
+          textSeed: row.text_seed || "",
+          lang: row.lang || "en",
+          duration: row.duration || 15,
+          createdAt: row.created_at,
+        };
+
+        // Handler'larga xabar beramiz
+        inviteHandlers.forEach((h) => h(invite));
+      }
+    }
+
+    // O'zi yuborga finished invitation'larni ham tekshiramiz
+    const { data: results } = await supabase!
+      .from("challenge_invites")
+      .select("*")
+      .eq("from_user_id", uid)
+      .eq("status", "finished")
+      .gt("created_at", lastPollTime);
+
+    if (results && results.length > 0) {
+      for (const row of results) {
+        statusHandlers.forEach((h) =>
+          h(row.id, "finished", { wpm: row.to_wpm || 0, accuracy: row.to_accuracy || 0 })
+        );
+      }
+    }
+
+    lastPollTime = Date.now();
+  } catch {
+    // Xatolik — keyingi polling'da qayta uriniladi
+  }
+}
+
+/**
  * Channel'dan chiqish
  */
 export function unsubscribeFromChallenges() {
-  if (currentChannel) {
-    currentChannel.unsubscribe();
-    currentChannel = null;
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
   }
   inviteHandlers = [];
   statusHandlers = [];
+  lastPollTime = 0;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -121,22 +157,9 @@ export async function sendChallengeInvite(params: {
   const inviteId = `ch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const textSeed = Math.random().toString(36).slice(2, 10);
 
-  const invite: ChallengeInvite = {
-    id: inviteId,
-    fromUserId: uid,
-    fromUsername: username,
-    toUserId: params.toUserId,
-    toUsername: params.toUsername,
-    status: "pending",
-    textSeed,
-    lang: params.lang,
-    duration: params.duration,
-    createdAt: Date.now(),
-  };
-
-  // Ma'lumotlar bazasiga saqlaymiz (referans uchun)
+  // Database'ga yozamiz — qabul qiluvchi polling orqali topadi
   try {
-    await supabase!.from("challenge_invites").insert({
+    const { error } = await supabase!.from("challenge_invites").insert({
       id: inviteId,
       from_user_id: uid,
       from_username: username,
@@ -148,17 +171,15 @@ export async function sendChallengeInvite(params: {
       duration: params.duration,
       created_at: Date.now(),
     });
-  } catch {
-    // Jadval hali yaratilmagan bo'lsa — jim o'tkazamiz
-  }
 
-  // Realtime orqali yuboramiz — maqsad: qabul qiluvchining ekranida banner chiqishi
-  const targetChannel = supabase!.channel(userChannelName(params.toUserId));
-  await targetChannel.send({
-    type: "broadcast",
-    event: "challenge_invite",
-    payload: invite,
-  });
+    if (error) {
+      console.error("[Challenge] insert error:", error);
+      return null;
+    }
+  } catch (e) {
+    console.error("[Challenge] insert failed:", e);
+    return null;
+  }
 
   return inviteId;
 }
@@ -177,11 +198,11 @@ export async function updateChallengeStatus(params: {
   const uid = await getCurrentUserId();
   if (!uid) return;
 
-  // Bazani yangilaymiz
   const updates: Record<string, unknown> = {
     status: params.status,
     updated_at: Date.now(),
   };
+
   if (params.result) {
     if (params.status === "finished") {
       updates.to_wpm = params.result.wpm;
@@ -194,27 +215,8 @@ export async function updateChallengeStatus(params: {
     await supabase!.from("challenge_invites")
       .update(updates)
       .eq("id", params.inviteId);
-  } catch {}
-
-  // Yuboruvchiga xabar beramiz
-  // Buning uchun invite dan from_user_id ni olishimiz kerak
-  const { data: invite } = await supabase!.from("challenge_invites")
-    .select("from_user_id")
-    .eq("id", params.inviteId)
-    .maybeSingle();
-
-  if (invite?.from_user_id) {
-    const senderChannel = supabase!.channel(userChannelName(invite.from_user_id));
-    await senderChannel.send({
-      type: "broadcast",
-      event: "challenge_status",
-      payload: {
-        inviteId: params.inviteId,
-        status: params.status,
-        result: params.result,
-        fromUserId: uid,
-      },
-    });
+  } catch (e) {
+    console.error("[Challenge] update error:", e);
   }
 }
 
@@ -231,7 +233,6 @@ export async function submitChallengeResult(params: {
   const uid = await getCurrentUserId();
   if (!uid) return;
 
-  // Bazani yangilaymiz
   try {
     await supabase!.from("challenge_invites")
       .update({
@@ -242,18 +243,21 @@ export async function submitChallengeResult(params: {
         updated_at: Date.now(),
       })
       .eq("id", params.inviteId);
-  } catch {}
+  } catch (e) {
+    console.error("[Challenge] submit error:", e);
+  }
+}
 
-  // Qabul qiluvchiga xabar beramiz
-  const receiverChannel = supabase!.channel(userChannelName(params.toUserId));
-  await receiverChannel.send({
-    type: "broadcast",
-    event: "challenge_status",
-    payload: {
-      inviteId: params.inviteId,
-      status: "finished",
-      result: params.result,
-      fromUserId: uid,
-    },
-  });
+/**
+ * Pending invitationlarni tozalash (eski invitation'larni expired qilish)
+ */
+export async function cleanupOldInvites(): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+
+  try {
+    await supabase!.from("challenge_invites")
+      .update({ status: "expired", updated_at: Date.now() })
+      .eq("status", "pending")
+      .lt("created_at", Date.now() - 60000); // 60 soniyadan eski
+  } catch {}
 }
