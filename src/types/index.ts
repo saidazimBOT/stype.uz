@@ -139,6 +139,7 @@ export interface ReplayRecording {
 
 // ── Friend Types ─────────────────────────────────────────────────────────
 export interface FriendUser {
+  id?: string;
   name: string;
   country: string;
   status: "online" | "idle" | "offline";

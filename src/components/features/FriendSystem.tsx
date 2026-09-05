@@ -21,6 +21,7 @@ interface FriendSystemProps {
 
 function profileToFriend(u: ProfileRow): FriendUser {
   return {
+    id: u.id,
     name: u.username || u.first_name || "User",
     country: "🌍",
     status: "offline",
@@ -124,9 +125,10 @@ export default function FriendSystem({ t, onClose, activeAvatar = "avatar_defaul
                 </div>
                 <button
                   onClick={async () => {
+                    if (!f.id) return;
                     setChallengeBusy(f.name);
                     const id = await sendChallengeInvite({
-                      toUserId: "",
+                      toUserId: f.id,
                       toUsername: f.name,
                       lang: "en",
                       duration: 15,
@@ -134,7 +136,7 @@ export default function FriendSystem({ t, onClose, activeAvatar = "avatar_defaul
                     if (id && onChallengeSent) onChallengeSent(id);
                     setChallengeBusy(null);
                   }}
-                  disabled={challengeBusy === f.name}
+                  disabled={challengeBusy === f.name || !f.id}
                   className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all hover:scale-105 disabled:opacity-50"
                   style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}44` }}
                   title={`${f.name} ni challenge ga taklif qilish`}
