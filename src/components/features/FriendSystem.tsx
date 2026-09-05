@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FiUsers, FiX } from "react-icons/fi";
+import { FaGamepad } from "react-icons/fa6";
+import { sendChallengeInvite } from "../../lib/challengeBridge";
 import { DEFAULT_HERO_EQUIP, getAvatarInfo, type HeroEquip } from "../../data/shop";
 import HeroAvatar from "./HeroAvatar";
 import type { ThemeColors, FriendUser } from "../../types";
@@ -14,6 +16,7 @@ interface FriendSystemProps {
   onClose: () => void;
   activeAvatar?: string;
   heroEquip?: HeroEquip;
+  onChallengeSent?: (inviteId: string) => void;
 }
 
 function profileToFriend(u: ProfileRow): FriendUser {
@@ -27,10 +30,11 @@ function profileToFriend(u: ProfileRow): FriendUser {
   };
 }
 
-export default function FriendSystem({ t, onClose, activeAvatar = "avatar_default", heroEquip }: FriendSystemProps) {
+export default function FriendSystem({ t, onClose, activeAvatar = "avatar_default", heroEquip, onChallengeSent }: FriendSystemProps) {
   const [friends, setFriends] = useState<FriendUser[]>([]);
   const [search, setSearch] = useState("");
   const [allUsers, setAllUsers] = useState<FriendUser[]>([]);
+  const [challengeBusy, setChallengeBusy] = useState<string | null>(null);
 
   // Supabase'dan foydalanuvchilarni olish
   useEffect(() => {
@@ -118,6 +122,25 @@ export default function FriendSystem({ t, onClose, activeAvatar = "avatar_defaul
                   <div className="text-sm font-medium text-white">{f.name}</div>
                   <div className="text-xs text-gray-500">{f.country} · {f.wpm} WPM</div>
                 </div>
+                <button
+                  onClick={async () => {
+                    setChallengeBusy(f.name);
+                    const id = await sendChallengeInvite({
+                      toUserId: "",
+                      toUsername: f.name,
+                      lang: "en",
+                      duration: 15,
+                    });
+                    if (id && onChallengeSent) onChallengeSent(id);
+                    setChallengeBusy(null);
+                  }}
+                  disabled={challengeBusy === f.name}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all hover:scale-105 disabled:opacity-50"
+                  style={{ background: t.accent + "22", color: t.accent, border: `1px solid ${t.accent}44` }}
+                  title={`${f.name} ni challenge ga taklif qilish`}
+                >
+                  <FaGamepad size={10} /> {challengeBusy === f.name ? "..." : "Challenge"}
+                </button>
                 <button onClick={() => removeFriend(f.name)} className="text-xs px-3 py-1 rounded-lg hover:bg-white/5 text-gray-500"><FiX size={13} /></button>
               </div>
             ))}

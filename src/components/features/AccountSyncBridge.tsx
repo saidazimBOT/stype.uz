@@ -13,9 +13,9 @@ export default function AccountSyncBridge() {
   const running = useRef(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) return;
+    if (!isSupabaseConfigured()) return;            
 
-    const sync = async () => {
+                                                      const sync = async () => {
       if (running.current) return;
       running.current = true;
       try {

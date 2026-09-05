@@ -314,3 +314,74 @@ export interface AnimatedAvatarProps {
 export interface GameProps extends ThemeProp {}
 
 export interface CountryRankingProps extends ViewProps {}
+
+// ── Tournament Types ──────────────────────────────────────────────────────
+export type TournamentStatus = "upcoming" | "active" | "finished";
+export type TournamentMode = "sprint" | "marathon" | "accuracy" | "endless";
+
+export interface Tournament {
+  id: string;
+  title: string;
+  description: string;
+  mode: TournamentMode;
+  status: TournamentStatus;
+  lang: string;
+  /** Taymer: necha soniya (sprint=15, marathon=60, endless=0) */
+  duration: number;
+  /** Turnir boshlanish vaqti (timestamp) */
+  startTime: number;
+  /** Turnir tugash vaqti (timestamp) */
+  endTime: number;
+  /** Ishtirokchilar soni */
+  participantCount: number;
+  /** G'oliblar uchun mukofot (coin) */
+  prizeCoins: number;
+  /** Yaratuvchi admin nomi */
+  createdBy: string;
+  /** Foydalanuvchi ishtirok etganmi */
+  isJoined?: boolean;
+  /** Mukofotlar tarqatilganmi */
+  rewardsDistributed?: boolean;
+}
+
+export interface TournamentParticipant {
+  id: string;
+  tournamentId: string;
+  userId: string;
+  username: string;
+  wpm: number;
+  accuracy: number;
+  errors: number;
+  correct: number;
+  total: number;
+  /** Test davomiyligi (soniyalarda) */
+  time: number;
+  joinedAt: number;
+  color: string;
+  avatar: string;
+}
+
+export interface TournamentViewProps extends ViewProps {
+  history: TestResult[];
+  showCoinNotif?: (amount: number, source: string) => void;
+}
+
+// ── Challenge Invitation Types ────────────────────────────────────────
+export type ChallengeStatus = "pending" | "accepted" | "declined" | "expired" | "racing" | "finished";
+
+export interface ChallengeInvite {
+  id: string;
+  fromUserId: string;
+  fromUsername: string;
+  toUserId: string;
+  toUsername: string;
+  status: ChallengeStatus;
+  /** Matn ID si — bir xil matn bilan raqobatlashish uchun */
+  textSeed: string;
+  lang: string;
+  duration: number;
+  createdAt: number;
+  /** O'yin natijalari */
+  fromResult?: { wpm: number; accuracy: number; finishedAt?: number };
+  toResult?: { wpm: number; accuracy: number; finishedAt?: number };
+}

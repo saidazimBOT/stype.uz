@@ -47,6 +47,7 @@ import Chat from "./components/features/Chat";
 import SeasonalEvent from "./components/features/SeasonalEvent";
 import AIExercises from "./components/features/AIExercises";
 import MashqView from "./components/features/MashqView";
+import TournamentView from "./components/features/TournamentView";
 import CustomTextImport from "./components/features/CustomTextImport";
 import TypingChallenge from "./components/features/TypingChallenge";
 import TypingReplayView from "./components/features/TypingReplay";
@@ -57,6 +58,9 @@ import LingohubPromo from "./components/features/LingohubPromo";
 import LingohubLogo from "./components/features/LingohubLogo";
 import AccountSyncBridge from "./components/features/AccountSyncBridge";
 import SupabaseCoinSync from "./components/features/SupabaseCoinSync";
+import ChallengeInviteBanner, { ChallengeResultBanner } from "./components/features/ChallengeInviteBanner";
+import { subscribeToChallenges } from "./lib/challengeBridge";
+import type { ChallengeInvite } from "./types";
 import TypingDNA from "./components/features/TypingDNA";
 import OwnerView from "./components/features/OwnerView";
 import CoinIcon from "./components/CoinIcon";
@@ -299,6 +303,52 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const { missions, xp, updateProgress, addXp } = useMissions();
   const { recordings, startRecording, recordEvent, stopRecording } = useReplay();
   const coinsStore = useCoins();
+
+  // ── CHALLENGE INVITE STATE ──
+  const [challengeInvite, setChallengeInvite] = useState<ChallengeInvite | null>(null);
+  const [challengeResult, setChallengeResult] = useState<{
+    opponentName: string;
+    myWpm: number;
+    myAccuracy: number;
+    opponentWpm: number;
+    opponentAccuracy: number;
+  } | null>(null);
+
+  // Challenge Realtime subscription
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    const unsub = subscribeToChallenges(
+      // Yangi invite qabul qilindi
+      (invite) => {
+        setChallengeInvite(invite);
+      },
+      // Status yangilandi (qabul qildi / rad etdi / natija)
+      (inviteId, status, result) => {
+        if (status === "finished" && result) {
+          // Natija keldi — banner ko'rsatamiz
+          setChallengeResult({
+            opponentName: "Raqib",
+            myWpm: 0,
+            myAccuracy: 0,
+            opponentWpm: result.wpm,
+            opponentAccuracy: result.accuracy,
+          });
+          setChallengeInvite(null);
+        } else if (status === "declined") {
+          setChallengeInvite(null);
+        }
+      }
+    );
+    return unsub;
+  }, [cloudEnabled]);
+
+  // Challenge invite qabul qilindi — typing view ga o'tamiz
+  const handleChallengeAccept = useCallback((invite: ChallengeInvite) => {
+    setChallengeInvite(null);
+    // Foydalanuvchini typing view ga o'tkazamiz
+    // Matn seed asosida bir xil matn tanlanadi
+    setView("type");
+  }, []);
 
   // Show coin notification for daily login reward on mount
   useEffect(() => {
@@ -800,6 +850,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     { id: "ai", icon: FiCpu, label: T("nav.ai") },
     { id: "custom", icon: FiBookOpen, label: T("nav.custom") },
     { id: "mashq", icon: FiEdit3, label: T("nav.mashq") },
+    { id: "tournament", icon: FaMedal, label: T("nav.tournament") },
     { id: "replay", icon: FiVideo, label: T("nav.replay") },
     { id: "games", icon: FiGrid, label: T("nav.games") },
     { id: "shop", icon: FiShoppingBag, label: T("nav.shop") },
@@ -811,7 +862,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   // O'chirilgan sahifalar (masalan "tutor") localStorage da qolgan bo'lsa — blank o'rniga "type" ochiladi.
   // "admin" navItems'da yo'q (maxsus view) — guard uni "type"ga qaytarib yubormasligi uchun qo'shilgan.
   useEffect(() => {
-    const valid = new Set([...navItems.map((n) => n.id), "admin", "profile_settings", "premium"]);
+    const valid = new Set([...navItems.map((n) => n.id), "admin", "profile_settings", "premium", "tournament"]);
     if (!valid.has(view)) setView("type");
   }, [view]);
 
@@ -822,6 +873,28 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     <SupabaseCoinSync />
     {/* window.__userToken ni o'rnatadi — lokal tarixda userId uchun kerak */}
     <TypingRecorderBridge />
+    {/* Challenge Invite Banner — tepada ko'rinadi */}
+    {challengeInvite && (
+      <ChallengeInviteBanner
+        t={t}
+        invite={challengeInvite}
+        onAccept={handleChallengeAccept}
+        onDecline={() => setChallengeInvite(null)}
+        onExpired={() => setChallengeInvite(null)}
+      />
+    )}
+    {/* Challenge Result Banner — natija ko'rsatilganda */}
+    {challengeResult && (
+      <ChallengeResultBanner
+        t={t}
+        opponentName={challengeResult.opponentName}
+        myWpm={challengeResult.myWpm}
+        myAccuracy={challengeResult.myAccuracy}
+        opponentWpm={challengeResult.opponentWpm}
+        opponentAccuracy={challengeResult.opponentAccuracy}
+        onClose={() => setChallengeResult(null)}
+      />
+    )}
     <div
       suppressHydrationWarning
       className="min-h-screen h-dvh flex flex-col isolate"
@@ -1338,7 +1411,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
           ) : view === "multiplyer" ? (
             <BattleHub t={t} onClose={() => setView("type")} coinsStore={coinsStore} heroEquip={coinsStore.heroEquip} addXp={addXp} />
           ) : view === "friends" ? (
-            <FriendSystem t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
+            <FriendSystem t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} onChallengeSent={(id) => showCoinNotif(0, "challenge")} />
           ) : view === "chat" ? (
             <Chat t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "ai" ? (
@@ -1349,6 +1422,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
             <ProfileSettingsView t={t} onClose={() => setView("type")} />
           ) : view === "mashq" ? (
             <MashqView t={t} lang={lang} onClose={() => setView("type")} onSelectText={(txt) => { newText(txt); setView("type"); }} />
+          ) : view === "tournament" ? (
+            <TournamentView t={t} onClose={() => setView("type")} history={history} />
           ) : view === "replay" ? (
             <TypingReplayView t={t} onClose={() => setView("type")} recordings={recordings} />
           ) : view === "games" ? (

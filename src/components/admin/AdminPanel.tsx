@@ -5,6 +5,7 @@ import {
   FiAward, FiBarChart2, FiBell, FiDatabase, FiDollarSign, FiEdit3, FiEye, FiFlag, FiLock,
   FiLogOut, FiRefreshCw, FiSearch, FiSettings, FiShield, FiUserPlus, FiUsers,
 } from "react-icons/fi";
+import { FaTrophy } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import useAdminProfile from "./useAdminProfile";
 import type { ThemeColors, TestResult } from "../../types";
@@ -23,6 +24,7 @@ import LogsSection from "./LogsSection";
 import SettingsSection from "./SettingsSection";
 import VisitorsSection from "./VisitorsSection";
 import PremiumSection from "./PremiumSection";
+import TournamentsSection from "./TournamentsSection";
 import { Spinner } from "./adminUi";
 
 const ADMIN_TELEGRAM_URL = "https://t.me/said_khujayev";
@@ -36,7 +38,7 @@ interface AdminPanelProps {
 
 type TabId =
   | "dashboard" | "users" | "registered" | "supabase" | "texts" | "economy"
-  | "achievements" | "reports" | "announcements" | "logs" | "settings" | "visitors" | "gsc" | "premium";
+  | "achievements" | "reports" | "announcements" | "logs" | "settings" | "visitors" | "gsc" | "premium" | "tournaments";
 
 interface TabDef {
   id: TabId;
@@ -61,6 +63,7 @@ const ALL_TABS: TabDef[] = [
   { id: "visitors", label: "Visitors", icon: FiEye },
   { id: "gsc", label: "Google Search", icon: FiSearch },
   { id: "premium", label: "👑 Premium", icon: FiAward },
+  { id: "tournaments", label: "🏆 Turnirlar", icon: FaTrophy, server: true },
 ];
 
 // ── Error Boundary ───────────────────────────────────────────────────
@@ -159,6 +162,7 @@ function AdminPanelInner({ t, onClose, history, xp }: AdminPanelProps) {
       case "visitors": return <VisitorsSection t={t} refreshKey={refreshKey} onRefresh={() => setRefreshKey((k) => k + 1)} />;
       case "gsc": return <GscDashboard t={t} />;
       case "premium": return <PremiumSection t={t} />;
+      case "tournaments": return <TournamentsSection t={t} />;
       default: return null;
     }
   };

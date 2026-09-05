@@ -32,6 +32,7 @@ const en: Dict = {
   "nav.shop": "Shop",
   "nav.about": "About",
   "nav.mashq": "Practice",
+  "nav.tournament": "Tournament",
 
   // ── MASHQ (PRACTICE) ──
   "mashq.title": "Practice",
@@ -280,6 +281,7 @@ const uz: Dict = {
   "nav.shop": "Do'kon",
   "nav.about": "Haqida",
   "nav.mashq": "Mashq",
+  "nav.tournament": "Turnir",
 
   // ── MASHQ (PRACTICE) ──
   "mashq.title": "Mashq",
@@ -529,6 +531,7 @@ const ru: Dict = {
   "nav.shop": "Магазин",
   "nav.about": "О сайте",
   "nav.mashq": "Практика",
+  "nav.tournament": "Турнир",
 
   // ── MASHQ (PRACTICE) ──
   "mashq.title": "Практика",

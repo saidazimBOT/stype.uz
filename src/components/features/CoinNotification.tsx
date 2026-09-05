@@ -8,7 +8,7 @@ export interface CoinNotif {
   amount: number;
   x: number;
   y: number;
-  source: "typing" | "game" | "daily";
+  source: "typing" | "game" | "daily" | "challenge";
 }
 
 interface CoinNotificationProps {
