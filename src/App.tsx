@@ -129,6 +129,9 @@ export default function App({ initialView }: { initialView?: string } = {}) {
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  // Sidebar: mish (hover) orqali ochiladi/yopiladi
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarHoverRef = useRef<HTMLDivElement>(null);
   // Supabase sessiyasi — auth holati va role
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [sessionRole, setSessionRole] = useState<string>("user");
@@ -422,6 +425,16 @@ export default function App({ initialView }: { initialView?: string } = {}) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showProfileMenu]);
+
+  // Sidebar hover — mish kirganda ochiladi, ketganda yopiladi
+  const sidebarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSidebarEnter = useCallback(() => {
+    if (sidebarTimeoutRef.current) clearTimeout(sidebarTimeoutRef.current);
+    setSidebarOpen(true);
+  }, []);
+  const handleSidebarLeave = useCallback(() => {
+    sidebarTimeoutRef.current = setTimeout(() => setSidebarOpen(false), 200);
+  }, []);
 
   // Auto Dark/Light Mode
   const [autoTheme, setAutoTheme] = useState(false);
@@ -1287,43 +1300,61 @@ export default function App({ initialView }: { initialView?: string } = {}) {
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-14 md:w-44 px-1 md:px-3 pt-3 pb-16 border-r border-white/5 flex flex-col gap-0.5 text-xs md:text-sm flex-shrink-0 overflow-y-auto min-h-0">
-          {navItems.map((item, i) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setShowOwner(false);
-                setShowPromo(false);
-                setShowLingohub(false);
-                setView(view === item.id ? "type" : item.id);
-              }}
-              className={`nav-item-anim flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 ${
-                view === item.id ? "is-active" : ""
-              }`}
-              style={{
-                color: view === item.id ? t.accent : "#6b7280",
-                background: view === item.id ? t.accent + "11" : "transparent",
-                animationDelay: `${i * 35}ms`,
-                "--nav-glow": t.accent,
-              } as CSSProperties}
-              title={item.label}
-            >
-              <item.icon size={16} className="flex-shrink-0" />
-              <span className="hidden md:block">{item.label}</span>
-            </button>
-          ))}
-
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Admin panel tugmasi — barcha foydalanuvchilar uchun */}
-          <button
-            onClick={() => {
-              setShowLingohub(false);
-              setView(view === "admin" ? "type" : "admin");
+        {/* Sidebar — mish (hover) orqali ochiladi/yopiladi */}
+        <div
+          ref={sidebarHoverRef}
+          className="sidebar-hover-zone relative flex-shrink-0"
+          onMouseEnter={handleSidebarEnter}
+          onMouseLeave={handleSidebarLeave}
+        >
+          {/* Qiziqar chiziq — sidebar yopiq bo'lganda ko'rinadi */}
+          <div
+            className="absolute top-0 bottom-0 right-0 w-0.5 z-10 transition-opacity duration-300"
+            style={{
+              background: t.accent + "55",
+              opacity: sidebarOpen ? 0 : 0.7,
             }}
-              className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 mt-2"
+          />
+          <aside
+            className={`h-full pt-3 pb-16 border-r border-white/5 flex flex-col gap-0.5 text-xs text-sm flex-shrink-0 overflow-y-auto overflow-x-hidden min-h-0 transition-all duration-300 ease-in-out ${
+              sidebarOpen ? "w-48 px-3" : "w-10 px-1"
+            }`}
+          >
+            {navItems.map((item, i) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setShowOwner(false);
+                  setShowPromo(false);
+                  setShowLingohub(false);
+                  setView(view === item.id ? "type" : item.id);
+                }}
+                className={`nav-item-anim flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 whitespace-nowrap ${
+                  view === item.id ? "is-active" : ""
+                }`}
+                style={{
+                  color: view === item.id ? t.accent : "#6b7280",
+                  background: view === item.id ? t.accent + "11" : "transparent",
+                  animationDelay: `${i * 35}ms`,
+                  "--nav-glow": t.accent,
+                } as CSSProperties}
+                title={item.label}
+              >
+                <item.icon size={16} className="flex-shrink-0" />
+                <span className={`transition-opacity duration-200 ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}>{item.label}</span>
+              </button>
+            ))}
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Admin panel tugmasi — barcha foydalanuvchilar uchun */}
+            <button
+              onClick={() => {
+                setShowLingohub(false);
+                setView(view === "admin" ? "type" : "admin");
+              }}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all hover:bg-white/5 mt-2 whitespace-nowrap"
               style={{
                 color: view === "admin" ? t.accent : "#6b7280",
                 background: view === "admin" ? t.accent + "11" : "transparent",
@@ -1333,10 +1364,10 @@ export default function App({ initialView }: { initialView?: string } = {}) {
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              <span className="hidden md:block">Admin</span>
+              <span className={`transition-opacity duration-200 ${sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"}`}>Admin</span>
             </button>
-
-        </aside>
+          </aside>
+        </div>
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
