@@ -16,10 +16,11 @@ import type { Tournament, TournamentParticipant, TournamentMode, TournamentStatu
 /** Barcha turnirlarni olish (holat bo'yicha filterlash mumkin) */
 export async function listTournaments(status?: TournamentStatus): Promise<Tournament[]> {
   if (!isSupabaseConfigured()) return [];
-  let query = supabase!.from("tournaments").select("*").order("start_time", { ascending: false });
-  if (status) query = query.eq("status", status);
-  const { data } = await query;
-  if (!data) return [];
+  try {
+    let query = supabase!.from("tournaments").select("*").order("start_time", { ascending: false });
+    if (status) query = query.eq("status", status);
+    const { data, error } = await query;
+    if (error || !data) return [];
 
   const uid = await getCurrentUserId();
   return data.map((row) => ({
@@ -38,6 +39,9 @@ export async function listTournaments(status?: TournamentStatus): Promise<Tourna
     isJoined: row.participant_user_ids?.includes(uid) || false,
     rewardsDistributed: row.rewards_distributed || false,
   }));
+  } catch {
+    return [];
+  }
 }
 
 /** Faqat bir turnirni olish */
@@ -343,17 +347,20 @@ export async function distributeTournamentRewards(
 export async function ensureDailyTournaments(): Promise<void> {
   if (!isSupabaseConfigured()) return;
 
-  const now = Date.now();
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayMs = todayStart.getTime();
+  try {
+    const now = Date.now();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
 
-  // Bugun yaratilgan turnirlar bormi?
-  const { data: existing } = await supabase!.from("tournaments")
-    .select("id")
-    .gte("created_at", todayMs);
+    // Bugun yaratilgan turnirlar bormi?
+    const { data: existing, error: checkErr } = await supabase!.from("tournaments")
+      .select("id")
+      .gte("created_at", todayMs);
 
-  if (existing && existing.length > 0) return; // allaqachon yaratilgan
+    // Jadval yo'q bo'lsa — jim qaytamiz
+    if (checkErr) return;
+    if (existing && existing.length > 0) return; // allaqachon yaratilgan
 
   // Har kuni 3 ta turnir yaratamiz
   const nowDate = new Date();
@@ -415,5 +422,8 @@ export async function ensureDailyTournaments(): Promise<void> {
       created_at: Date.now(),
       updated_at: Date.now(),
     });
+  }
+  } catch {
+    // Jadval yo'q yoki xatolik — jim o'tkazamiz
   }
 }
