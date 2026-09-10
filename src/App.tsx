@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { TEXTS, LANG_LABELS, LANG_FLAGS } from "./data/texts";
 import { getT } from "./data/i18n";
 import { THEMES, FONT_SIZES, DURATIONS, THEME_LIST } from "./data/themes";
@@ -1405,7 +1406,15 @@ export default function App({ initialView }: { initialView?: string } = {}) {
               onClose={() => setShowSettings(false)}
             />
           ) : (
-            <div key={view} className="flex-1 min-h-0 overflow-hidden flex flex-col animate-view-in">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={view}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 min-h-0 overflow-hidden flex flex-col"
+              >
             {view === "leaderboard" ? (
             <LeaderboardView t={t} onClose={() => setView("type")} activeAvatar={coinsStore.activeAvatar} heroEquip={coinsStore.heroEquip} />
           ) : view === "countryrank" ? (
@@ -1541,8 +1550,11 @@ export default function App({ initialView }: { initialView?: string } = {}) {
 
               {/* Text display */}
               <div className="w-full max-w-2xl relative">
-                <div
-                  key={`typing-text-${errTick}`}
+                <motion.div
+                  key={`typing-text-${text.substring(0, 5)}-${errTick}`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4 }}
                   className={`leading-relaxed tracking-wide text-center select-none ${
                     FONT_SIZES[fontSize] || FONT_SIZES.md
                   } ${errTick > 0 ? "text-shake" : ""}`}
@@ -1550,7 +1562,7 @@ export default function App({ initialView }: { initialView?: string } = {}) {
                   onClick={() => inputRef.current?.focus()}
                 >
                   {rendered}
-                </div>
+                </motion.div>
                 <input
                   ref={inputRef}
                   className="absolute inset-0 opacity-0 cursor-default"
@@ -1661,7 +1673,8 @@ export default function App({ initialView }: { initialView?: string } = {}) {
 
             </main>
             ) : null}
-            </div>
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
       </div>
